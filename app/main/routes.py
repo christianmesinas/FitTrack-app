@@ -459,17 +459,17 @@ def weight_history():
                            weights=weights,
                            user=current_user)
 
+
 @main.route('/workout/<int:plan_id>/add_exercise', methods=['POST'])
 @login_required
 @owns_workout_plan
-#    Voeg een oefening toe aan een workout-plan.
-
 def add_exercise_to_workout(plan_id):
-    logger.debug(f"Add exercise to plan, user: {current_user.name}, user_id: {current_user.id}, plan_id: {plan_id}, request_data: {request.get_json()}")
+    """Voeg een oefening toe aan een workout-plan - bijgewerkt voor cardio"""
+    logger.debug(f"Add exercise to plan, user: {current_user.name}, user_id: {current_user.id}, plan_id: {plan_id}")
 
-    # Haal exercise_id uit JSON, querystring, of formulier
     data = request.get_json(silent=True) or {}
     exercise_id = data.get('exercise_id')
+
     if not exercise_id:
         try:
             exercise_id = int(request.args.get('exercise_id') or request.form.get('exercise_id'))
@@ -477,62 +477,75 @@ def add_exercise_to_workout(plan_id):
             logger.error(f"Invalid or missing exercise_id: {data.get('exercise_id')}")
             return jsonify({'success': False, 'message': 'Exercise ID is required'}), 400
 
-    # Haal optionele next URL op
     next_url = data.get('next') or url_for('main.edit_workout', plan_id=plan_id)
 
     try:
-        # Speciale case voor tijdelijke workouts (plan_id=0)
+        # Speciale case voor tijdelijke workouts
         if plan_id == 0:
             if 'temp_exercises' not in session:
                 session['temp_exercises'] = []
             if exercise_id not in session['temp_exercises']:
                 session['temp_exercises'].append(exercise_id)
                 session.modified = True
-                logger.debug(f"Added exercise_id={exercise_id} to session: {session['temp_exercises']}")
-            else:
-                logger.debug(f"Exercise_id={exercise_id} already in session")
             return jsonify({'success': True, 'message': 'Exercise added to temporary workout'})
 
-        # Controleer oefening
+        # Controleer oefening en haal cardio info op
         exercise = Exercise.query.get_or_404(exercise_id)
 
         # Controleer op duplicaten
         existing = WorkoutPlanExercise.query.filter_by(workout_plan_id=plan_id, exercise_id=exercise_id).first()
         if existing:
-            logger.debug(f"Duplicate exercise: plan_id={plan_id}, exercise_id={exercise_id}")
             return jsonify({'success': False, 'message': 'Exercise already in workout plan'}), 400
 
         # Bepaal volgende order
-        max_order = db.session.query(db.func.max(WorkoutPlanExercise.order)).filter_by(workout_plan_id=plan_id).scalar() or -1
+        max_order = db.session.query(db.func.max(WorkoutPlanExercise.order)).filter_by(
+            workout_plan_id=plan_id).scalar() or -1
         next_order = max_order + 1
 
-        # Voeg nieuwe oefening toe
-        new_entry = WorkoutPlanExercise(
-            workout_plan_id=plan_id,
-            exercise_id=exercise_id,
-            sets=3,
-            reps=10,
-            weight=0.0,
-            order=next_order
-        )
+        # Maak nieuwe entry met juiste default waarden
+        if exercise.is_cardio:
+            # Default cardio waarden
+            new_entry = WorkoutPlanExercise(
+                workout_plan_id=plan_id,
+                exercise_id=exercise_id,
+                sets=None,  # Niet relevant voor cardio
+                reps=None,  # Niet relevant voor cardio
+                weight=None,  # Niet relevant voor cardio
+                duration_minutes=30.0,  # Default 30 minuten
+                distance_km=5.0,  # Default 5km (optioneel)
+                order=next_order
+            )
+        else:
+            # Default strength training waarden
+            new_entry = WorkoutPlanExercise(
+                workout_plan_id=plan_id,
+                exercise_id=exercise_id,
+                sets=3,
+                reps=10,
+                weight=0.0,
+                duration_minutes=None,  # Niet relevant voor strength
+                distance_km=None,  # Niet relevant voor strength
+                order=next_order
+            )
+
         db.session.add(new_entry)
         db.session.commit()
 
-        logger.debug(f"Exercise added: plan_id={plan_id}, exercise_name={exercise.name}")
+        logger.debug(
+            f"Exercise added: plan_id={plan_id}, exercise_name={exercise.name}, is_cardio={exercise.is_cardio}")
         flash(f"{exercise.name} toegevoegd aan workout!", "success")
         return jsonify({
             'success': True,
             'message': f'{exercise.name} added to workout plan',
+            'is_cardio': exercise.is_cardio,
             'redirect': next_url
         })
 
-    except CSRFError as e:
-        logger.error(f"CSRF error: {str(e)}, received={request.headers.get('X-CSRF-Token')}")
-        return jsonify({'success': False, 'message': 'Invalid or missing CSRF token'}), 403
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error adding exercise: {str(e)}", exc_info=True)
         return jsonify({'success': False, 'message': 'Error adding exercise'}), 500
+
 
 @main.route('/add_workout', methods=['GET', 'POST'])
 @login_required
@@ -936,27 +949,26 @@ def start_workout(plan_id):
                            session_id=session_id,
                            form=form)
 
-
 @main.route('/save_workout/<int:plan_id>', methods=['POST'])
 @login_required
 @owns_workout_plan
-#    Sla een actieve workout op met set-logs.
 def save_workout(plan_id):
-    logger.debug(
-        f"Saving workout for plan_id={plan_id}, user_id={current_user.id}, session_id={session.get('current_workout_session')}")
+    """Sla een actieve workout op met set-logs - bijgewerkt voor cardio"""
+    logger.debug(f"Saving workout for plan_id={plan_id}, user_id={current_user.id}")
+
     form = ActiveWorkoutForm()
     if not form.validate_on_submit():
         errors = form.errors
         logger.error(f"Form validation failed: {errors}")
-        return jsonify({'success': False, 'message': f'Ongeldige formuliergegevens: {errors}'}), 400
+        return jsonify({'success': False, 'message': f'Invalid form data: {errors}'}), 400
 
     workout_plan = WorkoutPlan.query.get_or_404(plan_id)
-
     wpes = WorkoutPlanExercise.query.filter_by(workout_plan_id=plan_id).all()
     session_id = session.get('current_workout_session')
+
     if not session_id:
         logger.error("No active workout session found")
-        return jsonify({'success': False, 'message': 'Geen actieve workout sessie gevonden.'}), 400
+        return jsonify({'success': False, 'message': 'No active workout session found'}), 400
 
     # Verwijder bestaande SetLogs om herschrijven mogelijk te maken
     existing_logs = SetLog.query.filter_by(workout_session_id=session_id).all()
@@ -970,66 +982,82 @@ def save_workout(plan_id):
             completed_key = f'completed_{wpe.id}_{set_num}'
             if completed_key not in request.form:
                 break
+
             if request.form[completed_key]:
-                reps_key = f'reps_{wpe.id}_{set_num}'
-                weight_key = f'weight_{wpe.id}_{set_num}'
-                reps = request.form.get(reps_key, type=float)
-                weight = request.form.get(weight_key, type=float)
-                if reps is not None and weight is not None:
-                    log = SetLog(
-                        user_id=current_user.id,
-                        workout_plan_id=plan_id,
-                        exercise_id=wpe.exercise_id,
-                        workout_plan_exercise_id=wpe.id,
-                        workout_session_id=session_id,
-                        set_number=set_num,  # GEEN +1 MEER
-                        reps=reps,
-                        weight=weight,
-                        completed=True,
-                        completed_at=datetime.now(timezone.utc)
-                    )
-                    db.session.add(log)
-                    logger.debug(f"Added SetLog: wpe_id={wpe.id}, set_num={set_num}, reps={reps}, weight={weight}")
+                if wpe.exercise.is_cardio:
+                    # Verwerk cardio data
+                    duration_key = f'duration_{wpe.id}_{set_num}'
+                    distance_key = f'distance_{wpe.id}_{set_num}'
+                    duration = request.form.get(duration_key, type=float)
+                    distance = request.form.get(distance_key, type=float, default=0.0)
+
+                    if duration is not None and duration > 0:
+                        log = SetLog(
+                            user_id=current_user.id,
+                            workout_plan_id=plan_id,
+                            exercise_id=wpe.exercise_id,
+                            workout_plan_exercise_id=wpe.id,
+                            workout_session_id=session_id,
+                            set_number=set_num,
+                            duration_minutes=duration,
+                            distance_km=distance,
+                            reps=None,
+                            weight=None,
+                            completed=True,
+                            completed_at=datetime.now(timezone.utc)
+                        )
+                        db.session.add(log)
+                        logger.debug(
+                            f"Added cardio SetLog: wpe_id={wpe.id}, set_num={set_num}, duration={duration}, distance={distance}")
+                else:
+                    # Verwerk strength training data
+                    reps_key = f'reps_{wpe.id}_{set_num}'
+                    weight_key = f'weight_{wpe.id}_{set_num}'
+                    reps = request.form.get(reps_key, type=float)
+                    weight = request.form.get(weight_key, type=float, default=0.0)
+
+                    if reps is not None and reps > 0:
+                        log = SetLog(
+                            user_id=current_user.id,
+                            workout_plan_id=plan_id,
+                            exercise_id=wpe.exercise_id,
+                            workout_plan_exercise_id=wpe.id,
+                            workout_session_id=session_id,
+                            set_number=set_num,
+                            reps=reps,
+                            weight=weight,
+                            duration_minutes=None,
+                            distance_km=None,
+                            completed=True,
+                            completed_at=datetime.now(timezone.utc)
+                        )
+                        db.session.add(log)
+                        logger.debug(
+                            f"Added strength SetLog: wpe_id={wpe.id}, set_num={set_num}, reps={reps}, weight={weight}")
+
             set_num += 1
 
     try:
         db.session.commit()
+        logger.info("Workout successfully saved with cardio support!")
+        return jsonify({'success': True, 'message': 'Workout successfully saved!'})
     except Exception as e:
         db.session.rollback()
         logger.error(f"Database error: {str(e)}")
-        return jsonify({'success': False, 'message': f'Database fout: {str(e)}'}), 500
-
-    # Update sessie-statistieken
-
-    workout_session = WorkoutSession.query.get(session_id)
-    if workout_session:
-        workout_session.calculate_statistics()
-        try:
-            db.session.commit()
-            logger.debug(f"Updated statistics for session_id={session_id}")
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Statistics update error: {str(e)}")
-            return jsonify({'success': False, 'message': f'Statistics update fout: {str(e)}'}), 500
-
-    logger.info("Workout succesvol opgeslagen!")
-    return jsonify({'success': True, 'message': 'Workout succesvol opgeslagen!'})
-
+        return jsonify({'success': False, 'message': f'Database error: {str(e)}'}), 500
 
 
 @main.route('/save_set', methods=['POST'])
 @login_required
 def save_set():
-    """Sla een individuele set op tijdens een actieve workout"""
+    """Sla een individuele set op tijdens een actieve workout - bijgewerkt voor cardio"""
     data = request.get_json()
 
     wpe_id = data.get('wpe_id')
     set_number = data.get('set_number')
-    reps = data.get('reps')
-    weight = data.get('weight', 0.0)
     completed = data.get('completed', False)
 
-    if not all([wpe_id, set_number is not None, reps]):
+    if not all([wpe_id, set_number is not None]):
         return jsonify({'success': False, 'message': 'Missing required data'}), 400
 
     try:
@@ -1045,43 +1073,88 @@ def save_set():
         if not session_id:
             return jsonify({'success': False, 'message': 'No active workout session'}), 400
 
-        # Check of deze set al bestaat
+        # Check bestaande set
         existing_set = SetLog.query.filter_by(
             workout_plan_exercise_id=wpe_id,
             set_number=set_number,
             workout_session_id=session_id
         ).first()
 
-        if existing_set:
-            # Update bestaande set
-            existing_set.reps = reps
-            existing_set.weight = weight
-            existing_set.completed = completed
-            if completed:
-                existing_set.completed_at = datetime.now(timezone.utc)
-            set_log = existing_set
+        # Bepaal welke data we verwachten gebaseerd op exercise type
+        if wpe.exercise.is_cardio:
+            # Voor cardio verwachten we duration en optioneel distance
+            duration_minutes = data.get('duration_minutes')
+            distance_km = data.get('distance_km', 0.0)
+
+            if not duration_minutes and completed:
+                return jsonify({'success': False, 'message': 'Duration is required for cardio exercises'}), 400
+
+            if existing_set:
+                existing_set.duration_minutes = duration_minutes
+                existing_set.distance_km = distance_km
+                existing_set.completed = completed
+                existing_set.reps = None  # Zet strength velden op None
+                existing_set.weight = None
+                if completed:
+                    existing_set.completed_at = datetime.now(timezone.utc)
+                set_log = existing_set
+            else:
+                set_log = SetLog(
+                    user_id=current_user.id,
+                    workout_plan_id=wpe.workout_plan_id,
+                    exercise_id=wpe.exercise_id,
+                    workout_plan_exercise_id=wpe_id,
+                    set_number=set_number,
+                    duration_minutes=duration_minutes,
+                    distance_km=distance_km,
+                    reps=None,
+                    weight=None,
+                    completed=completed,
+                    workout_session_id=session_id,
+                    completed_at=datetime.now(timezone.utc) if completed else None
+                )
+                db.session.add(set_log)
         else:
-            # Maak nieuwe set aan
-            set_log = SetLog(
-                user_id=current_user.id,
-                workout_plan_id=wpe.workout_plan_id,
-                exercise_id=wpe.exercise_id,
-                workout_plan_exercise_id=wpe_id,
-                set_number=set_number,
-                reps=reps,
-                weight=weight,
-                completed=completed,
-                workout_session_id=session_id,
-                completed_at=datetime.now(timezone.utc) if completed else None
-            )
-            db.session.add(set_log)
+            # Voor strength training verwachten we reps en weight
+            reps = data.get('reps')
+            weight = data.get('weight', 0.0)
+
+            if not reps and completed:
+                return jsonify({'success': False, 'message': 'Reps are required for strength exercises'}), 400
+
+            if existing_set:
+                existing_set.reps = reps
+                existing_set.weight = weight
+                existing_set.completed = completed
+                existing_set.duration_minutes = None  # Zet cardio velden op None
+                existing_set.distance_km = None
+                if completed:
+                    existing_set.completed_at = datetime.now(timezone.utc)
+                set_log = existing_set
+            else:
+                set_log = SetLog(
+                    user_id=current_user.id,
+                    workout_plan_id=wpe.workout_plan_id,
+                    exercise_id=wpe.exercise_id,
+                    workout_plan_exercise_id=wpe_id,
+                    set_number=set_number,
+                    reps=reps,
+                    weight=weight,
+                    duration_minutes=None,
+                    distance_km=None,
+                    completed=completed,
+                    workout_session_id=session_id,
+                    completed_at=datetime.now(timezone.utc) if completed else None
+                )
+                db.session.add(set_log)
 
         db.session.commit()
 
         return jsonify({
             'success': True,
             'message': 'Set saved successfully',
-            'set_id': set_log.id
+            'set_id': set_log.id,
+            'is_cardio': wpe.exercise.is_cardio
         })
 
     except Exception as e:
@@ -1089,42 +1162,34 @@ def save_set():
         logger.error(f"Error saving set: {str(e)}")
         return jsonify({'success': False, 'message': f'Error saving set: {str(e)}'}), 500
 
+
 @main.route('/complete_workout/<int:plan_id>', methods=['POST'])
 @login_required
 @owns_workout_plan
 #    Voltooi een workout en aggregeer set-logs naar exercise-logs.
 
 def complete_workout(plan_id):
-    logger.debug(f"Attempting to complete workout for plan_id={plan_id}, user_id={current_user.id}")
+    current_app.logger.debug(f"Attempting to complete workout for plan_id={plan_id}, user_id={current_user.id}")
+    session_id = session.get('current_workout_session')
+    current_app.logger.debug(f"Session ID: {session_id}")
+
+    if not session_id:
+        current_app.logger.error("No active workout session found")
+        return jsonify({'success': False, 'message': 'No active workout session found'}), 400
+
+    workout_session = WorkoutSession.query.filter_by(id=session_id, user_id=current_user.id).first()
+    if not workout_session:
+        current_app.logger.error(f"Workout session not found for session_id={session_id}, user_id={current_user.id}")
+        return jsonify({'success': False, 'message': 'Workout session not found'}), 404
+
+    current_app.logger.debug(f"Found workout_session: id={workout_session.id}, user_id={workout_session.user_id}")
+
+    # Haal voltooide sets op
+    completed_sets = SetLog.query.filter_by(workout_session_id=session_id, completed=True).all()
+    current_app.logger.debug(f"Found {len(completed_sets)} completed sets for session_id={session_id}")
+
     try:
-        session_id = session.get('current_workout_session')
-        logger.debug(f"Session ID: {session_id}")
-        if not session_id:
-            logger.error("No active workout session found")
-            return jsonify({'success': False, 'message': 'No active workout session'}), 400
-
-        workout_session = WorkoutSession.query.get_or_404(session_id)
-        logger.debug(f"Found workout_session: id={workout_session.id}, user_id={workout_session.user_id}")
-        if workout_session.user_id != current_user.id:
-            logger.error(f"Unauthorized: session_user_id={workout_session.user_id}, current_user_id={current_user.id}")
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-
-        # Markeer sessie als voltooid
-
-        workout_session.completed_at = datetime.now(timezone.utc)
-        workout_session.is_completed = True
-        workout_session.calculate_statistics()
-
-        # Haal voltooide sets op
-
-        completed_sets = SetLog.query.filter_by(
-            workout_session_id=session_id,
-            completed=True
-        ).all()
-        logger.debug(f"Found {len(completed_sets)} completed sets for session_id={session_id}")
-
-        # Groepeer sets per oefening
-
+        # Maak ExerciseLog entries voor elke oefening
         exercise_groups = {}
         for set_log in completed_sets:
             exercise_id = set_log.exercise_id
@@ -1132,38 +1197,46 @@ def complete_workout(plan_id):
                 exercise_groups[exercise_id] = []
             exercise_groups[exercise_id].append(set_log)
 
-        # Maak ExerciseLogs voor elke oefening
-
         for exercise_id, sets in exercise_groups.items():
-            if sets:
-                avg_reps = sum(s.reps for s in sets) / len(sets)
-                avg_weight = sum(s.weight for s in sets) / len(sets)
-                exercise_log = ExerciseLog(
-                    user_id=current_user.id,
-                    exercise_id=exercise_id,
-                    workout_plan_id=plan_id,
-                    sets=len(sets),
-                    reps=avg_reps,
-                    weight=avg_weight,
-                    completed=True,
-                    completed_at=datetime.now(timezone.utc)
-                )
-                db.session.add(exercise_log)
-                logger.debug(f"Created ExerciseLog: exercise_id={exercise_id}, sets={len(sets)}")
+            is_cardio = sets[0].exercise.is_cardio
+            exercise_log = ExerciseLog(
+                user_id=current_user.id,
+                workout_plan_id=plan_id,
+                exercise_id=exercise_id,
+                workout_session_id=session_id,
+                completed_at=datetime.now(timezone.utc),
+                completed=True
+            )
+            if is_cardio:
+                # Cardio: bereken gemiddelde duur en afstand
+                total_duration = sum(s.duration_minutes or 0 for s in sets)
+                total_distance = sum(s.distance_km or 0 for s in sets)
+                exercise_log.duration_minutes = total_duration / len(sets) if sets else 0
+                exercise_log.distance_km = total_distance / len(sets) if sets else 0
+            else:
+                # Krachttraining: bereken gemiddelde reps en gewicht
+                total_reps = sum(s.reps or 0 for s in sets)
+                total_weight = sum(s.weight or 0 for s in sets)
+                exercise_log.reps = total_reps / len(sets) if sets else 0
+                exercise_log.weight = total_weight / len(sets) if sets else 0
+                exercise_log.sets = len(sets)
+            db.session.add(exercise_log)
 
+        # Markeer sessie als voltooid
+        workout_session.is_completed = True
+        workout_session.completed_at = datetime.now(timezone.utc)
+        workout_session.calculate_statistics()
         db.session.commit()
+
+        # Reset sessie
         session.pop('current_workout_session', None)
-        logger.info(f"Completed workout_session: id={workout_session.id}, plan_id={plan_id}")
-        flash("Workout succesvol voltooid!", "success")
-        return jsonify({
-            'success': True,
-            'message': 'Workout completed successfully',
-            'session_stats': workout_session.to_dict()
-        })
+
+        current_app.logger.debug(f"Workout completed successfully for session_id={session_id}")
+        return jsonify({'success': True, 'message': 'Workout completed successfully'})
 
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error completing workout: {str(e)}")
+        current_app.logger.error(f"Error completing workout: {str(e)}")
         return jsonify({'success': False, 'message': f'Error completing workout: {str(e)}'}), 500
 
 
