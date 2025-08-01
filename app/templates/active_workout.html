@@ -18,16 +18,29 @@
                 <section class="active-workout-block active-workout-in-plan" data-wpe-id="{{ wpe.id }}">
                     <h2>{{ wpe.exercise.name }}</h2>
                     <section class="set-section">
-                        {% for set_num in range(wpe.sets) %}
-                            <div class="active-workout-set">
-                                <input type="number" name="reps_{{ wpe.id }}_{{ set_num }}" min="0" step="1" placeholder="{{ wpe.reps }} reps" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                <input type="number" name="weight_{{ wpe.id }}_{{ set_num }}" min="0" step="0.1" placeholder="{{ wpe.weight }} KG" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
-                                <label class="custom-checkbox">
-                                    <input type="checkbox" name="completed_{{ wpe.id }}_{{ set_num }}">
-                                    <span class="checkmark"></span>
-                                </label>
-                            </div>
-                        {% endfor %}
+{% if wpe.exercise.is_cardio %}
+    <!-- Cardio style block -->
+    <div class="active-workout-set">
+        <input type="number" name="duration_{{ wpe.id }}_0" min="0.1" step="0.1" placeholder="{{ wpe.duration_minutes or 'Duur (min)' }}" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
+        <input type="number" name="distance_{{ wpe.id }}_0" min="0" step="0.1" placeholder="{{ wpe.distance_km or 'Afstand (km)' }}" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
+        <label class="custom-checkbox">
+            <input type="checkbox" name="completed_{{ wpe.id }}_0">
+            <span class="checkmark"></span>
+        </label>
+    </div>
+{% else %}
+    {% for set_num in range(wpe.sets) %}
+        <div class="active-workout-set">
+            <input type="number" name="reps_{{ wpe.id }}_{{ set_num }}" min="0" step="1" placeholder="{{ wpe.reps }} reps" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            <input type="number" name="weight_{{ wpe.id }}_{{ set_num }}" min="0" step="0.1" placeholder="{{ wpe.weight }} KG" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
+            <label class="custom-checkbox">
+                <input type="checkbox" name="completed_{{ wpe.id }}_{{ set_num }}">
+                <span class="checkmark"></span>
+            </label>
+        </div>
+    {% endfor %}
+{% endif %}
+
                     </section>
                     <div class="active-workout-button-section">
                         <a href="#" class="orange-btn-outline active-workout-btn" data-action="add">Add set</a>

@@ -294,6 +294,11 @@ class Exercise(db.Model):
         return f'<Exercise {self.name}>'
 
     @property
+    def is_cardio(self):
+        """Controleer of oefening cardio is gebaseerd op category"""
+        return self.category and self.category.lower() == 'cardio'
+
+    @property
     def images_list(self):
         """
         Haal de lijst van afbeeldingen op als Python-lijst.
@@ -401,9 +406,18 @@ class WorkoutPlanExercise(db.Model):
     exercise: so.Mapped['Exercise'] = so.relationship()
     set_logs: so.WriteOnlyMapped['SetLog'] = so.relationship(back_populates="workout_plan_exercise")
 
+    # Voor cardio
+    duration_minutes: so.Mapped[Optional[float]] = so.mapped_column(nullable=True)
+    distance_km: so.Mapped[Optional[float]] = so.mapped_column(nullable=True)
+
     def __repr__(self):
         """String-representatie van het WorkoutPlanExercise-object."""
         return f'<WorkoutPlanExercise {self.exercise_id} in {self.workout_plan_id}>'
+
+    @property
+    def is_cardio(self):
+        """Check of deze workout plan exercise cardio is"""
+        return self.exercise.is_cardio if self.exercise else False
 
 class ExerciseLog(db.Model):
     """
@@ -468,6 +482,11 @@ class SetLog(db.Model):
     set_number: so.Mapped[int] = so.mapped_column(nullable=False)
     reps: so.Mapped[int] = so.mapped_column(nullable=False)
     weight: so.Mapped[float] = so.mapped_column(default=0.0)
+
+    # Voor cardio
+    duration_minutes: so.Mapped[Optional[float]] = so.mapped_column(nullable=True)
+    distance_km: so.Mapped[Optional[float]] = so.mapped_column(nullable=True)
+
     completed: so.Mapped[bool] = so.mapped_column(default=False)
     created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     completed_at: so.Mapped[Optional[datetime]] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
@@ -498,6 +517,18 @@ class SetLog(db.Model):
             'completed_at': self.completed_at.isoformat() if self.completed_at else None,
             'exercise_name': self.exercise.name if self.exercise else None
         }
+
+    @property
+    def is_cardio(self):
+        """Check of deze set log cardio is"""
+        return self.exercise.is_cardio if self.exercise else False
+
+    # Helper functie om cardio te checken
+    def is_cardio_exercise(category):
+        """
+        Eenvoudige functie om te bepalen of een category cardio is.
+        """
+        return category and category.lower() == 'cardio'
 
 class WorkoutSession(db.Model):
     """
