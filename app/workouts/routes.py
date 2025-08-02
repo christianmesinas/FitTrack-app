@@ -1,3 +1,6 @@
+import os
+import uuid
+
 from flask import render_template, request, jsonify, flash, redirect, url_for, session
 from flask_login import login_required, current_user
 from flask_wtf.csrf import CSRFError
@@ -5,11 +8,13 @@ from markupsafe import escape
 import logging
 import json
 
+from werkzeug.utils import secure_filename
+
 from . import bp as workouts
 from .services import WorkoutService, ExerciseService
 from app.decorators import owns_workout_plan, get_user_workout_plans, fix_image_path, clean_instruction_text, \
     get_workout_data
-from app.forms import WorkoutPlanForm, SearchExerciseForm, ExerciseForm, DeleteExerciseForm
+from app.forms import WorkoutPlanForm, SearchExerciseForm, ExerciseForm, DeleteExerciseForm, AddExerciseForm
 from app.models import WorkoutPlan, Exercise, WorkoutPlanExercise
 from app import db
 
@@ -316,13 +321,13 @@ def search_exercise():
         if form.validate():
             if form.search_term.data:
                 filters['search_term'] = form.search_term.data
-            if form.difficulty.data:
+            if form.difficulty.data and form.difficulty.data != 'NONE':
                 filters['difficulty'] = form.difficulty.data
-            if form.mechanic.data:
+            if form.mechanic.data and form.mechanic.data != 'NONE':
                 filters['mechanic'] = form.mechanic.data
-            if form.equipment.data:
+            if form.equipment.data and form.equipment.data != 'NONE':
                 filters['equipment'] = form.equipment.data
-            if form.category.data:
+            if form.category.data and form.category.data != 'NONE':
                 filters['category'] = form.category.data
 
         query = ExerciseService.search_exercises(**filters)
@@ -332,20 +337,46 @@ def search_exercise():
         pagination = query.paginate(page=page, per_page=10, error_out=False)
         exercises = pagination.items
 
-        # Fix image paths
+        # Fix image paths - Dit is de belangrijke fix
         for exercise in exercises:
-            if exercise.images and exercise.images.startswith('['):
-                try:
-                    images_list = json.loads(exercise.images)
-                    exercise.image_url = fix_image_path(images_list[0])
-                except Exception:
-                    exercise.image_url = fix_image_path(exercise.images)
-            else:
-                exercise.image_url = fix_image_path(exercise.images) if exercise.images else 'default.jpg'
+            try:
+                image_url = None
+                if exercise.images:
+                    # Parse de images JSON
+                    images_list = json.loads(exercise.images) if isinstance(exercise.images, str) else exercise.images
+
+                    # Verwerk de afbeelding-paden
+                    real_images = []
+                    for img in images_list:
+                        if img and img != 'img/exercises/default.jpg' and 'default.jpg' not in img:
+                            # Als het pad al volledig is (begint met img/exercises/), gebruik direct
+                            if img.startswith('img/exercises/'):
+                                real_images.append(img)
+                            # Als het alleen img/ heeft, voeg exercises/ toe
+                            elif img.startswith('img/'):
+                                # img/3_4_Sit-Up/0.jpg -> img/exercises/3_4_Sit-Up/0.jpg
+                                real_images.append(img.replace('img/', 'img/exercises/'))
+                            else:
+                                # Voor paden zonder img/ prefix
+                                real_images.append(f'img/exercises/{img}')
+
+                    # Gebruik de eerste echte afbeelding
+                    if real_images:
+                        image_url = real_images[0]
+
+                # Als we geen echte afbeelding hebben, gebruik placeholder
+                if not image_url:
+                    image_url = 'img/placeholder.png'
+
+                exercise.image_url = image_url
+
+            except (json.JSONDecodeError, IndexError, TypeError) as e:
+                logger.warning(f"Failed to parse images for exercise {exercise.id}: {str(e)}")
+                exercise.image_url = 'img/placeholder.png'
 
         # AJAX-verzoek? -> alleen oefeningen (HTML-fragment)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return render_template('_exercise_items.html', exercises=exercises)
+            return render_template('_exercise_items.html', exercises=exercises, plan_id=plan_id)
 
         return render_template(
             'search_exercise.html',
@@ -367,16 +398,50 @@ def exercise_detail(exercise_id):
     """Toon details van een specifieke oefening."""
     exercise = Exercise.query.get_or_404(exercise_id)
 
-    # Zet de images correct om naar lijst
-    raw_images = exercise.images or []
-    if isinstance(raw_images, str):
-        try:
-            raw_images = json.loads(raw_images)
-        except Exception as e:
-            logger.error(f"Kon images niet parsen: {raw_images} — fout: {e}")
-            raw_images = []
+    # Debug logging
+    logger.debug(f"Exercise {exercise_id}: raw images = {exercise.images}")
 
-    fixed_images = [fix_image_path(img) for img in raw_images]
+    # Verwerk de images van de exercise
+    image_url = None
+    fixed_images = []
+
+    if exercise.images:
+        if isinstance(exercise.images, str):
+            try:
+                raw_images = json.loads(exercise.images)
+            except Exception as e:
+                logger.error(f"Kon images niet parsen: {exercise.images} — fout: {e}")
+                raw_images = []
+        else:
+            raw_images = exercise.images
+
+        logger.debug(f"Exercise {exercise_id}: parsed raw_images = {raw_images}")
+
+        # Verwerk de afbeelding-paden
+        for img in raw_images:
+            if img and img != 'img/exercises/default.jpg' and 'default.jpg' not in img:
+                # Als het pad al volledig is (begint met img/exercises/), gebruik direct
+                if img.startswith('img/exercises/'):
+                    fixed_images.append(img)
+                # Als het alleen img/ heeft, voeg exercises/ toe
+                elif img.startswith('img/'):
+                    # img/3_4_Sit-Up/0.jpg -> img/exercises/3_4_Sit-Up/0.jpg
+                    fixed_images.append(img.replace('img/', 'img/exercises/'))
+                else:
+                    # Voor paden zonder img/ prefix
+                    fixed_images.append(f'img/exercises/{img}')
+
+        logger.debug(f"Exercise {exercise_id}: fixed_images = {fixed_images}")
+
+        # Gebruik de eerste echte afbeelding
+        if fixed_images:
+            image_url = fixed_images[0]
+
+    # Als we geen echte afbeelding hebben, gebruik placeholder
+    if not image_url:
+        image_url = 'img/placeholder.png'
+
+    logger.debug(f"Exercise {exercise_id}: final image_url = {image_url}")
 
     # Parseer instructies
     raw_instructions = exercise.instructions or []
@@ -387,16 +452,22 @@ def exercise_detail(exercise_id):
             logger.error(f"Kon instructies niet parsen: {raw_instructions} — fout: {e}")
             raw_instructions = []
 
-    cleaned_instructions = [clean_instruction_text(step) for step in raw_instructions]
+    # Gebruik clean_instruction_text als beschikbaar, anders gewoon de instructies
+    try:
+        cleaned_instructions = [clean_instruction_text(step) for step in raw_instructions]
+    except NameError:
+        cleaned_instructions = raw_instructions
 
     exercise_dict = {
         'name': exercise.name,
         'images': fixed_images,
+        'image_url': image_url,
         'instructions': cleaned_instructions,
         'level': exercise.level,
         'equipment': exercise.equipment,
         'mechanic': exercise.mechanic,
         'category': exercise.category,
+        'youtube_url': getattr(exercise, 'youtube_url', None),
     }
 
     return render_template('exercise_detail.html', exercise=exercise_dict)
@@ -420,6 +491,108 @@ def archive_workout(plan_id):
         logger.error(f"Error archiving workout: {str(e)}")
         return jsonify({'success': False, 'message': f'Fout bij het archiveren: {str(e)}'}), 500
 
+@workouts.route('/add_new_exercise', methods=['GET', 'POST'])
+@login_required
+def add_new_exercise():
+    """Maak een nieuwe oefening aan."""
+    logger.debug(f"Add new exercise route, user: {current_user.name}, user_id: {current_user.id}")
+    form = AddExerciseForm()
+    plan_id = request.args.get('plan_id', type=int)
+    existing_plans = WorkoutPlan.query.filter_by(user_id=current_user.id, is_archived=False).all()
+
+    if form.validate_on_submit():
+        try:
+            # Genereer een unieke ID voor de oefening
+            exercise_id = str(uuid.uuid4())[:50]
+
+            # Verwerk instructies (als lijst)
+            instructions = form.instructions.data.splitlines() if form.instructions.data else []
+            instructions = [line.strip() for line in instructions if line.strip()]
+
+            # Verwerk afbeeldingen
+            images = []
+            if form.images.data:
+                for file in form.images.data:
+                    if file:
+                        filename = secure_filename(file.filename)
+                        safe_name = secure_filename(form.name.data.replace(" ", "_")) or "unnamed_exercise"
+                        upload_folder = os.path.join('app', 'static', 'img', 'exercises', safe_name)
+                        absolute_upload_folder = os.path.abspath(upload_folder)
+                        os.makedirs(absolute_upload_folder, exist_ok=True)
+                        file_path = os.path.join('img', 'exercises', safe_name, filename)
+                        absolute_file_path = os.path.abspath(os.path.join('app', 'static', file_path))
+                        file.save(absolute_file_path)
+                        images.append(file_path)
+
+            # Verwerk video-upload
+            video_path = None
+            if form.video_file.data:
+                video = form.video_file.data
+                filename = secure_filename(video.filename)
+                safe_name = secure_filename(form.name.data.replace(" ", "_")) or "unnamed_exercise"
+                upload_folder = os.path.join('app', 'static', 'videos', 'exercises', safe_name)
+                absolute_upload_folder = os.path.abspath(upload_folder)
+                os.makedirs(absolute_upload_folder, exist_ok=True)
+                video_path = os.path.join('videos', 'exercises', safe_name, filename)
+                absolute_video_path = os.path.abspath(os.path.join('app', 'static', video_path))
+                video.save(absolute_video_path)
+
+            # Maak nieuwe oefening
+            new_exercise = Exercise(
+                id=exercise_id,
+                name=escape(form.name.data),
+                force=form.force.data if form.force.data != 'NONE' else None,
+                level=form.difficulty.data,
+                mechanic=form.mechanic.data if form.mechanic.data != 'NONE' else None,
+                equipment=form.equipment.data if form.equipment.data != 'NONE' else None,
+                category=form.category.data,
+                instructions=json.dumps(instructions),
+                images=json.dumps(images),
+                is_public=form.is_public.data,
+                user_id=current_user.id if not form.is_public.data else None
+            )
+
+            db.session.add(new_exercise)
+            db.session.commit()
+
+            # Haal workout_plan_id uit formulier of gebruik plan_id
+            workout_plan_id = request.form.get('workout_plan', type=int) or plan_id
+            if workout_plan_id:
+                WorkoutService.add_exercise_to_plan(
+                    plan_id=workout_plan_id,
+                    exercise_id=exercise_id,
+                    sets=3,
+                    reps=10,
+                    weight=0.0,
+                    order=WorkoutPlanExercise.query.filter_by(workout_plan_id=workout_plan_id).count()
+                )
+                flash(f"Oefening '{new_exercise.name}' toegevoegd aan workout-plan!", "success")
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({
+                        'success': True,
+                        'exercise_id': exercise_id,
+                        'message': f"Oefening '{new_exercise.name}' aangemaakt en toegevoegd aan workout-plan"
+                    })
+                return redirect(url_for('workouts.edit_workout', plan_id=workout_plan_id))
+
+            flash(f"Oefening '{new_exercise.name}' succesvol aangemaakt!", "success")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({
+                    'success': True,
+                    'exercise_id': exercise_id,
+                    'message': f"Oefening '{new_exercise.name}' aangemaakt"
+                })
+            return redirect(url_for('workouts.search_exercise', plan_id=plan_id) if plan_id else url_for('workouts.add_workout'))
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Fout bij het aanmaken van oefening: {str(e)}")
+            flash("Er is een fout opgetreden bij het aanmaken van de oefening.", "error")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': False, 'message': str(e)}), 500
+            return render_template('add_exercise.html', form=form, plan_id=plan_id, existing_plans=existing_plans)
+
+    return render_template('add_exercise.html', form=form, plan_id=plan_id, existing_plans=existing_plans)
 
 
 @workouts.route('/archived')

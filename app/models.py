@@ -276,6 +276,9 @@ class Exercise(db.Model):
     category: so.Mapped[str] = so.mapped_column(sa.Enum(Category), index=True)
     instructions: so.Mapped[str] = so.mapped_column(sa.Text)
     images: so.Mapped[str] = so.mapped_column(sa.Text)
+    is_public: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=True)
+    user_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey('user.id'), nullable=True)
+    user: so.Mapped[Optional['User']] = so.relationship('User', backref='exercises')
     primary_muscles: so.WriteOnlyMapped['ExerciseMuscle'] = so.relationship(
         secondary=lambda: exercise_muscle_association,
         primaryjoin=lambda: (exercise_muscle_association.c.exercise_id == Exercise.id) & (exercise_muscle_association.c.is_primary == True),

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="top-bar">
+    {% if plan_id %}
+        <a href="{{ url_for('workouts.edit_workout', plan_id=plan_id) }}">
+<img src="{{ url_for('static', filename='img/back.svg') }}" alt="back button" class="back-icon" aria-label="Go back"/>        </a>
+    {% else %}
+        <a href="{{ url_for('workouts.add_workout') }}">
+<img src="{{ url_for('static', filename='img/back.svg') }}" alt="back button" class="back-icon" aria-label="Go back"/>        </a>
+    {% endif %}
+</div>
+
+<section class="header-section">
+    <div class="workout-name">
+        <h1>Create your own exercise</h1>
+    </div>
+</section>
+
+<section class="form-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        
+        <div class="form-group">
+            {{ form.name.label }} 
+            {{ form.name(class="form-control", id="exerciseName") }}
+            {% for error in form.name.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.difficulty.label }} 
+            {{ form.difficulty(class="form-control", id="difficulty") }}
+            {% for error in form.difficulty.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.mechanic.label }} 
+            {{ form.mechanic(class="form-control", id="mechanic") }}
+            {% for error in form.mechanic.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.category.label }} 
+            {{ form.category(class="form-control", id="category") }}
+            {% for error in form.category.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.equipment.label }} 
+            {{ form.equipment(class="form-control", id="equipment") }}
+            {% for error in form.equipment.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.force.label }} 
+            {{ form.force(class="form-control", id="force") }}
+            {% for error in form.force.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.instructions.label }} 
+            {{ form.instructions(class="form-control", id="instructions", rows=5) }}
+            {% for error in form.instructions.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.images.label }} 
+            {{ form.images(class="form-control-file", id="coverImage", multiple=True) }}
+            {% for error in form.images.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.video_file.label }} 
+            {{ form.video_file(class="form-control-file", id="videoFile") }}
+            {% for error in form.video_file.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            {{ form.video_url.label }} 
+            {{ form.video_url(class="form-control", id="youtube") }}
+            {% for error in form.video_url.errors %}
+                <span class="text-danger">{{ error }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="form-group form-check">
+            {{ form.is_public(class="form-check-input", id="isPublic") }} 
+            {{ form.is_public.label(class="form-check-label") }}
+        </div>
+
+        {{ form.submit(class="orange-btn-outline submit-btn mg-btm-exercise") }}
+    </form>
+</section>
+
+    <script>
+    document.getElementById('coverImage').addEventListener('change', function(e) {
+        const preview = document.createElement('div');
+        preview.className = 'image-preview';
+        Array.from(e.target.files).forEach(file => {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.style.maxWidth = '100px';
+            preview.appendChild(img);
+        });
+        e.target.parentNode.appendChild(preview);
+    });
+
+    document.getElementById('youtube').addEventListener('input', function(e) {
+        const url = e.target.value;
+        if (url && !url.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/)) {
+            e.target.setCustomValidity('Please enter a valid YouTube URL');
+        } else {
+            e.target.setCustomValidity('');
+        }
+    });
+</script>
+
+{% endblock %}

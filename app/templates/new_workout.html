@@ -3,8 +3,7 @@
 {% block content %}
 <div class="top-bar">
     <a href="{{ url_for('main.index') }}">
-        <img src="{{ url_for('static', filename='img/back.svg') }}" alt="Back" class="back-icon">
-    </a>
+<img src="{{ url_for('static', filename='img/back.svg') }}" alt="back button" class="back-icon" aria-label="Go back"/>    </a>
 </div>
 
 <section class="header-section add-workout-blok">
@@ -101,6 +100,7 @@
             {{ form.submit(class="orange-btn-outline add-new-workout-btn") }}
         </section>
     </form>
+</section>
 
 <script>
     // Drag-and-drop functionality
@@ -195,4 +195,5 @@
 
     }
 </script>
+
 {% endblock %}

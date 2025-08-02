@@ -1,6 +1,8 @@
 from flask import flash
 from flask_wtf import FlaskForm
-from wtforms import FieldList, FormField, StringField, FloatField, SelectField, IntegerField, SubmitField, ValidationError
+from flask_wtf.file import FileAllowed, FileField
+from wtforms import BooleanField,MultipleFileField, SelectField, FormField, StringField, FloatField, SelectField, IntegerField, SubmitField, ValidationError
+from wtforms.fields.list import FieldList
 from wtforms.fields.simple import TextAreaField
 from wtforms.validators import DataRequired, Length, NumberRange, Optional
 from wtforms.widgets import Input
@@ -155,6 +157,74 @@ class GoalWeightForm(FlaskForm):
     fitness_goal = FloatField('Streefgewicht (kg)', validators=[DataRequired(), NumberRange(min=30, max=500)])
     submit = SubmitField('Volgende')
 
+class AddExerciseForm(FlaskForm):
+    name = StringField('Naam', validators=[DataRequired(), Length(max=100)])
+    description = TextAreaField('Beschrijving', validators=[Optional()])
+
+    # Kies uit enums - je kan hier je eigen enums of choices overnemen
+    difficulty = SelectField('Moeilijkheid', choices=[
+        ('BEGINNER', 'Beginner'),
+        ('INTERMEDIATE', 'Intermediate'),
+        ('EXPERT', 'Expert')
+    ], validators=[DataRequired()])
+
+    mechanic = SelectField('Mechaniek', choices=[
+        ('COMPOUND', 'Compound'),
+        ('ISOLATION', 'Isolation'),
+        ('NONE', 'Geen')
+    ], validators=[Optional()])
+
+    category = SelectField('Categorie', choices=[
+        ('CARDIO', 'Cardio'),
+        ('OLYMPIC_WEIGHTLIFTING', 'Olympic Weightlifting'),
+        ('PLYOMETRICS', 'Plyometrics'),
+        ('POWERLIFTING', 'Powerlifting'),
+        ('STRENGTH', 'Strength'),
+        ('STRETCHING', 'Stretching'),
+        ('STRONGMAN', 'Strongman')
+    ], validators=[DataRequired()])
+
+    equipment = SelectField('Apparatuur', choices=[
+        ('BANDS', 'Resistance Bands'),
+        ('BARBELL', 'Barbell'),
+        ('BODY_ONLY', 'Bodyweight'),
+        ('CABLE', 'Cable'),
+        ('DUMBBELL', 'Dumbbell'),
+        ('EXERCISE_BALL', 'Exercise Ball'),
+        ('E_Z_CURL_BAR', 'EZ Curl Bar'),
+        ('FOAM_ROLL', 'Foam Roll'),
+        ('KETTLEBELLS', 'Kettlebell'),
+        ('MACHINE', 'Machine'),
+        ('MEDICINE_BALL', 'Medicine Ball'),
+        ('OTHER', 'Other')
+    ], validators=[Optional()])
+
+    force = SelectField('Kracht-type', choices=[
+        ('PUSH', 'Push'),
+        ('PULL', 'Pull'),
+        ('STATIC', 'Static'),
+        ('NONE', 'Geen')
+    ], validators=[Optional()])
+
+    # Meerdere instructies, één per regel
+    instructions = TextAreaField('Instructies (één per regel)', validators=[Optional()])
+
+    # Meerdere afbeeldingen uploaden
+    images = MultipleFileField('Afbeeldingen uploaden', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Alleen afbeeldingen toegestaan!')
+    ])
+
+    # Video upload (optioneel)
+    video_file = FileField('Upload video (mp4/webm)', validators=[
+        FileAllowed(['mp4', 'webm'], 'Alleen mp4 of webm videobestanden toegestaan!')
+    ])
+
+    # Youtube link (optioneel)
+    video_url = StringField('YouTube video URL', validators=[Optional(), Length(max=300)])
+
+    is_public = BooleanField('Publiek zichtbaar', default=True)
+
+    submit = SubmitField('Oefening toevoegen')
 
 class SearchExerciseForm(FlaskForm):
     """

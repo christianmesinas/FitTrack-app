@@ -1,4 +1,7 @@
+import json
 import logging
+import os
+
 from flask import Flask, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -49,6 +52,17 @@ def create_app(config_class=Config):
 
     # Initialiseer Flask-Session voor server-side sessiebeheer
     Session(app)
+
+    # Registreer de from_json filter
+    def from_json_filter(data):
+        return json.loads(data) if data else []
+
+    app.jinja_env.filters['from_json'] = from_json_filter
+
+    # Maak upload-mappen
+    os.makedirs(os.path.abspath(os.path.join('app', 'static', 'img', 'exercises')), exist_ok=True)
+    os.makedirs(os.path.abspath(os.path.join('app', 'static', 'videos', 'exercises')), exist_ok=True)
+
 
     # Initialiseer extensies met de app
     db.init_app(app)        # Database-ORM

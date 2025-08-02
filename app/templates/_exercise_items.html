@@ -1,21 +1,19 @@
-{% for exercise in exercises %}
-            <a href="{{ url_for('workouts.exercise_detail', exercise_id=exercise.id) }}" class="exercise-block-link search-exercise-link">
-
-    <section class="exercise-block ">
-                    <h2>{{ exercise.name }}</h2>
-
-            <div class="exercise-block-content exercise-search-content">
-{% if exercise.image_url %}
-    <img class="exercise-block-img" src="{{ url_for('static', filename='img/exercises/' + exercise.image_url) }}" alt="{{ exercise.name }}">
+{% if not exercises %}
+    <p>Geen oefeningen gevonden. <a href="{{ url_for('workouts.add_new_exercise', plan_id=plan_id|default(0)) }}">Maak een nieuwe oefening aan</a>.</p>
 {% else %}
-    <img class="exercise-block-img" src="/static/img/exercises/default.jpg" alt="{{ exercise.name }}">
+    {% for exercise in exercises %}
+        <a href="{{ url_for('workouts.exercise_detail', exercise_id=exercise.id) }}" class="exercise-block-link search-exercise-link">
+            <section class="exercise-block">
+                <h2>{{ exercise.name }}</h2>
+                <div class="exercise-block-content exercise-search-content">
+                    {% if exercise.image_url and exercise.image_url != 'img/exercises/default.jpg' %}
+                        <img class="exercise-block-img " src="{{ url_for('static', filename=exercise.image_url) }}" alt="{{ exercise.name }}">
+                    {% else %}
+                        <img class="exercise-block-img " src="{{ url_for('static', filename='img/exercises/default.jpg') }}" alt="{{ exercise.name }}">
+                    {% endif %}
+                </div>
+                <a href="#" class="add-exercise" data-exercise-id="{{ exercise.id }}" data-next="{{ request.args.get('next', request.referrer) }}">+</a>
+            </section>
+        </a>
+    {% endfor %}
 {% endif %}
-
-
-
-            </div>
-<a href="#" class="add-exercise" data-exercise-id="{{ exercise.id }}" data-next="{{ request.args.get('next', request.referrer) }}">+</a>
-    </section>
-                    </a>
-
-{% endfor %}

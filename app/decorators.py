@@ -16,19 +16,30 @@ def check_onboarding_status(user):
     return None  # Onboarding is klaar
 
 def fix_image_path(path):
-    #    Normaliseer bestandspaden voor afbeeldingen met regex.
+    """Normaliseer bestandspaden voor afbeeldingen met regex."""
+    if not path:
+        return 'img/exercises/default.jpg'
+
+    # Strip ongewenste tekens
     path = path.strip().strip('"').strip("'")
 
-    # Verwijder eventueel voorafgaande mappen zoals img/exercises/
-    path = re.sub(r'^(img/)?exercises/', '', path)
+    # Verwijder alleen app/static/ of static/ voorvoegsels
+    if path.startswith('app/static/'):
+        path = path.replace('app/static/', '')
+    elif path.startswith('static/'):
+        path = path.replace('static/', '')
 
-    # getallen als folders
+    # Getallen als folders (bijv. 123/123_filename.jpg -> 123_filename.jpg)
     path = re.sub(r'(\d+)/(\d+_[^/]+)', r'\1_\2', path)
-    # twee tekstfolders
-    path = re.sub(r'([^/]+)/([^/]+)/(\d+\.jpg)', r'\1_\2/\3', path)
-    # verwijder haakjes
+
+    # Twee tekstfolders (bijv. folder1/folder2/123.jpg -> folder1_folder2/123.jpg)
+    path = re.sub(r'([^/]+)/([^/]+)/(\d+\.(?:jpg|jpeg|png|gif))', r'\1_\2/\3', path)
+
+    # Verwijder haakjes
     path = re.sub(r'\(([^)]+)\)', r'\1', path)
-    return path
+
+    # Als het pad leeg is of ongeldig, gebruik standaardafbeelding
+    return path if path and path.startswith('img/exercises/') else 'img/exercises/default.jpg'
 
 def clean_instruction_text(text):
     #Reinig instructietekst door speciale tekens te vervangen.

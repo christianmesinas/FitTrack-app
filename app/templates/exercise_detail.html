@@ -15,55 +15,56 @@
 
         <section class="single-exercise-page">
             <h2>Afbeelding</h2>
-  {% if exercise.images %}
-      <div>
-       <img class="single-exercise-img" src="{{ url_for('static', filename='img/exercises/' + exercise.images[0]) }}" alt="{{ exercise.name }}">
-  <img class="single-exercise-img" src="{{ url_for('static', filename='img/exercises/' + exercise.images[1]) }}" alt="{{ exercise.name }}">
-      </div>
 
+         {% if exercise.images and exercise.images|length > 0 %}
+    {% for image in exercise.images %}
+        <div>
+            <img class="single-exercise-img" src="{{ url_for('static', filename=image) }}" alt="{{ exercise.name }} afbeelding {{ loop.index }}">
+        </div>
+    {% endfor %}
 {% else %}
-  <img class="single-exercise-img" src="{{ url_for('static', filename='img/placeholder.png') }}" alt="{{ exercise.name }}">
+    <img class="single-exercise-img" src="{{ url_for('static', filename='img/placeholder.png') }}" alt="{{ exercise.name }}">
 {% endif %}
 
+
             <h2>Instructies</h2>
-<ol class="single-exercise-instructions">
-  {% for step in exercise.instructions %}
-    <li>{{ step }}</li>
-  {% endfor %}
-</ol>
+            <ol class="single-exercise-instructions">
+                {% for step in exercise.instructions %}
+                    <li>{{ step }}</li>
+                {% endfor %}
+            </ol>
 
-        <h2>Video tutorial</h2>
-<a class="orange-btn-outline watch-video-btn"
-   href="https://www.youtube.com/results?search_query={{ exercise.name | replace(' ', '+') }}+exercise"
-   target="_blank" rel="noopener noreferrer">
-    Zoek op YouTube
-</a>
-
-            <h2>Difficulty</h2>
-            <ul class="exercise-labels-list">
-                <li>{{ exercise.level|capitalize }}</li>
-            </ul>
-
-         <h2>Mechanic</h2>
-<ul class="exercise-labels-list">
-    <li>{{ exercise.mechanic|capitalize }}</li>
-</ul>
-
-<h2>Category</h2>
-<ul class="exercise-labels-list">
-    <li>{{ exercise.category|capitalize }}</li>
-</ul>
-
-<h2>Equipment</h2>
-<ul class="exercise-labels-list">
-    <li>{{ exercise.equipment|capitalize }}</li>
-</ul>
-
+            <h2>Video tutorial</h2>
             {% if exercise.youtube_url %}
                 <a href="{{ exercise.youtube_url }}" class="orange-btn-outline watch-video-btn" target="_blank" rel="noopener noreferrer">
                     Watch video tutorial
                 </a>
             {% endif %}
+            <a class="orange-btn-outline watch-video-btn"
+               href="https://www.youtube.com/results?search_query={{ exercise.name | replace(' ', '+') }}+exercise"
+               target="_blank" rel="noopener noreferrer">
+                Zoek op YouTube
+            </a>
+
+            <h2>Difficulty</h2>
+            <ul class="exercise-labels-list">
+                <li>{{ exercise.level|capitalize if exercise.level else 'Onbekend' }}</li>
+            </ul>
+
+            <h2>Mechanic</h2>
+            <ul class="exercise-labels-list">
+                <li>{{ exercise.mechanic|capitalize if exercise.mechanic else 'Onbekend' }}</li>
+            </ul>
+
+            <h2>Category</h2>
+            <ul class="exercise-labels-list">
+                <li>{{ exercise.category|capitalize if exercise.category else 'Onbekend' }}</li>
+            </ul>
+
+            <h2>Equipment</h2>
+            <ul class="exercise-labels-list">
+                <li>{{ exercise.equipment|capitalize if exercise.equipment else 'Geen' }}</li>
+            </ul>
         </section>
     {% else %}
         <p>Je moet ingelogd zijn om deze pagina te bekijken.</p>

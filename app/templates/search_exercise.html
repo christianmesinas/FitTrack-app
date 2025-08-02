@@ -10,6 +10,7 @@
 
 <div class="workout-name">
     <h1>Add exercise</h1>
+<a href="{{ url_for('workouts.add_new_exercise', plan_id=plan_id|default(0)) }}" class="btn btn-primary">Maak nieuwe Exercise</a>
 </div>
 
 <form class="filter-form" method="GET" id="filter-form">
@@ -33,6 +34,7 @@
     <div class="form-group-buttons">
         <button type="submit" class="orange-btn-outline add-new-workout-btn">{{ form.submit.label.text }}</button>
         <a href="{{ url_for('workouts.search_exercise', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Reset Filters</a>
+       <a href="{{ url_for('workouts.add_new_exercise', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Maak nieuwe Exercise</a>
         <a href="{{ url_for('workouts.edit_workout', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Terug naar Workout</a>
     </div>
 </form>

@@ -21,3 +21,8 @@ class Config:
     AUTH0_CALLBACK_URL = os.getenv('AUTH0_CALLBACK_URL')
 
     DEBUG = True
+
+    UPLOAD_FOLDER = os.path.abspath(os.path.join('app', 'static', 'img', 'exercises'))
+    VIDEO_UPLOAD_FOLDER = os.path.abspath(os.path.join('app', 'static', 'videos', 'exercises'))
+    ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'mp4', 'webm'}
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024
