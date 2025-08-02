@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}FitTrack - Actieve Workout{% endblock %}
 {% block content %}
-    <form method="POST" action="{{ url_for('main.save_workout', plan_id=workout_plan.id) }}" id="save-workout-form">
+    <form method="POST" action="{{ url_for('sessions.save_workout', plan_id=workout_plan.id) }}" id="save-workout-form">
         {{ form.csrf_token }}
         <div class="top-bar">
             <a href="{{ url_for('main.index') }}">
@@ -45,7 +45,7 @@
                     <div class="active-workout-button-section">
                         <a href="#" class="orange-btn-outline active-workout-btn" data-action="add">Add set</a>
                         <a href="#" class="orange-btn-outline active-workout-btn" data-action="complete">Complete all</a>
-                        <a href="{{ url_for('main.exercise_detail', exercise_id=wpe.exercise.id) }}" class="orange-btn active-workout-btn">Details</a>
+                        <a href="{{ url_for('workouts.exercise_detail', exercise_id=wpe.exercise.id) }}" class="orange-btn active-workout-btn">Details</a>
                     </div>
                 </section>
             {% endfor %}
@@ -114,7 +114,7 @@
                     console.log('Complete workout response:', data);
                     if (data.success) {
                         alert('Workout succesvol opgeslagen en voltooid!');
-                        window.location.href = '{{ url_for('main.workout_history') }}';
+                        window.location.href = '{{ url_for('profile.workout_history') }}';
                     } else {
                         alert(`Fout bij voltooien: ${data.message}`);
                     }

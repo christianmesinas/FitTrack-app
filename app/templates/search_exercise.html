@@ -32,8 +32,8 @@
     </div>
     <div class="form-group-buttons">
         <button type="submit" class="orange-btn-outline add-new-workout-btn">{{ form.submit.label.text }}</button>
-        <a href="{{ url_for('main.search_exercise', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Reset Filters</a>
-        <a href="{{ url_for('main.edit_workout', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Terug naar Workout</a>
+        <a href="{{ url_for('workouts.search_exercise', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Reset Filters</a>
+        <a href="{{ url_for('workouts.edit_workout', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Terug naar Workout</a>
     </div>
 </form>
 
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 params.set('plan_id', planId);
             }
 
-            fetch(`{{ url_for('main.search_exercise') }}?${params.toString()}`, {
+            fetch(`{{ url_for('workouts.search_exercise') }}?${params.toString()}`, {
                 headers: {
                     "X-Requested-With": "XMLHttpRequest"
                 }
@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const params = new URLSearchParams(window.location.search);
             params.set('page', nextPage);
 
-            fetch(`{{ url_for('main.search_exercise') }}?${params.toString()}`, {
+            fetch(`{{ url_for('workouts.search_exercise') }}?${params.toString()}`, {
                 headers: {
                     "X-Requested-With": "XMLHttpRequest"
                 }
@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            const baseUrl = "{{ url_for('main.add_exercise_to_workout', plan_id=0, exercise_id=0) }}";
+            const baseUrl = "{{ url_for('workouts.add_exercise_to_workout', plan_id=0, exercise_id=0) }}";
             const url = baseUrl.replace('/0/', `/${planId}/`).replace('/0', `/${exerciseId}`);
 
             fetch(url, {

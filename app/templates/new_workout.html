@@ -97,7 +97,7 @@
                     </div>
                 </section>
             {% endfor %}
-            <a href="{{ url_for('main.search_exercise', plan_id=0) }}" class="second-grey-cta-btn">Add exercise</a>
+            <a href="{{ url_for('workouts.search_exercise', plan_id=0) }}" class="second-grey-cta-btn">Add exercise</a>
             {{ form.submit(class="orange-btn-outline add-new-workout-btn") }}
         </section>
     </form>

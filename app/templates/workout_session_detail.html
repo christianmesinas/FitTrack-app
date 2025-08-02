@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="top-bar">
-    <a href="{{ url_for('main.workout_history') }}">
+    <a href="{{ url_for('profile.workout_history') }}">
         <img src="{{ url_for('static', filename='img/back.svg') }}" alt="Terug knop" class="back-icon"/>
     </a>
 </div>
@@ -50,7 +50,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
-                    <a href="{{ url_for('main.exercise_detail', exercise_id=group.exercise.id) }}" class="btn btn-outline-secondary">Details</a>
+                    <a href="{{ url_for('workouts.exercise_detail', exercise_id=group.exercise.id) }}" class="btn btn-outline-secondary">Details</a>
                 </div>
             </div>
         {% endfor %}

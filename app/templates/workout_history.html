@@ -39,7 +39,7 @@
                     </div>
                 </div>
 
-                <a href="{{ url_for('main.workout_session_detail', session_id=session.id) }}" class="orange-btn-outline">
+                <a href="{{ url_for('sessions.workout_session_detail', session_id=session.id) }}" class="orange-btn-outline">
                     Bekijk Details
                 </a>
             </div>
@@ -47,7 +47,7 @@
 
         <div class="pagination">
             {% if sessions.has_prev %}
-                <a href="{{ url_for('main.workout_history', page=sessions.prev_num) }}" class="pagination-btn">← Vorige</a>
+                <a href="{{ url_for('profile.workout_history', page=sessions.prev_num) }}" class="pagination-btn">← Vorige</a>
             {% endif %}
 
             <span class="pagination-info">
@@ -55,7 +55,7 @@
             </span>
 
             {% if sessions.has_next %}
-                <a href="{{ url_for('main.workout_history', page=sessions.next_num) }}" class="pagination-btn">Volgende →</a>
+                <a href="{{ url_for('profile.workout_history', page=sessions.next_num) }}" class="pagination-btn">Volgende →</a>
             {% endif %}
         </div>
     {% else %}
