@@ -3,6 +3,7 @@
 {% block content %}
     <form method="POST" action="{{ url_for('sessions.save_workout', plan_id=workout_plan.id) }}" id="save-workout-form">
         {{ form.csrf_token }}
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <div class="top-bar">
             <a href="{{ url_for('main.index') }}">
                 <img src="{{ url_for('static', filename='img/back.svg') }}" alt="Terug knop" class="back-icon"/>
@@ -15,32 +16,31 @@
         </section>
         <section class="exercise-blok-section mg-btm-exercise">
             {% for wpe in exercises %}
-                <section class="active-workout-block active-workout-in-plan" data-wpe-id="{{ wpe.id }}">
+                <section class="active-workout-block active-workout-in-plan" data-wpe-id="{{ wpe.id }}" data-session-id="{{ session_id }}" data-is-cardio="{{ wpe.exercise.is_cardio|lower }}">
                     <h2>{{ wpe.exercise.name }}</h2>
                     <section class="set-section">
-{% if wpe.exercise.is_cardio %}
-    <!-- Cardio style block -->
-    <div class="active-workout-set">
-        <input type="number" name="duration_{{ wpe.id }}_0" min="0.1" step="0.1" placeholder="{{ wpe.duration_minutes or 'Duur (min)' }}" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
-        <input type="number" name="distance_{{ wpe.id }}_0" min="0" step="0.1" placeholder="{{ wpe.distance_km or 'Afstand (km)' }}" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
-        <label class="custom-checkbox">
-            <input type="checkbox" name="completed_{{ wpe.id }}_0">
-            <span class="checkmark"></span>
-        </label>
-    </div>
-{% else %}
-    {% for set_num in range(wpe.sets) %}
-        <div class="active-workout-set">
-            <input type="number" name="reps_{{ wpe.id }}_{{ set_num }}" min="0" step="1" placeholder="{{ wpe.reps }} reps" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-            <input type="number" name="weight_{{ wpe.id }}_{{ set_num }}" min="0" step="0.1" placeholder="{{ wpe.weight }} KG" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
-            <label class="custom-checkbox">
-                <input type="checkbox" name="completed_{{ wpe.id }}_{{ set_num }}">
-                <span class="checkmark"></span>
-            </label>
-        </div>
-    {% endfor %}
-{% endif %}
-
+                        {% if wpe.exercise.is_cardio %}
+                            <!-- Cardio style block -->
+                            <div class="active-workout-set">
+                                <input type="number" name="duration_{{ wpe.id }}_0" min="0.1" step="0.1" placeholder="{{ wpe.duration_minutes or 'Duur (min)' }}" class="set-input duration-input" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
+                                <input type="number" name="distance_{{ wpe.id }}_0" min="0" step="0.1" placeholder="{{ wpe.distance_km or 'Afstand (km)' }}" class="set-input distance-input" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
+                                <label class="custom-checkbox">
+                                    <input type="checkbox" name="completed_{{ wpe.id }}_0">
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                        {% else %}
+                            {% for set_num in range(wpe.sets) %}
+                                <div class="active-workout-set">
+                                    <input type="number" name="reps_{{ wpe.id }}_{{ set_num }}" min="0" step="1" placeholder="{{ wpe.reps or 'reps' }}" class="set-input reps-input" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                                    <input type="number" name="weight_{{ wpe.id }}_{{ set_num }}" min="0" step="0.1" placeholder="{{ wpe.weight or 'KG' }}" class="set-input weight-input" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
+                                    <label class="custom-checkbox">
+                                        <input type="checkbox" name="completed_{{ wpe.id }}_{{ set_num }}">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
                     </section>
                     <div class="active-workout-button-section">
                         <a href="#" class="orange-btn-outline active-workout-btn" data-action="add">Add set</a>
@@ -57,7 +57,7 @@
     <script>
         const saveCompleteBtn = document.getElementById('save-complete-workout-btn');
         if (saveCompleteBtn) {
-            saveCompleteBtn.addEventListener('click', function() {
+            saveCompleteBtn.addEventListener('click', function () {
                 const planId = this.getAttribute('data-plan-id');
                 const csrfToken = document.querySelector('input[name="csrf_token"]').value;
                 const form = document.getElementById('save-workout-form');
@@ -67,7 +67,7 @@
                 console.log('Form data entries:', [...formData.entries()]);
 
                 // Step 1: Save workout
-                fetch(`/save_workout/${planId}`, {
+                fetch(`/sessions/save_workout/${planId}`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-Token': csrfToken
@@ -91,11 +91,12 @@
                     }
                     // Step 2: Complete workout
                     console.log(`Completing workout for plan_id: ${planId}`);
-                    return fetch(`/complete_workout/${planId}`, {
+                    return fetch(`/sessions/complete_workout/${planId}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-Token': csrfToken
+                            'X-CSRF-Token': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest'
                         },
                         body: JSON.stringify({})
                     });
@@ -126,6 +127,51 @@
             });
         } else {
             console.error('Save and complete workout button not found');
+        }
+
+        const saveBtn = document.getElementById('save-workout-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function () {
+                const planId = this.getAttribute('data-plan-id');
+                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+                const form = document.getElementById('save-workout-form');
+                const formData = new FormData(form);
+
+                console.log(`Saving workout progress for plan_id: ${planId}, CSRF: ${csrfToken}`);
+                console.log('Form data entries:', [...formData.entries()]);
+
+                fetch(`/sessions/save_workout/${planId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': csrfToken
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    console.log(`Save workout response status: ${response.status}`);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('Save workout response text:', text);
+                            throw new Error(`Save workout failed! Status: ${response.status}, Response: ${text}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Save workout response:', data);
+                    if (data.success) {
+                        alert('Vooruitgang succesvol opgeslagen!');
+                    } else {
+                        alert(`Fout bij opslaan: ${data.message}`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(`Er ging iets mis: ${error.message}`);
+                });
+            });
+        } else {
+            console.error('Save workout button not found');
         }
     </script>
 {% endblock %}

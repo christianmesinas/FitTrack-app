@@ -392,7 +392,7 @@ def search_exercise():
         return redirect(url_for('workouts.edit_workout', plan_id=plan_id))
 
 
-@workouts.route('/exercise/<int:exercise_id>')
+@workouts.route('/exercise/<exercise_id>')
 @login_required
 def exercise_detail(exercise_id):
     """Toon details van een specifieke oefening."""
