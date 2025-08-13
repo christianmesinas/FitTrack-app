@@ -11,7 +11,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <section class="header-section">
-  <form method="POST" action="{{ url_for('main.edit_workout', plan_id=workout_plan.id) }}" class="add-workout-form" id="main-workout-form">
+  <form method="POST" action="{{ url_for('workouts.edit_workout', plan_id=workout_plan.id) }}" class="add-workout-form" id="main-workout-form">
     {{ form.hidden_tag() }}
 
     <div class="workout-name">
@@ -87,7 +87,7 @@
         <p>Je hebt nog geen oefeningen toegevoegd.</p>
       {% endif %}
 
-      <a href="{{ url_for('main.search_exercise', plan_id=workout_plan.id) }}" class="second-grey-cta-btn">Add exercise</a>
+      <a href="{{ url_for('workouts.search_exercise', plan_id=workout_plan.id) }}" class="second-grey-cta-btn">Add exercise</a>
       {{ form.submit(value="Update workout", class="orange-btn-outline add-new-workout-btn update-workout-btn") }}
 
       <button class="btn btn-warning orange-btn-outline add-new-workout-btn archive-workout-btn"
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
             this.disabled = true;
             this.textContent = '⏳ Archiveren...';
 
-            fetch(`/archive_workout/${workoutId}`, {
+            fetch(`/workouts/${workoutId}/archive`, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({})

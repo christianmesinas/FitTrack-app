@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers['X-CSRFToken'] = csrfToken;
             }
 
-            fetch(`/archive_workout/${workoutId}`, {
+            fetch(`/workouts/${workoutId}/archive`, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({})
