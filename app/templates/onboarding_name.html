@@ -12,7 +12,7 @@
             {% endif %}
         {% endwith %}
 
-        <form method="POST" action="{{ url_for('main.onboarding_name') }}">
+        <form method="POST" action="{{ url_for('auth.onboarding_name') }}">
             {{ form.hidden_tag() }}
 
             <label for="naam" class="question-label">What is your name?</label>
