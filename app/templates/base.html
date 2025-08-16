@@ -30,8 +30,11 @@
     <nav class="navbar ">
         <a href="{{ url_for('main.index') }}">Home</a>
         <a aria-current="page" href="{{ url_for('profile.profile') }}">Profile</a>
+        <!-- Hardcoded link om de error te vermijden -->
+        <a href="/admin/dashboard" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 500;">
+            Trainer Dashboard
+        </a>
         <a aria-current="page" href="{{ url_for('auth.logout') }}">Logout</a>
-
     </nav>
     {% endif %}
 

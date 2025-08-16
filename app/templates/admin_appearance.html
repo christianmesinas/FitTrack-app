@@ -1,0 +1,976 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Uiterlijk & Thema{% endblock %}
+
+{% block extra_css %}
+<style>
+    .appearance-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .theme-selector {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .theme-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .theme-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .theme-card.selected {
+        border-color: var(--primary-color);
+    }
+
+    .theme-card.selected::after {
+        content: '';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 24px;
+        height: 24px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .theme-card.selected::before {
+        content: '✓';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: white;
+        font-weight: bold;
+        z-index: 1;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .theme-preview {
+        height: 150px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .theme-preview.dark {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    }
+
+    .theme-preview.blue {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .theme-preview.green {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    }
+
+    .theme-preview.purple {
+        background: linear-gradient(135deg, #8e2de2 0%, #4a00e0 100%);
+    }
+
+    .theme-preview-elements {
+        padding: 1rem;
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .preview-element {
+        width: 40px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+    }
+
+    .preview-element.long {
+        width: 80px;
+    }
+
+    .preview-sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 60px;
+        background: rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-info {
+        padding: 1rem;
+    }
+
+    .theme-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .theme-description {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .color-customizer {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .color-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .color-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .color-label {
+        font-size: 14px;
+        color: var(--text-primary);
+        flex: 1;
+    }
+
+    .color-input-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .color-picker {
+        width: 40px;
+        height: 40px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        overflow: hidden;
+        padding: 0;
+    }
+
+    .color-code {
+        width: 100px;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 13px;
+        font-family: monospace;
+    }
+
+    .logo-uploader {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .logo-preview-area {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+        margin-top: 1.5rem;
+    }
+
+    .logo-preview {
+        width: 150px;
+        height: 150px;
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-primary);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .logo-preview img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    .logo-placeholder {
+        text-align: center;
+        color: var(--text-light);
+    }
+
+    .logo-placeholder i {
+        font-size: 48px;
+        margin-bottom: 0.5rem;
+    }
+
+    .logo-placeholder p {
+        font-size: 13px;
+    }
+
+    .logo-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .font-selector {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .font-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .font-card {
+        padding: 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .font-card:hover {
+        border-color: var(--primary-color);
+    }
+
+    .font-card.selected {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: var(--primary-color);
+    }
+
+    .font-preview {
+        font-size: 18px;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .font-name {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .layout-options {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .layout-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .layout-option {
+        text-align: center;
+    }
+
+    .layout-preview {
+        width: 100%;
+        height: 120px;
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        margin-bottom: 0.5rem;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .layout-preview:hover {
+        border-color: var(--primary-color);
+    }
+
+    .layout-preview.selected {
+        border-color: var(--primary-color);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .layout-sidebar-left {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 30%;
+        background: var(--text-light);
+        opacity: 0.2;
+    }
+
+    .layout-sidebar-right {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 30%;
+        background: var(--text-light);
+        opacity: 0.2;
+    }
+
+    .layout-content {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        left: 35%;
+        background: var(--text-light);
+        opacity: 0.1;
+    }
+
+    .layout-content.full {
+        left: 0;
+    }
+
+    .layout-name {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .preview-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .live-preview {
+        margin-top: 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+        height: 400px;
+        position: relative;
+    }
+
+    .preview-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: var(--bg-primary);
+    }
+
+    .custom-css-editor {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .code-editor {
+        margin-top: 1.5rem;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .code-textarea {
+        width: 100%;
+        min-height: 200px;
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        resize: vertical;
+    }
+
+    .code-textarea:focus {
+        outline: none;
+    }
+
+    .reset-section {
+        background: rgba(239, 68, 68, 0.05);
+        border: 2px solid rgba(239, 68, 68, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .reset-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--danger-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .reset-description {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .theme-selector {
+            grid-template-columns: 1fr;
+        }
+
+        .color-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .logo-preview-area {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="appearance-container">
+    <div class="page-header">
+        <h1 class="page-title">Uiterlijk & Personalisatie</h1>
+        <div class="breadcrumb">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+            <span>Uiterlijk</span>
+        </div>
+    </div>
+
+    <!-- Theme Selection -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Kies een Thema</h3>
+        </div>
+        
+        <div class="theme-selector">
+            <div class="theme-card selected" onclick="selectTheme('default')">
+                <div class="theme-preview blue">
+                    <div class="preview-sidebar"></div>
+                    <div class="theme-preview-elements">
+                        <div class="preview-element"></div>
+                        <div class="preview-element long"></div>
+                        <div class="preview-element"></div>
+                        <div class="preview-element"></div>
+                        <div class="preview-element long"></div>
+                    </div>
+                </div>
+                <div class="theme-info">
+                    <div class="theme-name">Professional Blue</div>
+                    <div class="theme-description">Moderne blauwe kleuren met professionele uitstraling</div>
+                </div>
+            </div>
+
+            <div class="theme-card" onclick="selectTheme('dark')">
+                <div class="theme-preview dark">
+                    <div class="preview-sidebar"></div>
+                    <div class="theme-preview-elements">
+                        <div class="preview-element"></div>
+                        <div class="preview-element long"></div>
+                        <div class="preview-element"></div>
+                        <div class="preview-element"></div>
+                        <div class="preview-element long"></div>
+                    </div>
+                </div>
+                <div class="theme-info">
+                    <div class="theme-name">Dark Mode</div>
+                    <div class="theme-description">Donker thema voor minder oogvermoeidheid</div>
+                </div>
+            </div>
+
+            <div class="theme-card" onclick="selectTheme('green')">
+                <div class="theme-preview green">
+                    <div class="preview-sidebar"></div>
+                    <div class="theme-preview-elements">
+                        <div class="preview-element"></div>
+                        <div class="preview-element long"></div>
+                        <div class="preview-element"></div>
+                        <div class="preview-element"></div>
+                        <div class="preview-element long"></div>
+                    </div>
+                </div>
+                <div class="theme-info">
+                    <div class="theme-name">Nature Green</div>
+                    <div class="theme-description">Frisse groene tinten voor een natuurlijke look</div>
+                </div>
+            </div>
+
+            <div class="theme-card" onclick="selectTheme('purple')">
+                <div class="theme-preview purple">
+                    <div class="preview-sidebar"></div>
+                    <div class="theme-preview-elements">
+                        <div class="preview-element"></div>
+                        <div class="preview-element long"></div>
+                        <div class="preview-element"></div>
+                        <div class="preview-element"></div>
+                        <div class="preview-element long"></div>
+                    </div>
+                </div>
+                <div class="theme-info">
+                    <div class="theme-name">Royal Purple</div>
+                    <div class="theme-description">Elegante paarse kleuren voor een luxe gevoel</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Customization -->
+    <div class="color-customizer">
+        <h3 class="card-title">Kleuren Aanpassen</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0.5rem;">
+            Pas de kleuren van je dashboard aan naar je eigen huisstijl
+        </p>
+        
+        <div class="color-grid">
+            <div class="color-item">
+                <span class="color-label">Primaire Kleur</span>
+                <div class="color-input-wrapper">
+                    <input type="color" class="color-picker" value="#6366f1" id="primaryColor" onchange="updateColor('primary', this.value)">
+                    <input type="text" class="color-code" value="#6366f1" id="primaryColorCode">
+                </div>
+            </div>
+            
+            <div class="color-item">
+                <span class="color-label">Secundaire Kleur</span>
+                <div class="color-input-wrapper">
+                    <input type="color" class="color-picker" value="#22d3ee" id="secondaryColor" onchange="updateColor('secondary', this.value)">
+                    <input type="text" class="color-code" value="#22d3ee">
+                </div>
+            </div>
+            
+            <div class="color-item">
+                <span class="color-label">Accent Kleur</span>
+                <div class="color-input-wrapper">
+                    <input type="color" class="color-picker" value="#f59e0b" id="accentColor" onchange="updateColor('accent', this.value)">
+                    <input type="text" class="color-code" value="#f59e0b">
+                </div>
+            </div>
+            
+            <div class="color-item">
+                <span class="color-label">Succes Kleur</span>
+                <div class="color-input-wrapper">
+                    <input type="color" class="color-picker" value="#10b981" id="successColor" onchange="updateColor('success', this.value)">
+                    <input type="text" class="color-code" value="#10b981">
+                </div>
+            </div>
+            
+            <div class="color-item">
+                <span class="color-label">Waarschuwing Kleur</span>
+                <div class="color-input-wrapper">
+                    <input type="color" class="color-picker" value="#f59e0b" id="warningColor" onchange="updateColor('warning', this.value)">
+                    <input type="text" class="color-code" value="#f59e0b">
+                </div>
+            </div>
+            
+            <div class="color-item">
+                <span class="color-label">Gevaar Kleur</span>
+                <div class="color-input-wrapper">
+                    <input type="color" class="color-picker" value="#ef4444" id="dangerColor" onchange="updateColor('danger', this.value)">
+                    <input type="text" class="color-code" value="#ef4444">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logo Upload -->
+    <div class="logo-uploader">
+        <h3 class="card-title">Bedrijfslogo</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0.5rem;">
+            Upload je eigen logo dat zichtbaar is voor je klanten
+        </p>
+        
+        <div class="logo-preview-area">
+            <div class="logo-preview" id="logoPreview">
+                <div class="logo-placeholder">
+                    <i class="fas fa-image"></i>
+                    <p>Geen logo geüpload</p>
+                </div>
+            </div>
+            
+            <div class="logo-actions">
+                <label class="btn btn-primary" style="cursor: pointer;">
+                    <i class="fas fa-upload"></i>
+                    Logo Uploaden
+                    <input type="file" accept="image/*" style="display: none;" onchange="uploadLogo(this)">
+                </label>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-crop"></i>
+                    Logo Bijsnijden
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-trash"></i>
+                    Logo Verwijderen
+                </button>
+            </div>
+        </div>
+        
+        <p style="font-size: 12px; color: var(--text-light); margin-top: 1rem;">
+            Aanbevolen: PNG of SVG, minimaal 200x200 pixels, transparante achtergrond
+        </p>
+    </div>
+
+    <!-- Font Selection -->
+    <div class="font-selector">
+        <h3 class="card-title">Lettertype</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0.5rem;">
+            Kies het lettertype voor je dashboard
+        </p>
+        
+        <div class="font-options">
+            <div class="font-card selected" onclick="selectFont('inter')">
+                <div class="font-preview" style="font-family: 'Inter', sans-serif;">
+                    The quick brown fox jumps
+                </div>
+                <div class="font-name">Inter (Standaard)</div>
+            </div>
+            
+            <div class="font-card" onclick="selectFont('roboto')">
+                <div class="font-preview" style="font-family: 'Roboto', sans-serif;">
+                    The quick brown fox jumps
+                </div>
+                <div class="font-name">Roboto</div>
+            </div>
+            
+            <div class="font-card" onclick="selectFont('opensans')">
+                <div class="font-preview" style="font-family: 'Open Sans', sans-serif;">
+                    The quick brown fox jumps
+                </div>
+                <div class="font-name">Open Sans</div>
+            </div>
+            
+            <div class="font-card" onclick="selectFont('montserrat')">
+                <div class="font-preview" style="font-family: 'Montserrat', sans-serif;">
+                    The quick brown fox jumps
+                </div>
+                <div class="font-name">Montserrat</div>
+            </div>
+            
+            <div class="font-card" onclick="selectFont('poppins')">
+                <div class="font-preview" style="font-family: 'Poppins', sans-serif;">
+                    The quick brown fox jumps
+                </div>
+                <div class="font-name">Poppins</div>
+            </div>
+            
+            <div class="font-card" onclick="selectFont('lato')">
+                <div class="font-preview" style="font-family: 'Lato', sans-serif;">
+                    The quick brown fox jumps
+                </div>
+                <div class="font-name">Lato</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Layout Options -->
+    <div class="layout-options">
+        <h3 class="card-title">Dashboard Layout</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0.5rem;">
+            Kies de indeling van je dashboard
+        </p>
+        
+        <div class="layout-grid">
+            <div class="layout-option">
+                <div class="layout-preview selected" onclick="selectLayout('sidebar-left')">
+                    <div class="layout-sidebar-left"></div>
+                    <div class="layout-content"></div>
+                </div>
+                <div class="layout-name">Sidebar Links (Standaard)</div>
+            </div>
+            
+            <div class="layout-option">
+                <div class="layout-preview" onclick="selectLayout('sidebar-right')">
+                    <div class="layout-content" style="left: 0; right: 35%;"></div>
+                    <div class="layout-sidebar-right"></div>
+                </div>
+                <div class="layout-name">Sidebar Rechts</div>
+            </div>
+            
+            <div class="layout-option">
+                <div class="layout-preview" onclick="selectLayout('top-nav')">
+                    <div style="position: absolute; top: 0; left: 0; right: 0; height: 20%; background: var(--text-light); opacity: 0.2;"></div>
+                    <div class="layout-content full" style="top: 25%;"></div>
+                </div>
+                <div class="layout-name">Top Navigatie</div>
+            </div>
+            
+            <div class="layout-option">
+                <div class="layout-preview" onclick="selectLayout('compact')">
+                    <div class="layout-sidebar-left" style="width: 15%;"></div>
+                    <div class="layout-content" style="left: 20%;"></div>
+                </div>
+                <div class="layout-name">Compact</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Preview -->
+    <div class="preview-section">
+        <h3 class="card-title">Live Voorbeeld</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0.5rem;">
+            Bekijk direct hoe je wijzigingen eruit zien
+        </p>
+        
+        <div class="live-preview">
+            <div class="preview-iframe" id="livePreview">
+                <!-- Mini dashboard preview would go here -->
+                <div style="padding: 1rem; height: 100%; display: flex;">
+                    <div style="width: 200px; background: var(--bg-primary); border-right: 1px solid var(--border-color); padding: 1rem;">
+                        <div style="background: var(--primary-color); height: 40px; border-radius: 8px; margin-bottom: 1rem;"></div>
+                        <div style="background: var(--text-light); height: 20px; border-radius: 4px; margin-bottom: 0.5rem; opacity: 0.3;"></div>
+                        <div style="background: var(--text-light); height: 20px; border-radius: 4px; margin-bottom: 0.5rem; opacity: 0.3;"></div>
+                        <div style="background: var(--text-light); height: 20px; border-radius: 4px; margin-bottom: 0.5rem; opacity: 0.3;"></div>
+                    </div>
+                    <div style="flex: 1; padding: 1rem;">
+                        <div style="background: var(--text-light); height: 30px; border-radius: 6px; margin-bottom: 1rem; opacity: 0.2;"></div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                            <div style="background: var(--bg-primary); border: 1px solid var(--border-color); height: 100px; border-radius: 8px;"></div>
+                            <div style="background: var(--bg-primary); border: 1px solid var(--border-color); height: 100px; border-radius: 8px;"></div>
+                            <div style="background: var(--bg-primary); border: 1px solid var(--border-color); height: 100px; border-radius: 8px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom CSS -->
+    <div class="custom-css-editor">
+        <h3 class="card-title">Geavanceerde CSS</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0.5rem;">
+            Voeg je eigen CSS toe voor meer controle over het uiterlijk
+        </p>
+        
+        <div class="code-editor">
+            <textarea class="code-textarea" placeholder="/* Voeg hier je eigen CSS toe */&#10;&#10;.custom-class {&#10;  /* je stijlen */&#10;}"></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button class="btn btn-secondary">
+                <i class="fas fa-eye"></i>
+                Voorbeeld
+            </button>
+            <button class="btn btn-secondary">
+                <i class="fas fa-check"></i>
+                Valideer CSS
+            </button>
+        </div>
+    </div>
+
+    <!-- Reset Options -->
+    <div class="reset-section">
+        <h3 class="reset-title">Reset Instellingen</h3>
+        <p class="reset-description">
+            Herstel alle uiterlijk instellingen naar de standaardwaarden
+        </p>
+        <button class="btn btn-danger" onclick="resetAppearance()">
+            <i class="fas fa-undo"></i>
+            Reset naar Standaard
+        </button>
+    </div>
+
+    <!-- Save Button -->
+    <div style="display: flex; justify-content: flex-end; margin-top: 2rem; gap: 1rem;">
+        <button class="btn btn-secondary" onclick="previewChanges()">
+            <i class="fas fa-eye"></i>
+            Voorbeeld Volledig Scherm
+        </button>
+        <button class="btn btn-primary" onclick="saveAppearance()">
+            <i class="fas fa-save"></i>
+            Wijzigingen Opslaan
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Theme Selection
+    function selectTheme(theme) {
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        event.target.closest('.theme-card').classList.add('selected');
+        
+        // Apply theme colors
+        switch(theme) {
+            case 'dark':
+                document.body.setAttribute('data-theme', 'dark');
+                break;
+            case 'green':
+                document.documentElement.style.setProperty('--primary-color', '#10b981');
+                document.documentElement.style.setProperty('--secondary-color', '#38ef7d');
+                break;
+            case 'purple':
+                document.documentElement.style.setProperty('--primary-color', '#8e2de2');
+                document.documentElement.style.setProperty('--secondary-color', '#4a00e0');
+                break;
+            default:
+                document.body.setAttribute('data-theme', 'light');
+                document.documentElement.style.setProperty('--primary-color', '#6366f1');
+                document.documentElement.style.setProperty('--secondary-color', '#22d3ee');
+        }
+    }
+
+    // Color Updates
+    function updateColor(type, color) {
+        switch(type) {
+            case 'primary':
+                document.documentElement.style.setProperty('--primary-color', color);
+                document.getElementById('primaryColorCode').value = color;
+                break;
+            case 'secondary':
+                document.documentElement.style.setProperty('--secondary-color', color);
+                break;
+            case 'success':
+                document.documentElement.style.setProperty('--success-color', color);
+                break;
+            case 'warning':
+                document.documentElement.style.setProperty('--warning-color', color);
+                break;
+            case 'danger':
+                document.documentElement.style.setProperty('--danger-color', color);
+                break;
+        }
+    }
+
+    // Logo Upload
+    function uploadLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('logoPreview').innerHTML = 
+                    `<img src="${e.target.result}" alt="Logo">`;
+                
+                // Also update the logo in the sidebar
+                localStorage.setItem('trainerLogo', e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Font Selection
+    function selectFont(font) {
+        document.querySelectorAll('.font-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        event.target.closest('.font-card').classList.add('selected');
+        
+        // Apply font
+        let fontFamily = '';
+        switch(font) {
+            case 'roboto':
+                fontFamily = "'Roboto', sans-serif";
+                break;
+            case 'opensans':
+                fontFamily = "'Open Sans', sans-serif";
+                break;
+            case 'montserrat':
+                fontFamily = "'Montserrat', sans-serif";
+                break;
+            case 'poppins':
+                fontFamily = "'Poppins', sans-serif";
+                break;
+            case 'lato':
+                fontFamily = "'Lato', sans-serif";
+                break;
+            default:
+                fontFamily = "'Inter', sans-serif";
+        }
+        document.body.style.fontFamily = fontFamily;
+    }
+
+    // Layout Selection
+    function selectLayout(layout) {
+        document.querySelectorAll('.layout-preview').forEach(preview => {
+            preview.classList.remove('selected');
+        });
+        event.target.closest('.layout-preview').classList.add('selected');
+        
+        // Store layout preference
+        localStorage.setItem('dashboardLayout', layout);
+    }
+
+    // Save Appearance Settings
+    function saveAppearance() {
+        // Save all appearance settings to localStorage
+        const settings = {
+            primaryColor: document.getElementById('primaryColor').value,
+            secondaryColor: document.getElementById('secondaryColor').value,
+            accentColor: document.getElementById('accentColor').value,
+            successColor: document.getElementById('successColor').value,
+            warningColor: document.getElementById('warningColor').value,
+            dangerColor: document.getElementById('dangerColor').value,
+            theme: document.body.getAttribute('data-theme'),
+            customCSS: document.querySelector('.code-textarea').value
+        };
+        
+        localStorage.setItem('appearanceSettings', JSON.stringify(settings));
+        alert('Uiterlijk instellingen succesvol opgeslagen!');
+    }
+
+    // Preview Changes
+    function previewChanges() {
+        // Open preview in new window or modal
+        alert('Volledig scherm voorbeeld wordt geopend...');
+    }
+
+    // Reset Appearance
+    function resetAppearance() {
+        if (confirm('Weet je zeker dat je alle uiterlijk instellingen wilt resetten naar standaard?')) {
+            localStorage.removeItem('appearanceSettings');
+            localStorage.removeItem('trainerLogo');
+            localStorage.removeItem('dashboardLayout');
+            localStorage.removeItem('theme');
+            location.reload();
+        }
+    }
+
+    // Sync color inputs
+    document.querySelectorAll('.color-picker').forEach(picker => {
+        picker.addEventListener('change', function() {
+            const codeInput = this.parentElement.querySelector('.color-code');
+            if (codeInput) {
+                codeInput.value = this.value;
+            }
+        });
+    });
+
+    document.querySelectorAll('.color-code').forEach(codeInput => {
+        codeInput.addEventListener('change', function() {
+            const picker = this.parentElement.querySelector('.color-picker');
+            if (picker && /^#[0-9A-F]{6}$/i.test(this.value)) {
+                picker.value = this.value;
+                const type = picker.id.replace('Color', '').toLowerCase();
+                updateColor(type, this.value);
+            }
+        });
+    });
+</script>
+{% endblock %}

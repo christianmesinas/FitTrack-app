@@ -1,0 +1,950 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Instellingen{% endblock %}
+
+{% block extra_css %}
+<style>
+    .settings-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .settings-nav {
+        display: flex;
+        gap: 0.5rem;
+        padding: 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        overflow-x: auto;
+    }
+
+    .settings-nav-item {
+        padding: 0.75rem 1.5rem;
+        background: none;
+        border: none;
+        border-radius: 8px;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .settings-nav-item:hover {
+        background: var(--bg-primary);
+        color: var(--primary-color);
+    }
+
+    .settings-nav-item.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+
+    .settings-content {
+        display: none;
+    }
+
+    .settings-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .settings-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .section-description {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+
+    .setting-info {
+        flex: 1;
+        margin-right: 2rem;
+    }
+
+    .setting-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .setting-help {
+        font-size: 12px;
+        color: var(--text-light);
+    }
+
+    .toggle-switch {
+        position: relative;
+        width: 48px;
+        height: 24px;
+    }
+
+    .toggle-switch input {
+        display: none;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--text-light);
+        border-radius: 24px;
+        transition: 0.3s;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.3s;
+    }
+
+    input:checked + .toggle-slider {
+        background: var(--primary-color);
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(24px);
+    }
+
+    .notification-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+    }
+
+    .notification-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+
+    .notification-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .notification-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+    }
+
+    .notification-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .notification-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .notification-option {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .notification-option input {
+        width: 16px;
+        height: 16px;
+    }
+
+    .integration-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .integration-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .integration-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .integration-logo {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+    }
+
+    .integration-name {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .integration-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 12px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        margin-bottom: 1rem;
+    }
+
+    .integration-status.connected {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .integration-status.disconnected {
+        background: rgba(148, 163, 184, 0.1);
+        color: var(--text-light);
+    }
+
+    .backup-status {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .backup-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .backup-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .backup-value {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .backup-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .danger-zone {
+        background: rgba(239, 68, 68, 0.05);
+        border: 2px solid rgba(239, 68, 68, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .danger-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--danger-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .danger-description {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .settings-nav {
+            flex-direction: column;
+        }
+
+        .setting-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .setting-info {
+            margin-right: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="page-header">
+        <h1 class="page-title">Instellingen</h1>
+        <div class="breadcrumb">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+            <span>Instellingen</span>
+        </div>
+    </div>
+
+    <!-- Settings Navigation -->
+    <div class="settings-nav">
+        <button class="settings-nav-item active" onclick="switchSettings('general')">
+            <i class="fas fa-cog"></i>
+            Algemeen
+        </button>
+        <button class="settings-nav-item" onclick="switchSettings('notifications')">
+            <i class="fas fa-bell"></i>
+            Notificaties
+        </button>
+        <button class="settings-nav-item" onclick="switchSettings('privacy')">
+            <i class="fas fa-lock"></i>
+            Privacy
+        </button>
+        <button class="settings-nav-item" onclick="switchSettings('integrations')">
+            <i class="fas fa-plug"></i>
+            Integraties
+        </button>
+        <button class="settings-nav-item" onclick="switchSettings('billing')">
+            <i class="fas fa-credit-card"></i>
+            Facturatie
+        </button>
+        <button class="settings-nav-item" onclick="switchSettings('backup')">
+            <i class="fas fa-database"></i>
+            Backup
+        </button>
+    </div>
+
+    <!-- General Settings -->
+    <div class="settings-content active" id="general-settings">
+        <div class="settings-section">
+            <div class="section-header">
+                <h2 class="section-title">Algemene Instellingen</h2>
+                <p class="section-description">Beheer je basis applicatie instellingen</p>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Bedrijfsnaam</div>
+                    <div class="setting-help">Deze naam wordt getoond aan je klanten</div>
+                </div>
+                <input type="text" class="form-input" style="width: 250px;" value="FitPro Training">
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Tijdzone</div>
+                    <div class="setting-help">Wordt gebruikt voor planning en notificaties</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option selected>Europe/Amsterdam (CET)</option>
+                    <option>Europe/London (GMT)</option>
+                    <option>America/New_York (EST)</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Taal</div>
+                    <div class="setting-help">Standaard taal voor de interface</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option selected>Nederlands</option>
+                    <option>English</option>
+                    <option>Deutsch</option>
+                    <option>Français</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Valuta</div>
+                    <div class="setting-help">Voor prijzen en facturatie</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option selected>EUR (€)</option>
+                    <option>USD ($)</option>
+                    <option>GBP (£)</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Week start op</div>
+                    <div class="setting-help">Eerste dag van de week in kalenders</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option selected>Maandag</option>
+                    <option>Zondag</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="section-header">
+                <h2 class="section-title">Sessie Instellingen</h2>
+                <p class="section-description">Standaard waarden voor trainingsessies</p>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Standaard sessieduur</div>
+                    <div class="setting-help">Wordt gebruikt als standaard bij nieuwe boekingen</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option>30 minuten</option>
+                    <option>45 minuten</option>
+                    <option selected>60 minuten</option>
+                    <option>90 minuten</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Buffer tijd tussen sessies</div>
+                    <div class="setting-help">Minimale tijd tussen opeenvolgende sessies</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option>Geen</option>
+                    <option>5 minuten</option>
+                    <option selected>15 minuten</option>
+                    <option>30 minuten</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Annuleringsbeleid</div>
+                    <div class="setting-help">Minimale tijd voor annulering zonder kosten</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option>Geen beleid</option>
+                    <option>12 uur van tevoren</option>
+                    <option selected>24 uur van tevoren</option>
+                    <option>48 uur van tevoren</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Settings -->
+    <div class="settings-content" id="notifications-settings">
+        <div class="settings-section">
+            <div class="section-header">
+                <h2 class="section-title">Email Notificaties</h2>
+                <p class="section-description">Beheer welke emails je wilt ontvangen</p>
+            </div>
+
+            <div class="notification-grid">
+                <div class="notification-card">
+                    <div class="notification-header">
+                        <div class="notification-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color);">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="notification-title">Boekingen</div>
+                    </div>
+                    <div class="notification-options">
+                        <label class="notification-option">
+                            <input type="checkbox" checked>
+                            Nieuwe boekingen
+                        </label>
+                        <label class="notification-option">
+                            <input type="checkbox" checked>
+                            Annuleringen
+                        </label>
+                        <label class="notification-option">
+                            <input type="checkbox">
+                            Wijzigingen
+                        </label>
+                    </div>
+                </div>
+
+                <div class="notification-card">
+                    <div class="notification-header">
+                        <div class="notification-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="notification-title">Klanten</div>
+                    </div>
+                    <div class="notification-options">
+                        <label class="notification-option">
+                            <input type="checkbox" checked>
+                            Nieuwe aanmeldingen
+                        </label>
+                        <label class="notification-option">
+                            <input type="checkbox">
+                            Klant voortgang updates
+                        </label>
+                        <label class="notification-option">
+                            <input type="checkbox" checked>
+                            Berichten van klanten
+                        </label>
+                    </div>
+                </div>
+
+                <div class="notification-card">
+                    <div class="notification-header">
+                        <div class="notification-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="notification-title">Rapporten</div>
+                    </div>
+                    <div class="notification-options">
+                        <label class="notification-option">
+                            <input type="checkbox" checked>
+                            Weekelijkse samenvatting
+                        </label>
+                        <label class="notification-option">
+                            <input type="checkbox">
+                            Maandelijkse rapporten
+                        </label>
+                        <label class="notification-option">
+                            <input type="checkbox">
+                            Prestatie alerts
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="section-header">
+                <h2 class="section-title">Push Notificaties</h2>
+                <p class="section-description">Mobiele app en browser notificaties</p>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Browser notificaties</div>
+                    <div class="setting-help">Ontvang meldingen in je browser</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Geluid bij notificaties</div>
+                    <div class="setting-help">Speel een geluid af bij nieuwe meldingen</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Desktop notificaties</div>
+                    <div class="setting-help">Toon meldingen op je desktop</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Settings -->
+    <div class="settings-content" id="privacy-settings">
+        <div class="settings-section">
+            <div class="section-header">
+                <h2 class="section-title">Privacy & Beveiliging</h2>
+                <p class="section-description">Beheer je privacy en beveiligingsinstellingen</p>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Twee-factor authenticatie</div>
+                    <div class="setting-help">Extra beveiliging voor je account</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Sessie timeout</div>
+                    <div class="setting-help">Automatisch uitloggen na inactiviteit</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option>30 minuten</option>
+                    <option selected>1 uur</option>
+                    <option>2 uur</option>
+                    <option>Nooit</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Profiel zichtbaarheid</div>
+                    <div class="setting-help">Wie kan je profiel bekijken</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option>Alleen ik</option>
+                    <option selected>Mijn klanten</option>
+                    <option>Iedereen</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Data export toestaan</div>
+                    <div class="setting-help">Klanten kunnen hun eigen data exporteren</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="danger-zone">
+            <h3 class="danger-title">Danger Zone</h3>
+            <p class="danger-description">Acties in deze sectie zijn permanent en kunnen niet ongedaan worden gemaakt.</p>
+            
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-danger">
+                    <i class="fas fa-trash"></i>
+                    Account Verwijderen
+                </button>
+                <button class="btn btn-danger">
+                    <i class="fas fa-eraser"></i>
+                    Alle Data Wissen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Integrations Settings -->
+    <div class="settings-content" id="integrations-settings">
+        <div class="settings-section">
+            <div class="section-header">
+                <h2 class="section-title">Verbonden Apps</h2>
+                <p class="section-description">Beheer je externe koppelingen en integraties</p>
+            </div>
+
+            <div class="integration-list">
+                <div class="integration-card">
+                    <div class="integration-logo" style="color: #4285f4;">
+                        <i class="fab fa-google"></i>
+                    </div>
+                    <div class="integration-name">Google Calendar</div>
+                    <div class="integration-status connected">
+                        <i class="fas fa-check-circle"></i>
+                        Verbonden
+                    </div>
+                    <button class="btn btn-secondary" style="width: 100%;">
+                        Instellingen
+                    </button>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-logo" style="color: #1877f2;">
+                        <i class="fab fa-facebook"></i>
+                    </div>
+                    <div class="integration-name">Facebook</div>
+                    <div class="integration-status disconnected">
+                        <i class="fas fa-times-circle"></i>
+                        Niet verbonden
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;">
+                        Verbinden
+                    </button>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-logo" style="color: #e4405f;">
+                        <i class="fab fa-instagram"></i>
+                    </div>
+                    <div class="integration-name">Instagram</div>
+                    <div class="integration-status connected">
+                        <i class="fas fa-check-circle"></i>
+                        Verbonden
+                    </div>
+                    <button class="btn btn-secondary" style="width: 100%;">
+                        Instellingen
+                    </button>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-logo" style="color: #00b489;">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <div class="integration-name">WhatsApp Business</div>
+                    <div class="integration-status disconnected">
+                        <i class="fas fa-times-circle"></i>
+                        Niet verbonden
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;">
+                        Verbinden
+                    </button>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-logo" style="color: #611f69;">
+                        <i class="fab fa-slack"></i>
+                    </div>
+                    <div class="integration-name">Slack</div>
+                    <div class="integration-status disconnected">
+                        <i class="fas fa-times-circle"></i>
+                        Niet verbonden
+                    </div>
+                    <button class="btn btn-primary" style="width: 100%;">
+                        Verbinden
+                    </button>
+                </div>
+
+                <div class="integration-card">
+                    <div class="integration-logo" style="color: #ff4500;">
+                        <i class="fab fa-stripe"></i>
+                    </div>
+                    <div class="integration-name">Stripe</div>
+                    <div class="integration-status connected">
+                        <i class="fas fa-check-circle"></i>
+                        Verbonden
+                    </div>
+                    <button class="btn btn-secondary" style="width: 100%;">
+                        Instellingen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Billing Settings -->
+    <div class="settings-content" id="billing-settings">
+        <div class="settings-section">
+            <div class="section-header">
+                <h2 class="section-title">Facturatie Instellingen</h2>
+                <p class="section-description">Beheer je facturatie en betalingsinstellingen</p>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Automatische facturatie</div>
+                    <div class="setting-help">Stuur automatisch facturen naar klanten</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Facturatie cyclus</div>
+                    <div class="setting-help">Wanneer worden facturen verstuurd</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option>Begin van de maand</option>
+                    <option selected>Einde van de maand</option>
+                    <option>Na elke sessie</option>
+                    <option>Wekelijks</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Betalingstermijn</div>
+                    <div class="setting-help">Dagen waarbinnen betaald moet worden</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option>7 dagen</option>
+                    <option selected>14 dagen</option>
+                    <option>30 dagen</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">BTW percentage</div>
+                    <div class="setting-help">Wordt toegepast op alle facturen</div>
+                </div>
+                <input type="number" class="form-input" style="width: 250px;" value="21" step="0.1">
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Factuur prefix</div>
+                    <div class="setting-help">Prefix voor factuurnummers</div>
+                </div>
+                <input type="text" class="form-input" style="width: 250px;" value="FP-2024-">
+            </div>
+        </div>
+    </div>
+
+    <!-- Backup Settings -->
+    <div class="settings-content" id="backup-settings">
+        <div class="settings-section">
+            <div class="section-header">
+                <h2 class="section-title">Backup & Herstel</h2>
+                <p class="section-description">Beheer je data backups en herstel opties</p>
+            </div>
+
+            <div class="backup-status">
+                <div class="backup-info">
+                    <span class="backup-label">Laatste backup:</span>
+                    <span class="backup-value">Vandaag, 03:00</span>
+                </div>
+                <div class="backup-info">
+                    <span class="backup-label">Backup grootte:</span>
+                    <span class="backup-value">245 MB</span>
+                </div>
+                <div class="backup-info">
+                    <span class="backup-label">Volgende backup:</span>
+                    <span class="backup-value">Morgen, 03:00</span>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Automatische backup</div>
+                    <div class="setting-help">Maak automatisch backups van je data</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Backup frequentie</div>
+                    <div class="setting-help">Hoe vaak worden backups gemaakt</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option selected>Dagelijks</option>
+                    <option>Wekelijks</option>
+                    <option>Maandelijks</option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-label">Backup behouden</div>
+                    <div class="setting-help">Hoeveel backups bewaren</div>
+                </div>
+                <select class="form-select" style="width: 250px;">
+                    <option>7 dagen</option>
+                    <option selected>30 dagen</option>
+                    <option>90 dagen</option>
+                    <option>Onbeperkt</option>
+                </select>
+            </div>
+
+            <div class="backup-actions">
+                <button class="btn btn-primary">
+                    <i class="fas fa-download"></i>
+                    Backup Nu Maken
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-upload"></i>
+                    Backup Herstellen
+                </button>
+                <button class="btn btn-secondary">
+                    <i class="fas fa-cloud-download-alt"></i>
+                    Download Backup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Button -->
+    <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+        <button class="btn btn-primary" onclick="saveSettings()">
+            <i class="fas fa-save"></i>
+            Instellingen Opslaan
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchSettings(section) {
+        // Hide all sections
+        document.querySelectorAll('.settings-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Remove active from all nav items
+        document.querySelectorAll('.settings-nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        
+        // Show selected section
+        document.getElementById(section + '-settings').classList.add('active');
+        
+        // Add active to clicked nav item
+        event.target.closest('.settings-nav-item').classList.add('active');
+    }
+
+    function saveSettings() {
+        // Save settings to backend
+        alert('Instellingen succesvol opgeslagen!');
+    }
+</script>
+{% endblock %}

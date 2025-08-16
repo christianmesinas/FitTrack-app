@@ -1,0 +1,979 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Klanten Beheer{% endblock %}
+
+{% block extra_css %}
+<style>
+    .clients-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card-mini {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-icon-mini {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .stat-info {
+        flex: 1;
+    }
+
+    .stat-value-mini {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .stat-label-mini {
+        font-size: 12px;
+        color: var(--text-light);
+    }
+
+    .clients-toolbar {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+        position: relative;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        background: var(--bg-card);
+        color: var(--text-primary);
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-light);
+    }
+
+    .clients-table-container {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .clients-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .clients-table thead {
+        background: var(--bg-primary);
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .clients-table th {
+        padding: 1rem;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .clients-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.2s;
+    }
+
+    .clients-table tbody tr:hover {
+        background: var(--bg-primary);
+    }
+
+    .clients-table td {
+        padding: 1rem;
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .client-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .client-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        overflow: hidden;
+    }
+
+    .client-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .client-details {
+        flex: 1;
+    }
+
+    .client-name {
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.125rem;
+    }
+
+    .client-email {
+        font-size: 12px;
+        color: var(--text-light);
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .status-badge.active {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .status-badge.inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+
+    .status-badge.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning-color);
+    }
+
+    .progress-bar {
+        width: 100px;
+        height: 6px;
+        background: var(--bg-primary);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        border-radius: 3px;
+    }
+
+    .progress-text {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .action-btn:hover {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .action-btn.danger:hover {
+        background: var(--danger-color);
+        border-color: var(--danger-color);
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .pagination-info {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .pagination-controls {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .page-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+
+    .page-btn:hover:not(:disabled) {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .page-btn.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    /* Client Detail Modal */
+    .client-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .client-modal.active {
+        display: flex;
+    }
+
+    .client-modal-content {
+        background: var(--bg-card);
+        border-radius: 16px;
+        width: 90%;
+        max-width: 900px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .client-modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .client-modal-body {
+        padding: 1.5rem;
+    }
+
+    .client-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+    }
+
+    .client-sidebar {
+        text-align: center;
+    }
+
+    .client-avatar-large {
+        width: 150px;
+        height: 150px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 48px;
+        font-weight: 700;
+        margin: 0 auto 1.5rem;
+    }
+
+    .client-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .client-stat-box {
+        background: var(--bg-primary);
+        padding: 1rem;
+        border-radius: 10px;
+    }
+
+    .client-stat-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .client-stat-label {
+        font-size: 12px;
+        color: var(--text-light);
+        margin-top: 0.25rem;
+    }
+
+    .tabs {
+        display: flex;
+        gap: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+        padding: 0.75rem 1.5rem;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        position: relative;
+        transition: color 0.3s;
+    }
+
+    .tab-btn:hover {
+        color: var(--primary-color);
+    }
+
+    .tab-btn.active {
+        color: var(--primary-color);
+    }
+
+    .tab-btn.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-color);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .info-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .info-value {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    @media (max-width: 768px) {
+        .clients-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .stats-overview {
+            grid-template-columns: 1fr;
+        }
+
+        .clients-table-container {
+            overflow-x: auto;
+        }
+
+        .client-detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .pagination {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="clients-header">
+    <div>
+        <h1 class="page-title">Klanten</h1>
+        <div class="breadcrumb">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+            <span>Klanten</span>
+        </div>
+    </div>
+    
+    <div class="header-actions">
+        <button class="btn btn-secondary" onclick="exportClients()">
+            <i class="fas fa-download"></i>
+            Exporteer
+        </button>
+        <a href="{{ url_for('admin.add_client') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus"></i>
+            Nieuwe Klant
+        </a>
+    </div>
+</div>
+
+<!-- Statistics Overview -->
+<div class="stats-overview">
+    <div class="stat-card-mini">
+        <div class="stat-icon-mini" style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color);">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value-mini">24</div>
+            <div class="stat-label-mini">Totaal Klanten</div>
+        </div>
+    </div>
+    
+    <div class="stat-card-mini">
+        <div class="stat-icon-mini" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value-mini">18</div>
+            <div class="stat-label-mini">Actieve Klanten</div>
+        </div>
+    </div>
+    
+    <div class="stat-card-mini">
+        <div class="stat-icon-mini" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+            <i class="fas fa-user-clock"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value-mini">3</div>
+            <div class="stat-label-mini">Nieuwe Deze Week</div>
+        </div>
+    </div>
+    
+    <div class="stat-card-mini">
+        <div class="stat-icon-mini" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-info">
+            <div class="stat-value-mini">87%</div>
+            <div class="stat-label-mini">Retentie Rate</div>
+        </div>
+    </div>
+</div>
+
+<!-- Toolbar -->
+<div class="clients-toolbar">
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Zoek klanten op naam, email of telefoon...">
+    </div>
+    
+    <select class="filter-select">
+        <option>Alle Statussen</option>
+        <option>Actief</option>
+        <option>Inactief</option>
+        <option>In afwachting</option>
+    </select>
+    
+    <select class="filter-select">
+        <option>Alle Programma's</option>
+        <option>Krachttraining</option>
+        <option>Afvallen</option>
+        <option>Spieropbouw</option>
+        <option>Conditie</option>
+    </select>
+    
+    <button class="btn btn-secondary">
+        <i class="fas fa-filter"></i>
+        Meer Filters
+    </button>
+</div>
+
+<!-- Clients Table -->
+<div class="clients-table-container">
+    <table class="clients-table">
+        <thead>
+            <tr>
+                <th>Klant</th>
+                <th>Status</th>
+                <th>Programma</th>
+                <th>Voortgang</th>
+                <th>Laatste Activiteit</th>
+                <th>Volgende Sessie</th>
+                <th>Acties</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="client-info">
+                        <div class="client-avatar">EV</div>
+                        <div class="client-details">
+                            <div class="client-name">Emma de Vries</div>
+                            <div class="client-email">emma.devries@email.com</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge active">Actief</span>
+                </td>
+                <td>Afvallen</td>
+                <td>
+                    <div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%;"></div>
+                        </div>
+                        <div class="progress-text">75% compleet</div>
+                    </div>
+                </td>
+                <td>2 uur geleden</td>
+                <td>Morgen 10:00</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="action-btn" onclick="viewClient(1)" title="Bekijk">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="editClient(1)" title="Bewerk">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" onclick="messageClient(1)" title="Bericht">
+                            <i class="fas fa-comment"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteClient(1)" title="Verwijder">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr>
+                <td>
+                    <div class="client-info">
+                        <div class="client-avatar" style="background: linear-gradient(135deg, #10b981, #059669);">JJ</div>
+                        <div class="client-details">
+                            <div class="client-name">Jan Jansen</div>
+                            <div class="client-email">j.jansen@email.com</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge active">Actief</span>
+                </td>
+                <td>Spieropbouw</td>
+                <td>
+                    <div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 60%;"></div>
+                        </div>
+                        <div class="progress-text">60% compleet</div>
+                    </div>
+                </td>
+                <td>1 dag geleden</td>
+                <td>Vandaag 14:00</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="action-btn" onclick="viewClient(2)" title="Bekijk">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="editClient(2)" title="Bewerk">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" onclick="messageClient(2)" title="Bericht">
+                            <i class="fas fa-comment"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteClient(2)" title="Verwijder">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr>
+                <td>
+                    <div class="client-info">
+                        <div class="client-avatar" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">LB</div>
+                        <div class="client-details">
+                            <div class="client-name">Lisa Bakker</div>
+                            <div class="client-email">lisa.b@email.com</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge inactive">Inactief</span>
+                </td>
+                <td>Conditie</td>
+                <td>
+                    <div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 30%;"></div>
+                        </div>
+                        <div class="progress-text">30% compleet</div>
+                    </div>
+                </td>
+                <td>1 week geleden</td>
+                <td>-</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="action-btn" onclick="viewClient(3)" title="Bekijk">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="editClient(3)" title="Bewerk">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" onclick="messageClient(3)" title="Bericht">
+                            <i class="fas fa-comment"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteClient(3)" title="Verwijder">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr>
+                <td>
+                    <div class="client-info">
+                        <div class="client-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">MP</div>
+                        <div class="client-details">
+                            <div class="client-name">Mark Peters</div>
+                            <div class="client-email">m.peters@email.com</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge pending">In afwachting</span>
+                </td>
+                <td>Krachttraining</td>
+                <td>
+                    <div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 0%;"></div>
+                        </div>
+                        <div class="progress-text">Nog niet gestart</div>
+                    </div>
+                </td>
+                <td>Nieuw</td>
+                <td>Dinsdag 09:00</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="action-btn" onclick="viewClient(4)" title="Bekijk">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="editClient(4)" title="Bewerk">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" onclick="messageClient(4)" title="Bericht">
+                            <i class="fas fa-comment"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteClient(4)" title="Verwijder">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr>
+                <td>
+                    <div class="client-info">
+                        <div class="client-avatar" style="background: linear-gradient(135deg, #ec4899, #be185d);">SB</div>
+                        <div class="client-details">
+                            <div class="client-name">Sophie van den Berg</div>
+                            <div class="client-email">sophie.vdb@email.com</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <span class="status-badge active">Actief</span>
+                </td>
+                <td>Yoga & Flexibiliteit</td>
+                <td>
+                    <div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 90%;"></div>
+                        </div>
+                        <div class="progress-text">90% compleet</div>
+                    </div>
+                </td>
+                <td>Vandaag</td>
+                <td>Woensdag 18:00</td>
+                <td>
+                    <div class="table-actions">
+                        <button class="action-btn" onclick="viewClient(5)" title="Bekijk">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="action-btn" onclick="editClient(5)" title="Bewerk">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="action-btn" onclick="messageClient(5)" title="Bericht">
+                            <i class="fas fa-comment"></i>
+                        </button>
+                        <button class="action-btn danger" onclick="deleteClient(5)" title="Verwijder">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="pagination">
+        <div class="pagination-info">
+            Toon 1-5 van 24 klanten
+        </div>
+        <div class="pagination-controls">
+            <button class="page-btn" disabled>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">4</button>
+            <button class="page-btn">5</button>
+            <button class="page-btn">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Client Detail Modal -->
+<div class="client-modal" id="clientModal">
+    <div class="client-modal-content">
+        <div class="client-modal-header">
+            <h3 style="font-size: 20px; font-weight: 600;">Klant Details</h3>
+            <button class="modal-close" onclick="closeClientModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="client-modal-body">
+            <div class="client-detail-grid">
+                <div class="client-sidebar">
+                    <div class="client-avatar-large">EV</div>
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 0.5rem;">Emma de Vries</h3>
+                    <p style="color: var(--text-secondary); font-size: 14px;">emma.devries@email.com</p>
+                    <p style="color: var(--text-secondary); font-size: 14px;">+31 6 12345678</p>
+                    
+                    <div class="client-stats-grid">
+                        <div class="client-stat-box">
+                            <div class="client-stat-value">45</div>
+                            <div class="client-stat-label">Workouts</div>
+                        </div>
+                        <div class="client-stat-box">
+                            <div class="client-stat-value">12</div>
+                            <div class="client-stat-label">Weken</div>
+                        </div>
+                        <div class="client-stat-box">
+                            <div class="client-stat-value">8.5</div>
+                            <div class="client-stat-label">Kg verloren</div>
+                        </div>
+                        <div class="client-stat-box">
+                            <div class="client-stat-value">95%</div>
+                            <div class="client-stat-label">Aanwezigheid</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem;">
+                        <button class="btn btn-primary" style="width: 100%; margin-bottom: 0.5rem;">
+                            <i class="fas fa-comment"></i>
+                            Stuur Bericht
+                        </button>
+                        <button class="btn btn-secondary" style="width: 100%;">
+                            <i class="fas fa-calendar"></i>
+                            Plan Sessie
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="switchClientTab('info')">Informatie</button>
+                        <button class="tab-btn" onclick="switchClientTab('progress')">Voortgang</button>
+                        <button class="tab-btn" onclick="switchClientTab('workouts')">Workouts</button>
+                        <button class="tab-btn" onclick="switchClientTab('nutrition')">Voeding</button>
+                        <button class="tab-btn" onclick="switchClientTab('notes')">Notities</button>
+                    </div>
+                    
+                    <div class="tab-content active" id="info-tab">
+                        <div class="info-row">
+                            <span class="info-label">Geboortedatum</span>
+                            <span class="info-value">15 maart 1992</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Geslacht</span>
+                            <span class="info-value">Vrouw</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Lengte</span>
+                            <span class="info-value">168 cm</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Gewicht</span>
+                            <span class="info-value">72 kg</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Doel</span>
+                            <span class="info-value">Afvallen (10 kg)</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Start datum</span>
+                            <span class="info-value">1 september 2024</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Abonnement</span>
+                            <span class="info-value">Premium (3x per week)</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Medische aandachtspunten</span>
+                            <span class="info-value">Knieblessure (rechts)</span>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-content" id="progress-tab">
+                        <!-- Progress charts and data -->
+                        <p>Voortgang grafieken en statistieken</p>
+                    </div>
+                    
+                    <div class="tab-content" id="workouts-tab">
+                        <!-- Assigned workouts -->
+                        <p>Toegewezen workouts en geschiedenis</p>
+                    </div>
+                    
+                    <div class="tab-content" id="nutrition-tab">
+                        <!-- Nutrition plans -->
+                        <p>Voedingsschema's en tracking</p>
+                    </div>
+                    
+                    <div class="tab-content" id="notes-tab">
+                        <!-- Notes and observations -->
+                        <p>Notities en observaties</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function viewClient(id) {
+        document.getElementById('clientModal').classList.add('active');
+    }
+
+    function closeClientModal() {
+        document.getElementById('clientModal').classList.remove('active');
+    }
+
+    function editClient(id) {
+        window.location.href = '{{ url_for("admin.add_client") }}?id=' + id;
+    }
+
+    function messageClient(id) {
+        alert('Bericht functionaliteit voor klant ' + id);
+    }
+
+    function deleteClient(id) {
+        if (confirm('Weet je zeker dat je deze klant wilt verwijderen?')) {
+            alert('Klant verwijderd!');
+        }
+    }
+
+    function exportClients() {
+        alert('Klanten exporteren naar CSV/Excel');
+    }
+
+    function switchClientTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + '-tab').classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.classList.add('active');
+    }
+</script>
+{% endblock %}

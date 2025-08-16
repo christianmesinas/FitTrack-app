@@ -1,0 +1,1201 @@
+{% extends "base_admin.html" %}
+
+{% block title %}{% if client_id %}Klant Bewerken{% else %}Nieuwe Klant{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .add-client-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 3rem;
+        position: relative;
+    }
+
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--border-color);
+        z-index: -1;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: var(--bg-primary);
+        cursor: pointer;
+    }
+
+    .step-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--bg-card);
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: var(--text-secondary);
+        transition: all 0.3s;
+        margin-bottom: 0.5rem;
+    }
+
+    .step.active .step-number {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .step.completed .step-number {
+        background: var(--success-color);
+        border-color: var(--success-color);
+        color: white;
+    }
+
+    .step-title {
+        font-size: 14px;
+        color: var(--text-secondary);
+        text-align: center;
+    }
+
+    .step.active .step-title {
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+
+    .form-section {
+        display: none;
+    }
+
+    .form-section.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-header {
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .section-description {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .photo-upload {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .photo-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 48px;
+        font-weight: 700;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .photo-upload-btn {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .upload-btn {
+        padding: 0.75rem 1.5rem;
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .upload-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .goal-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .goal-card {
+        padding: 1.5rem;
+        background: var(--bg-card);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-align: center;
+    }
+
+    .goal-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-3px);
+    }
+
+    .goal-card.selected {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(34, 211, 238, 0.1));
+        border-color: var(--primary-color);
+    }
+
+    .goal-icon {
+        font-size: 32px;
+        margin-bottom: 0.75rem;
+        color: var(--primary-color);
+    }
+
+    .goal-title {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .goal-description {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .measurements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .measurement-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+
+    .measurement-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .measurement-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--bg-primary);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+    }
+
+    .measurement-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .measurement-inputs {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .health-checklist {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .checklist-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .checklist-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .checklist-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .checklist-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .checklist-label {
+        font-size: 14px;
+        color: var(--text-primary);
+        cursor: pointer;
+    }
+
+    .schedule-builder {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .schedule-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .schedule-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .week-schedule {
+        display: grid;
+        grid-template-columns: 100px repeat(7, 1fr);
+        gap: 0.5rem;
+    }
+
+    .time-slot {
+        font-size: 12px;
+        color: var(--text-secondary);
+        padding: 0.5rem;
+        text-align: right;
+    }
+
+    .day-header {
+        text-align: center;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-primary);
+        padding: 0.5rem;
+        background: var(--bg-primary);
+        border-radius: 8px;
+    }
+
+    .schedule-cell {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 0.5rem;
+        min-height: 60px;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .schedule-cell:hover {
+        border-color: var(--primary-color);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .schedule-cell.booked {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(34, 211, 238, 0.1));
+        border-color: var(--primary-color);
+    }
+
+    .session-info {
+        font-size: 11px;
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+
+    .subscription-plans {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .plan-card {
+        background: var(--bg-card);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .plan-card:hover {
+        border-color: var(--primary-color);
+        transform: translateY(-3px);
+    }
+
+    .plan-card.selected {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(34, 211, 238, 0.05));
+    }
+
+    .plan-popular {
+        position: absolute;
+        top: -10px;
+        right: 10px;
+        background: var(--warning-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .plan-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .plan-price {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .plan-price span {
+        font-size: 14px;
+        color: var(--text-secondary);
+        font-weight: 400;
+    }
+
+    .plan-features {
+        list-style: none;
+        margin-top: 1rem;
+    }
+
+    .plan-feature {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .plan-feature i {
+        color: var(--success-color);
+    }
+
+    .form-navigation {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+        .progress-steps {
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .progress-steps::before {
+            display: none;
+        }
+
+        .photo-upload {
+            flex-direction: column;
+        }
+
+        .measurements-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .week-schedule {
+            grid-template-columns: 60px repeat(7, 1fr);
+            font-size: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="add-client-container">
+    <div class="page-header">
+        <h1 class="page-title">{% if client_id %}Klant Bewerken{% else %}Nieuwe Klant Toevoegen{% endif %}</h1>
+        <div class="breadcrumb">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+            <a href="{{ url_for('admin.clients') }}">Klanten</a>
+            <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+            <span>{% if client_id %}Bewerken{% else %}Nieuwe Klant{% endif %}</span>
+        </div>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+        <div class="step active" onclick="goToStep(1)">
+            <span class="step-number">1</span>
+            <span class="step-title">Persoonlijke Info</span>
+        </div>
+        <div class="step" onclick="goToStep(2)">
+            <span class="step-number">2</span>
+            <span class="step-title">Doelen & Gezondheid</span>
+        </div>
+        <div class="step" onclick="goToStep(3)">
+            <span class="step-number">3</span>
+            <span class="step-title">Metingen</span>
+        </div>
+        <div class="step" onclick="goToStep(4)">
+            <span class="step-number">4</span>
+            <span class="step-title">Planning</span>
+        </div>
+        <div class="step" onclick="goToStep(5)">
+            <span class="step-number">5</span>
+            <span class="step-title">Abonnement</span>
+        </div>
+    </div>
+
+    <form id="clientForm">
+        <!-- Step 1: Personal Information -->
+        <div class="form-section active" id="step1">
+            <div class="card">
+                <div class="section-header">
+                    <h2 class="section-title">Persoonlijke Informatie</h2>
+                    <p class="section-description">Vul de basisgegevens van de klant in</p>
+                </div>
+
+                <div class="photo-upload">
+                    <div class="photo-preview" id="photoPreview">
+                        <span id="initials">JD</span>
+                    </div>
+                    <div class="photo-upload-btn">
+                        <label class="upload-btn">
+                            <i class="fas fa-camera"></i>
+                            Foto Uploaden
+                            <input type="file" accept="image/*" style="display: none;" onchange="previewPhoto(this)">
+                        </label>
+                        <button type="button" class="upload-btn">
+                            <i class="fas fa-user"></i>
+                            Gebruik Initialen
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Voornaam *</label>
+                        <input type="text" class="form-input" required placeholder="John" oninput="updateInitials()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Achternaam *</label>
+                        <input type="text" class="form-input" required placeholder="Doe" oninput="updateInitials()">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-input" required placeholder="john.doe@email.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Telefoon *</label>
+                        <input type="tel" class="form-input" required placeholder="+31 6 12345678">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Geboortedatum *</label>
+                        <input type="date" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Geslacht</label>
+                        <select class="form-select">
+                            <option>Selecteer...</option>
+                            <option>Man</option>
+                            <option>Vrouw</option>
+                            <option>Anders</option>
+                            <option>Zeg ik liever niet</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Adres</label>
+                        <input type="text" class="form-input" placeholder="Straat en huisnummer">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Postcode</label>
+                        <input type="text" class="form-input" placeholder="1234 AB">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Plaats</label>
+                        <input type="text" class="form-input" placeholder="Amsterdam">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Noodcontact</label>
+                        <input type="text" class="form-input" placeholder="Naam en telefoonnummer">
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Notities</label>
+                        <textarea class="form-textarea" placeholder="Eventuele bijzonderheden..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Goals & Health -->
+        <div class="form-section" id="step2">
+            <div class="card">
+                <div class="section-header">
+                    <h2 class="section-title">Doelen & Gezondheid</h2>
+                    <p class="section-description">Selecteer de fitnessdoelen en gezondheidsinformatie</p>
+                </div>
+
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 1rem;">Primair Doel</h3>
+                <div class="goal-cards">
+                    <div class="goal-card" onclick="selectGoal(this)">
+                        <i class="fas fa-weight goal-icon"></i>
+                        <div class="goal-title">Afvallen</div>
+                        <div class="goal-description">Gewichtsverlies & vetverbranding</div>
+                    </div>
+                    
+                    <div class="goal-card" onclick="selectGoal(this)">
+                        <i class="fas fa-dumbbell goal-icon"></i>
+                        <div class="goal-title">Spieropbouw</div>
+                        <div class="goal-description">Kracht & massa winnen</div>
+                    </div>
+                    
+                    <div class="goal-card" onclick="selectGoal(this)">
+                        <i class="fas fa-running goal-icon"></i>
+                        <div class="goal-title">Conditie</div>
+                        <div class="goal-description">Uithoudingsvermogen verbeteren</div>
+                    </div>
+                    
+                    <div class="goal-card" onclick="selectGoal(this)">
+                        <i class="fas fa-heart goal-icon"></i>
+                        <div class="goal-title">Gezondheid</div>
+                        <div class="goal-description">Algemene fitness & welzijn</div>
+                    </div>
+                    
+                    <div class="goal-card" onclick="selectGoal(this)">
+                        <i class="fas fa-child goal-icon"></i>
+                        <div class="goal-title">Flexibiliteit</div>
+                        <div class="goal-description">Mobiliteit & stretching</div>
+                    </div>
+                    
+                    <div class="goal-card" onclick="selectGoal(this)">
+                        <i class="fas fa-trophy goal-icon"></i>
+                        <div class="goal-title">Sport Prestatie</div>
+                        <div class="goal-description">Sportspecifieke training</div>
+                    </div>
+                </div>
+
+                <div class="health-checklist">
+                    <h3 class="checklist-title">Medische Aandachtspunten</h3>
+                    <div class="checklist-items">
+                        <label class="checklist-item">
+                            <input type="checkbox">
+                            <span class="checklist-label">Hartproblemen</span>
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox">
+                            <span class="checklist-label">Hoge bloeddruk</span>
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox">
+                            <span class="checklist-label">Diabetes</span>
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox">
+                            <span class="checklist-label">Gewrichtsproblemen</span>
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox">
+                            <span class="checklist-label">Rugklachten</span>
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox">
+                            <span class="checklist-label">Astma</span>
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox">
+                            <span class="checklist-label">Zwangerschap</span>
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox">
+                            <span class="checklist-label">Recent letsel</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">Medische Details</label>
+                    <textarea class="form-textarea" placeholder="Beschrijf eventuele medische aandachtspunten, medicatie, beperkingen..."></textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Fitnesservaring</label>
+                        <select class="form-select">
+                            <option>Beginner (< 6 maanden)</option>
+                            <option>Intermediate (6 maanden - 2 jaar)</option>
+                            <option>Gevorderd (2+ jaar)</option>
+                            <option>Expert (5+ jaar)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Activiteitsniveau</label>
+                        <select class="form-select">
+                            <option>Zittend (weinig beweging)</option>
+                            <option>Licht actief (1-2x per week)</option>
+                            <option>Matig actief (3-4x per week)</option>
+                            <option>Zeer actief (5+ per week)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Measurements -->
+        <div class="form-section" id="step3">
+            <div class="card">
+                <div class="section-header">
+                    <h2 class="section-title">Metingen & Assessments</h2>
+                    <p class="section-description">Registreer de startmetingen van de klant</p>
+                </div>
+
+                <div class="measurements-grid">
+                    <div class="measurement-card">
+                        <div class="measurement-header">
+                            <div class="measurement-icon">
+                                <i class="fas fa-ruler-vertical"></i>
+                            </div>
+                            <span class="measurement-title">Lengte & Gewicht</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Lengte (cm)</label>
+                            <input type="number" class="form-input" placeholder="175">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gewicht (kg)</label>
+                            <input type="number" class="form-input" step="0.1" placeholder="75.5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Doelgewicht (kg)</label>
+                            <input type="number" class="form-input" step="0.1" placeholder="70.0">
+                        </div>
+                    </div>
+
+                    <div class="measurement-card">
+                        <div class="measurement-header">
+                            <div class="measurement-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <span class="measurement-title">Lichaamssamenstelling</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Vetpercentage (%)</label>
+                            <input type="number" class="form-input" step="0.1" placeholder="22.5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Spiermassa (kg)</label>
+                            <input type="number" class="form-input" step="0.1" placeholder="32.5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">BMI</label>
+                            <input type="number" class="form-input" step="0.1" placeholder="24.5" readonly>
+                        </div>
+                    </div>
+
+                    <div class="measurement-card">
+                        <div class="measurement-header">
+                            <div class="measurement-icon">
+                                <i class="fas fa-tape"></i>
+                            </div>
+                            <span class="measurement-title">Omtrekmetingen (cm)</span>
+                        </div>
+                        <div class="measurement-inputs">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Borst</label>
+                                <input type="number" class="form-input" placeholder="95">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Taille</label>
+                                <input type="number" class="form-input" placeholder="82">
+                            </div>
+                        </div>
+                        <div class="measurement-inputs">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Heupen</label>
+                                <input type="number" class="form-input" placeholder="98">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Arm</label>
+                                <input type="number" class="form-input" placeholder="32">
+                            </div>
+                        </div>
+                        <div class="measurement-inputs">
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Bovenbeen</label>
+                                <input type="number" class="form-input" placeholder="58">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label class="form-label">Kuit</label>
+                                <input type="number" class="form-input" placeholder="38">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="measurement-card">
+                        <div class="measurement-header">
+                            <div class="measurement-icon">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <span class="measurement-title">Fitness Tests</span>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Rustpuls (bpm)</label>
+                            <input type="number" class="form-input" placeholder="65">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Push-ups (max)</label>
+                            <input type="number" class="form-input" placeholder="25">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Plank (seconden)</label>
+                            <input type="number" class="form-input" placeholder="60">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Schedule -->
+        <div class="form-section" id="step4">
+            <div class="card">
+                <div class="section-header">
+                    <h2 class="section-title">Planning & Schema</h2>
+                    <p class="section-description">Stel de trainingsplanning in voor deze klant</p>
+                </div>
+
+                <div class="schedule-builder">
+                    <div class="schedule-header">
+                        <h3 class="schedule-title">Weekplanning</h3>
+                        <button type="button" class="btn btn-secondary">
+                            <i class="fas fa-copy"></i>
+                            Kopieer van template
+                        </button>
+                    </div>
+
+                    <div class="week-schedule">
+                        <div></div>
+                        <div class="day-header">Ma</div>
+                        <div class="day-header">Di</div>
+                        <div class="day-header">Wo</div>
+                        <div class="day-header">Do</div>
+                        <div class="day-header">Vr</div>
+                        <div class="day-header">Za</div>
+                        <div class="day-header">Zo</div>
+
+                        <div class="time-slot">09:00</div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+
+                        <div class="time-slot">10:00</div>
+                        <div class="schedule-cell booked" onclick="toggleSession(this)">
+                            <div class="session-info">PT Sessie</div>
+                        </div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell booked" onclick="toggleSession(this)">
+                            <div class="session-info">PT Sessie</div>
+                        </div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell booked" onclick="toggleSession(this)">
+                            <div class="session-info">PT Sessie</div>
+                        </div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+
+                        <div class="time-slot">14:00</div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+
+                        <div class="time-slot">18:00</div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                        <div class="schedule-cell" onclick="toggleSession(this)"></div>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-top: 2rem;">
+                    <div class="form-group">
+                        <label class="form-label">Startdatum</label>
+                        <input type="date" class="form-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Sessieduur</label>
+                        <select class="form-select">
+                            <option>30 minuten</option>
+                            <option>45 minuten</option>
+                            <option selected>60 minuten</option>
+                            <option>90 minuten</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Trainingslocatie</label>
+                        <select class="form-select">
+                            <option>Gym</option>
+                            <option>Thuis bij klant</option>
+                            <option>Buiten</option>
+                            <option>Online</option>
+                            <option>Wisselend</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Herinnering sturen</label>
+                        <select class="form-select">
+                            <option>1 dag van tevoren</option>
+                            <option>2 uur van tevoren</option>
+                            <option>Beide</option>
+                            <option>Geen</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Subscription -->
+        <div class="form-section" id="step5">
+            <div class="card">
+                <div class="section-header">
+                    <h2 class="section-title">Abonnement & Betaling</h2>
+                    <p class="section-description">Kies het juiste abonnement voor deze klant</p>
+                </div>
+
+                <div class="subscription-plans">
+                    <div class="plan-card" onclick="selectPlan(this)">
+                        <div class="plan-name">Basis</div>
+                        <div class="plan-price">€49<span>/maand</span></div>
+                        <ul class="plan-features">
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                1x per week training
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                Basis voedingsadvies
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                App toegang
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="plan-card selected" onclick="selectPlan(this)">
+                        <span class="plan-popular">Populair</span>
+                        <div class="plan-name">Standaard</div>
+                        <div class="plan-price">€99<span>/maand</span></div>
+                        <ul class="plan-features">
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                2x per week training
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                Gepersonaliseerd voedingsschema
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                App toegang + video's
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                WhatsApp support
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="plan-card" onclick="selectPlan(this)">
+                        <div class="plan-name">Premium</div>
+                        <div class="plan-price">€149<span>/maand</span></div>
+                        <ul class="plan-features">
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                3x per week training
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                Volledig voedingsplan + recepten
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                Alle app features
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                24/7 support
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                Maandelijkse evaluatie
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="plan-card" onclick="selectPlan(this)">
+                        <div class="plan-name">Custom</div>
+                        <div class="plan-price">€...<span>/maand</span></div>
+                        <ul class="plan-features">
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                Aangepast trainingsschema
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                Op maat gemaakte services
+                            </li>
+                            <li class="plan-feature">
+                                <i class="fas fa-check"></i>
+                                Flexibele voorwaarden
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-grid" style="margin-top: 2rem;">
+                    <div class="form-group">
+                        <label class="form-label">Betalingsmethode</label>
+                        <select class="form-select">
+                            <option>Automatische incasso</option>
+                            <option>iDEAL maandelijks</option>
+                            <option>Contant</option>
+                            <option>Factuur</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Betaalfrequentie</label>
+                        <select class="form-select">
+                            <option>Maandelijks</option>
+                            <option>Per kwartaal (5% korting)</option>
+                            <option>Per jaar (10% korting)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Kortingscode</label>
+                        <input type="text" class="form-input" placeholder="Optioneel">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Contractduur</label>
+                        <select class="form-select">
+                            <option>Maandelijks opzegbaar</option>
+                            <option>3 maanden</option>
+                            <option>6 maanden</option>
+                            <option>12 maanden</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <label class="form-label">Opmerkingen</label>
+                    <textarea class="form-textarea" placeholder="Speciale afspraken, kortingen, etc..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="form-navigation">
+            <button type="button" class="btn btn-secondary" onclick="previousStep()" id="prevBtn" style="display: none;">
+                <i class="fas fa-arrow-left"></i>
+                Vorige
+            </button>
+            
+            <div style="margin-left: auto; display: flex; gap: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="saveDraft()">
+                    <i class="fas fa-save"></i>
+                    Concept Opslaan
+                </button>
+                
+                <button type="button" class="btn btn-primary" onclick="nextStep()" id="nextBtn">
+                    Volgende
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                
+                <button type="submit" class="btn btn-primary" id="submitBtn" style="display: none;">
+                    <i class="fas fa-check"></i>
+                    Klant Aanmaken
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentStep = 1;
+    const totalSteps = 5;
+
+    function goToStep(step) {
+        if (step < 1 || step > totalSteps) return;
+        
+        // Hide all sections
+        document.querySelectorAll('.form-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Show selected section
+        document.getElementById('step' + step).classList.add('active');
+        
+        // Update step indicators
+        document.querySelectorAll('.step').forEach((stepEl, index) => {
+            stepEl.classList.remove('active', 'completed');
+            if (index + 1 === step) {
+                stepEl.classList.add('active');
+            } else if (index + 1 < step) {
+                stepEl.classList.add('completed');
+            }
+        });
+        
+        // Update navigation buttons
+        document.getElementById('prevBtn').style.display = step === 1 ? 'none' : 'flex';
+        document.getElementById('nextBtn').style.display = step === totalSteps ? 'none' : 'flex';
+        document.getElementById('submitBtn').style.display = step === totalSteps ? 'flex' : 'none';
+        
+        currentStep = step;
+    }
+
+    function nextStep() {
+        if (currentStep < totalSteps) {
+            goToStep(currentStep + 1);
+        }
+    }
+
+    function previousStep() {
+        if (currentStep > 1) {
+            goToStep(currentStep - 1);
+        }
+    }
+
+    function previewPhoto(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('photoPreview').innerHTML = 
+                    `<img src="${e.target.result}" alt="Client photo">`;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function updateInitials() {
+        const firstName = document.querySelector('input[placeholder="John"]').value;
+        const lastName = document.querySelector('input[placeholder="Doe"]').value;
+        const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+        document.getElementById('initials').textContent = initials || 'JD';
+    }
+
+    function selectGoal(card) {
+        document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+    }
+
+    function selectPlan(card) {
+        document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+    }
+
+    function toggleSession(cell) {
+        if (cell.classList.contains('booked')) {
+            cell.classList.remove('booked');
+            cell.innerHTML = '';
+        } else {
+            cell.classList.add('booked');
+            cell.innerHTML = '<div class="session-info">PT Sessie</div>';
+        }
+    }
+
+    function saveDraft() {
+        alert('Concept opgeslagen!');
+    }
+
+    // Form submission
+    document.getElementById('clientForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Klant succesvol aangemaakt!');
+        // Redirect to clients page
+        window.location.href = '{{ url_for("admin.clients") }}';
+    });
+</script>
+{% endblock %}

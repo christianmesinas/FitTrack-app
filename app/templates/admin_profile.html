@@ -1,0 +1,790 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Mijn Profiel{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 50%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: rotate(35deg);
+    }
+
+    .profile-info {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .profile-avatar-container {
+        position: relative;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 20px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        font-weight: 700;
+        color: var(--primary-color);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-upload {
+        position: absolute;
+        bottom: -5px;
+        right: -5px;
+        background: white;
+        border: 3px solid var(--primary-color);
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .avatar-upload:hover {
+        transform: scale(1.1);
+    }
+
+    .avatar-upload input {
+        display: none;
+    }
+
+    .profile-details {
+        flex: 1;
+        color: white;
+    }
+
+    .profile-name {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-role {
+        font-size: 16px;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+
+    .profile-stats {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .profile-stat {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .profile-stat-value {
+        font-size: 24px;
+        font-weight: 600;
+    }
+
+    .profile-stat-label {
+        font-size: 14px;
+        opacity: 0.9;
+    }
+
+    .profile-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+        overflow-x: auto;
+    }
+
+    .profile-tab {
+        padding: 1rem 1.5rem;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .profile-tab:hover {
+        color: var(--primary-color);
+    }
+
+    .profile-tab.active {
+        color: var(--primary-color);
+    }
+
+    .profile-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-color);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group.full-width {
+        grid-column: span 2;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .form-helper {
+        font-size: 12px;
+        color: var(--text-light);
+        margin-top: 0.25rem;
+    }
+
+    .certification-list {
+        list-style: none;
+    }
+
+    .certification-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: var(--bg-primary);
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+    }
+
+    .certification-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .certification-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+    }
+
+    .certification-details {
+        flex: 1;
+    }
+
+    .certification-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .certification-date {
+        font-size: 12px;
+        color: var(--text-light);
+    }
+
+    .social-input-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .social-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-secondary);
+    }
+
+    .availability-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+    }
+
+    .day-checkbox {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.75rem;
+        background: var(--bg-primary);
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .day-checkbox:hover {
+        border-color: var(--primary-color);
+    }
+
+    .day-checkbox.selected {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .day-checkbox input {
+        display: none;
+    }
+
+    .day-name {
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .day-abbr {
+        font-size: 10px;
+        opacity: 0.8;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full-width {
+            grid-column: span 1;
+        }
+
+        .profile-info {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .profile-stats {
+            justify-content: center;
+        }
+
+        .availability-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Mijn Profiel</h1>
+    <div class="breadcrumb">
+        <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+        <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+        <span>Profiel</span>
+    </div>
+</div>
+
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="profile-info">
+        <div class="profile-avatar-container">
+            <div class="profile-avatar" id="profileAvatar">
+                JD
+            </div>
+            <label class="avatar-upload">
+                <i class="fas fa-camera" style="color: var(--primary-color);"></i>
+                <input type="file" accept="image/*" onchange="updateAvatar(this)">
+            </label>
+        </div>
+        
+        <div class="profile-details">
+            <h2 class="profile-name">John Doe</h2>
+            <p class="profile-role">Personal Trainer & Voedingscoach</p>
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <span class="profile-stat-value">24</span>
+                    <span class="profile-stat-label">Klanten</span>
+                </div>
+                <div class="profile-stat">
+                    <span class="profile-stat-value">5 jaar</span>
+                    <span class="profile-stat-label">Ervaring</span>
+                </div>
+                <div class="profile-stat">
+                    <span class="profile-stat-value">4.8</span>
+                    <span class="profile-stat-label">Beoordeling</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Tabs -->
+<div class="profile-tabs">
+    <button class="profile-tab active" onclick="switchTab('personal')">
+        <i class="fas fa-user"></i> Persoonlijke Info
+    </button>
+    <button class="profile-tab" onclick="switchTab('professional')">
+        <i class="fas fa-briefcase"></i> Professioneel
+    </button>
+    <button class="profile-tab" onclick="switchTab('social')">
+        <i class="fas fa-share-alt"></i> Social Media
+    </button>
+    <button class="profile-tab" onclick="switchTab('availability')">
+        <i class="fas fa-calendar"></i> Beschikbaarheid
+    </button>
+    <button class="profile-tab" onclick="switchTab('security')">
+        <i class="fas fa-lock"></i> Beveiliging
+    </button>
+</div>
+
+<!-- Tab Contents -->
+<form id="profileForm">
+    <!-- Personal Info Tab -->
+    <div class="tab-content active" id="personal-tab">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Persoonlijke Informatie</h3>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Voornaam</label>
+                    <input type="text" class="form-input" value="John">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Achternaam</label>
+                    <input type="text" class="form-input" value="Doe">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" value="john.doe@fitpro.nl">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Telefoon</label>
+                    <input type="tel" class="form-input" value="+31 6 12345678">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Geboortedatum</label>
+                    <input type="date" class="form-input" value="1990-05-15">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Geslacht</label>
+                    <select class="form-select">
+                        <option value="male" selected>Man</option>
+                        <option value="female">Vrouw</option>
+                        <option value="other">Anders</option>
+                    </select>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">Adres</label>
+                    <input type="text" class="form-input" value="Hoofdstraat 123, 1234 AB Amsterdam">
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">Bio</label>
+                    <textarea class="form-textarea">Gepassioneerde personal trainer met 5 jaar ervaring in krachttraining, cardio en voedingsadvies. Ik help mensen hun fitnessdoelen te bereiken door gepersonaliseerde trainingsschema's en motiverende coaching.</textarea>
+                    <span class="form-helper">Max 500 karakters - Dit wordt getoond aan je klanten</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Tab -->
+    <div class="tab-content" id="professional-tab">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Professionele Informatie</h3>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Specialisaties</label>
+                    <select class="form-select" multiple style="height: 120px;">
+                        <option selected>Krachttraining</option>
+                        <option selected>Cardio</option>
+                        <option>Yoga</option>
+                        <option selected>HIIT</option>
+                        <option>Pilates</option>
+                        <option selected>Voedingsadvies</option>
+                        <option>Revalidatie</option>
+                    </select>
+                    <span class="form-helper">Houd Ctrl ingedrukt om meerdere te selecteren</span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Jaren Ervaring</label>
+                    <input type="number" class="form-input" value="5">
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">Certificeringen</label>
+                    <ul class="certification-list">
+                        <li class="certification-item">
+                            <div class="certification-info">
+                                <div class="certification-icon">
+                                    <i class="fas fa-certificate"></i>
+                                </div>
+                                <div class="certification-details">
+                                    <div class="certification-name">NASM Certified Personal Trainer</div>
+                                    <div class="certification-date">Behaald: Maart 2019</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-danger" style="padding: 0.5rem 1rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </li>
+                        <li class="certification-item">
+                            <div class="certification-info">
+                                <div class="certification-icon">
+                                    <i class="fas fa-certificate"></i>
+                                </div>
+                                <div class="certification-details">
+                                    <div class="certification-name">Voedingscoach Diploma</div>
+                                    <div class="certification-date">Behaald: Juni 2020</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-danger" style="padding: 0.5rem 1rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </li>
+                    </ul>
+                    <button type="button" class="btn btn-secondary">
+                        <i class="fas fa-plus"></i>
+                        Certificaat Toevoegen
+                    </button>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Uurtarief (€)</label>
+                    <input type="number" class="form-input" value="65" step="5">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Groepslessen Tarief (€)</label>
+                    <input type="number" class="form-input" value="25" step="5">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social Media Tab -->
+    <div class="tab-content" id="social-tab">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Social Media Profielen</h3>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label class="form-label">Instagram</label>
+                    <div class="social-input-group">
+                        <div class="social-icon">
+                            <i class="fab fa-instagram"></i>
+                        </div>
+                        <input type="text" class="form-input" placeholder="@gebruikersnaam" value="@johndoe_fitness">
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">Facebook</label>
+                    <div class="social-input-group">
+                        <div class="social-icon">
+                            <i class="fab fa-facebook"></i>
+                        </div>
+                        <input type="url" class="form-input" placeholder="https://facebook.com/..." value="https://facebook.com/johndoefitness">
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">YouTube</label>
+                    <div class="social-input-group">
+                        <div class="social-icon">
+                            <i class="fab fa-youtube"></i>
+                        </div>
+                        <input type="url" class="form-input" placeholder="https://youtube.com/...">
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">LinkedIn</label>
+                    <div class="social-input-group">
+                        <div class="social-icon">
+                            <i class="fab fa-linkedin"></i>
+                        </div>
+                        <input type="url" class="form-input" placeholder="https://linkedin.com/in/...">
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">Website</label>
+                    <div class="social-input-group">
+                        <div class="social-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <input type="url" class="form-input" placeholder="https://..." value="https://johndoefitness.nl">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Availability Tab -->
+    <div class="tab-content" id="availability-tab">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Beschikbaarheid</h3>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Werkdagen</label>
+                <div class="availability-grid">
+                    <label class="day-checkbox selected">
+                        <input type="checkbox" checked>
+                        <span class="day-name">MA</span>
+                        <span class="day-abbr">Maandag</span>
+                    </label>
+                    <label class="day-checkbox selected">
+                        <input type="checkbox" checked>
+                        <span class="day-name">DI</span>
+                        <span class="day-abbr">Dinsdag</span>
+                    </label>
+                    <label class="day-checkbox selected">
+                        <input type="checkbox" checked>
+                        <span class="day-name">WO</span>
+                        <span class="day-abbr">Woensdag</span>
+                    </label>
+                    <label class="day-checkbox selected">
+                        <input type="checkbox" checked>
+                        <span class="day-name">DO</span>
+                        <span class="day-abbr">Donderdag</span>
+                    </label>
+                    <label class="day-checkbox selected">
+                        <input type="checkbox" checked>
+                        <span class="day-name">VR</span>
+                        <span class="day-abbr">Vrijdag</span>
+                    </label>
+                    <label class="day-checkbox">
+                        <input type="checkbox">
+                        <span class="day-name">ZA</span>
+                        <span class="day-abbr">Zaterdag</span>
+                    </label>
+                    <label class="day-checkbox">
+                        <input type="checkbox">
+                        <span class="day-name">ZO</span>
+                        <span class="day-abbr">Zondag</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Starttijd</label>
+                    <input type="time" class="form-input" value="07:00">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Eindtijd</label>
+                    <input type="time" class="form-input" value="20:00">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Sessieduur (minuten)</label>
+                    <input type="number" class="form-input" value="60" step="15">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Pauze tussen sessies (minuten)</label>
+                    <input type="number" class="form-input" value="15" step="5">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Tab -->
+    <div class="tab-content" id="security-tab">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Beveiliging & Wachtwoord</h3>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label class="form-label">Huidig Wachtwoord</label>
+                    <input type="password" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Nieuw Wachtwoord</label>
+                    <input type="password" class="form-input">
+                    <span class="form-helper">Minimaal 8 karakters</span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Bevestig Nieuw Wachtwoord</label>
+                    <input type="password" class="form-input">
+                </div>
+                
+                <div class="form-group full-width">
+                    <label class="form-label">Twee-factor authenticatie</label>
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            <input type="checkbox" style="width: 20px; height: 20px;">
+                            <span>Inschakelen voor extra beveiliging</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Buttons -->
+    <div class="btn-group">
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i>
+            Wijzigingen Opslaan
+        </button>
+        <button type="button" class="btn btn-secondary">
+            <i class="fas fa-times"></i>
+            Annuleren
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Remove active class from all tab buttons
+        document.querySelectorAll('.profile-tab').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + '-tab').classList.add('active');
+        
+        // Add active class to clicked button
+        event.target.closest('.profile-tab').classList.add('active');
+    }
+
+    function updateAvatar(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('profileAvatar').innerHTML = 
+                    `<img src="${e.target.result}" alt="Profile">`;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Toggle day selection
+    document.querySelectorAll('.day-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('click', function() {
+            this.classList.toggle('selected');
+            const input = this.querySelector('input');
+            input.checked = !input.checked;
+        });
+    });
+
+    // Form submission
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        // Here you would send the data to your Flask backend
+        alert('Profiel succesvol bijgewerkt!');
+    });
+</script>
+{% endblock %}

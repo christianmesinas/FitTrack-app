@@ -1,0 +1,911 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Voedingsschema's{% endblock %}
+
+{% block extra_css %}
+<style>
+    .nutrition-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .nutrition-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .nutrition-stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .nutrition-stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+    }
+
+    .nutrition-stat-card.green::before {
+        background: var(--success-color);
+    }
+
+    .nutrition-stat-card.blue::before {
+        background: var(--primary-color);
+    }
+
+    .nutrition-stat-card.orange::before {
+        background: var(--warning-color);
+    }
+
+    .nutrition-stat-card.purple::before {
+        background: #8b5cf6;
+    }
+
+    .nutrition-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 1rem;
+    }
+
+    .nutrition-stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .nutrition-stat-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .plan-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+        overflow-x: auto;
+    }
+
+    .plan-tab {
+        padding: 1rem 1.5rem;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        white-space: nowrap;
+    }
+
+    .plan-tab:hover {
+        color: var(--primary-color);
+    }
+
+    .plan-tab.active {
+        color: var(--primary-color);
+    }
+
+    .plan-tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-color);
+    }
+
+    .meal-plan-container {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 1.5rem;
+    }
+
+    .clients-list {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        height: fit-content;
+    }
+
+    .clients-list-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .clients-search {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    .client-list-items {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .client-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .client-item:hover {
+        background: var(--bg-primary);
+    }
+
+    .client-item.active {
+        background: rgba(99, 102, 241, 0.1);
+        border-left: 3px solid var(--primary-color);
+    }
+
+    .client-avatar-small {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        margin-right: 0.75rem;
+    }
+
+    .client-info-small {
+        flex: 1;
+    }
+
+    .client-name-small {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.125rem;
+    }
+
+    .client-plan-info {
+        font-size: 12px;
+        color: var(--text-light);
+    }
+
+    .meal-plan-content {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+    }
+
+    .meal-plan-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .meal-plan-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .meal-plan-body {
+        padding: 1.5rem;
+    }
+
+    .meal-day {
+        margin-bottom: 2rem;
+    }
+
+    .meal-day:last-child {
+        margin-bottom: 0;
+    }
+
+    .meal-day-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .meal-day-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .meal-day-calories {
+        font-size: 14px;
+        color: var(--text-secondary);
+        background: var(--bg-primary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+    }
+
+    .meals-grid {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .meal-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1rem;
+        display: flex;
+        gap: 1rem;
+    }
+
+    .meal-time {
+        width: 80px;
+        text-align: center;
+        padding: 0.5rem;
+        background: var(--bg-card);
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--primary-color);
+        height: fit-content;
+    }
+
+    .meal-details {
+        flex: 1;
+    }
+
+    .meal-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .meal-ingredients {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+    }
+
+    .meal-macros {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .macro-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 12px;
+    }
+
+    .macro-label {
+        color: var(--text-light);
+    }
+
+    .macro-value {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .meal-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .meal-action-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-card);
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .meal-action-btn:hover {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .add-meal-btn {
+        width: 100%;
+        padding: 1rem;
+        background: var(--bg-primary);
+        border: 2px dashed var(--border-color);
+        border-radius: 12px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-size: 14px;
+    }
+
+    .add-meal-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .nutrition-summary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        margin-top: 1.5rem;
+    }
+
+    .summary-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+
+    .summary-item {
+        text-align: center;
+    }
+
+    .summary-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .summary-label {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+
+    .recipe-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .recipe-modal.active {
+        display: flex;
+    }
+
+    .recipe-modal-content {
+        background: var(--bg-card);
+        border-radius: 16px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    @media (max-width: 1024px) {
+        .meal-plan-container {
+            grid-template-columns: 1fr;
+        }
+
+        .clients-list {
+            display: none;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .nutrition-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="nutrition-header">
+    <div>
+        <h1 class="page-title">Voedingsschema's</h1>
+        <div class="breadcrumb">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+            <span>Voeding</span>
+        </div>
+    </div>
+    
+    <div style="display: flex; gap: 1rem;">
+        <button class="btn btn-secondary" onclick="openRecipeLibrary()">
+            <i class="fas fa-book"></i>
+            Recepten
+        </button>
+        <button class="btn btn-primary" onclick="createMealPlan()">
+            <i class="fas fa-plus"></i>
+            Nieuw Schema
+        </button>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="nutrition-stats">
+    <div class="nutrition-stat-card green">
+        <div class="nutrition-stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+            <i class="fas fa-clipboard-list"></i>
+        </div>
+        <div class="nutrition-stat-value">18</div>
+        <div class="nutrition-stat-label">Actieve Schema's</div>
+    </div>
+    
+    <div class="nutrition-stat-card blue">
+        <div class="nutrition-stat-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color);">
+            <i class="fas fa-utensils"></i>
+        </div>
+        <div class="nutrition-stat-value">245</div>
+        <div class="nutrition-stat-label">Totaal Maaltijden</div>
+    </div>
+    
+    <div class="nutrition-stat-card orange">
+        <div class="nutrition-stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+            <i class="fas fa-fire"></i>
+        </div>
+        <div class="nutrition-stat-value">2150</div>
+        <div class="nutrition-stat-label">Gem. Calorieën/dag</div>
+    </div>
+    
+    <div class="nutrition-stat-card purple">
+        <div class="nutrition-stat-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+            <i class="fas fa-chart-pie"></i>
+        </div>
+        <div class="nutrition-stat-value">40/30/30</div>
+        <div class="nutrition-stat-label">Macro Verdeling %</div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="plan-tabs">
+    <button class="plan-tab active" onclick="switchPlanTab('individual')">
+        <i class="fas fa-user"></i> Individuele Schema's
+    </button>
+    <button class="plan-tab" onclick="switchPlanTab('templates')">
+        <i class="fas fa-file-alt"></i> Templates
+    </button>
+    <button class="plan-tab" onclick="switchPlanTab('library')">
+        <i class="fas fa-pizza-slice"></i> Maaltijd Database
+    </button>
+    <button class="plan-tab" onclick="switchPlanTab('analytics')">
+        <i class="fas fa-chart-bar"></i> Analytics
+    </button>
+</div>
+
+<!-- Main Content -->
+<div class="meal-plan-container">
+    <!-- Clients List -->
+    <div class="clients-list">
+        <div class="clients-list-header">
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 0.75rem;">Klanten</h3>
+            <input type="text" class="clients-search" placeholder="Zoek klant...">
+        </div>
+        
+        <div class="client-list-items">
+            <div class="client-item active">
+                <div class="client-avatar-small">EV</div>
+                <div class="client-info-small">
+                    <div class="client-name-small">Emma de Vries</div>
+                    <div class="client-plan-info">Afvallen - 1800 kcal</div>
+                </div>
+            </div>
+            
+            <div class="client-item">
+                <div class="client-avatar-small" style="background: linear-gradient(135deg, #10b981, #059669);">JJ</div>
+                <div class="client-info-small">
+                    <div class="client-name-small">Jan Jansen</div>
+                    <div class="client-plan-info">Spieropbouw - 2800 kcal</div>
+                </div>
+            </div>
+            
+            <div class="client-item">
+                <div class="client-avatar-small" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">LB</div>
+                <div class="client-info-small">
+                    <div class="client-name-small">Lisa Bakker</div>
+                    <div class="client-plan-info">Onderhoud - 2200 kcal</div>
+                </div>
+            </div>
+            
+            <div class="client-item">
+                <div class="client-avatar-small" style="background: linear-gradient(135deg, #f59e0b, #d97706);">MP</div>
+                <div class="client-info-small">
+                    <div class="client-name-small">Mark Peters</div>
+                    <div class="client-plan-info">Geen schema</div>
+                </div>
+            </div>
+            
+            <div class="client-item">
+                <div class="client-avatar-small" style="background: linear-gradient(135deg, #ec4899, #be185d);">SB</div>
+                <div class="client-info-small">
+                    <div class="client-name-small">Sophie van den Berg</div>
+                    <div class="client-plan-info">Vegetarisch - 2000 kcal</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meal Plan -->
+    <div class="meal-plan-content">
+        <div class="meal-plan-header">
+            <div>
+                <h2 class="meal-plan-title">Voedingsschema - Emma de Vries</h2>
+                <p style="font-size: 14px; color: var(--text-secondary); margin-top: 0.25rem;">
+                    Doel: Afvallen | Start: 1 nov 2024 | Laatst bijgewerkt: 2 dagen geleden
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-secondary" onclick="editPlan()">
+                    <i class="fas fa-edit"></i>
+                    Bewerk
+                </button>
+                <button class="btn btn-secondary" onclick="printPlan()">
+                    <i class="fas fa-print"></i>
+                    Print
+                </button>
+                <button class="btn btn-secondary" onclick="sharePlan()">
+                    <i class="fas fa-share"></i>
+                    Deel
+                </button>
+            </div>
+        </div>
+        
+        <div class="meal-plan-body">
+            <!-- Monday -->
+            <div class="meal-day">
+                <div class="meal-day-header">
+                    <h3 class="meal-day-title">Maandag</h3>
+                    <span class="meal-day-calories">Totaal: 1850 kcal</span>
+                </div>
+                
+                <div class="meals-grid">
+                    <div class="meal-card">
+                        <div class="meal-time">07:30<br>Ontbijt</div>
+                        <div class="meal-details">
+                            <div class="meal-name">Havermout met Bessen en Noten</div>
+                            <div class="meal-ingredients">
+                                50g havermout, 200ml amandelmelk, 100g blauwe bessen, 
+                                15g amandelen, 1 tl honing
+                            </div>
+                            <div class="meal-macros">
+                                <div class="macro-item">
+                                    <span class="macro-label">Calorieën:</span>
+                                    <span class="macro-value">385</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Eiwit:</span>
+                                    <span class="macro-value">12g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Koolh:</span>
+                                    <span class="macro-value">58g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Vet:</span>
+                                    <span class="macro-value">11g</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="meal-actions">
+                            <button class="meal-action-btn" title="Bewerk">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Vervang">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Verwijder">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">10:00<br>Snack</div>
+                        <div class="meal-details">
+                            <div class="meal-name">Griekse Yoghurt met Appel</div>
+                            <div class="meal-ingredients">
+                                150g Griekse yoghurt 0%, 1 middelgrote appel, kaneel
+                            </div>
+                            <div class="meal-macros">
+                                <div class="macro-item">
+                                    <span class="macro-label">Calorieën:</span>
+                                    <span class="macro-value">180</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Eiwit:</span>
+                                    <span class="macro-value">15g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Koolh:</span>
+                                    <span class="macro-value">28g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Vet:</span>
+                                    <span class="macro-value">0.5g</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="meal-actions">
+                            <button class="meal-action-btn" title="Bewerk">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Vervang">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Verwijder">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">13:00<br>Lunch</div>
+                        <div class="meal-details">
+                            <div class="meal-name">Quinoa Salade met Gegrilde Kip</div>
+                            <div class="meal-ingredients">
+                                150g kipfilet, 80g quinoa (gekookt), gemengde groenten, 
+                                1 el olijfolie, citroen dressing
+                            </div>
+                            <div class="meal-macros">
+                                <div class="macro-item">
+                                    <span class="macro-label">Calorieën:</span>
+                                    <span class="macro-value">520</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Eiwit:</span>
+                                    <span class="macro-value">38g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Koolh:</span>
+                                    <span class="macro-value">45g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Vet:</span>
+                                    <span class="macro-value">18g</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="meal-actions">
+                            <button class="meal-action-btn" title="Bewerk">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Vervang">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Verwijder">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">16:00<br>Snack</div>
+                        <div class="meal-details">
+                            <div class="meal-name">Proteïne Shake</div>
+                            <div class="meal-ingredients">
+                                30g whey proteïne, 1 banaan, 200ml water, ijsblokjes
+                            </div>
+                            <div class="meal-macros">
+                                <div class="macro-item">
+                                    <span class="macro-label">Calorieën:</span>
+                                    <span class="macro-value">215</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Eiwit:</span>
+                                    <span class="macro-value">25g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Koolh:</span>
+                                    <span class="macro-value">27g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Vet:</span>
+                                    <span class="macro-value">1g</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="meal-actions">
+                            <button class="meal-action-btn" title="Bewerk">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Vervang">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Verwijder">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="meal-card">
+                        <div class="meal-time">19:00<br>Diner</div>
+                        <div class="meal-details">
+                            <div class="meal-name">Zalm met Zoete Aardappel en Broccoli</div>
+                            <div class="meal-ingredients">
+                                150g zalm, 200g zoete aardappel, 150g broccoli, 
+                                1 tl kokosolie, kruiden
+                            </div>
+                            <div class="meal-macros">
+                                <div class="macro-item">
+                                    <span class="macro-label">Calorieën:</span>
+                                    <span class="macro-value">550</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Eiwit:</span>
+                                    <span class="macro-value">35g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Koolh:</span>
+                                    <span class="macro-value">48g</span>
+                                </div>
+                                <div class="macro-item">
+                                    <span class="macro-label">Vet:</span>
+                                    <span class="macro-value">20g</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="meal-actions">
+                            <button class="meal-action-btn" title="Bewerk">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Vervang">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                            <button class="meal-action-btn" title="Verwijder">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button class="add-meal-btn" onclick="addMeal('monday')">
+                        <i class="fas fa-plus"></i>
+                        Maaltijd Toevoegen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Nutrition Summary -->
+            <div class="nutrition-summary">
+                <h3 class="summary-title">Dagelijkse Voedingswaarden</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-value">1850</div>
+                        <div class="summary-label">Calorieën</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">125g</div>
+                        <div class="summary-label">Eiwitten</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">206g</div>
+                        <div class="summary-label">Koolhydraten</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-value">50g</div>
+                        <div class="summary-label">Vetten</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add more days button -->
+            <button class="btn btn-secondary" style="width: 100%; margin-top: 2rem;" onclick="showMoreDays()">
+                <i class="fas fa-calendar-plus"></i>
+                Toon Volledige Week
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Recipe Modal -->
+<div class="recipe-modal" id="recipeModal">
+    <div class="recipe-modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Maaltijd Toevoegen</h3>
+            <button class="modal-close" onclick="closeRecipeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <!-- Recipe selection form -->
+            <p>Selecteer een maaltijd uit de database of maak een nieuwe aan.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchPlanTab(tab) {
+        document.querySelectorAll('.plan-tab').forEach(t => t.classList.remove('active'));
+        event.target.closest('.plan-tab').classList.add('active');
+        // Load tab content
+    }
+
+    function createMealPlan() {
+        alert('Nieuw voedingsschema maken');
+    }
+
+    function openRecipeLibrary() {
+        alert('Recepten bibliotheek openen');
+    }
+
+    function editPlan() {
+        alert('Schema bewerken');
+    }
+
+    function printPlan() {
+        window.print();
+    }
+
+    function sharePlan() {
+        alert('Schema delen met klant');
+    }
+
+    function addMeal(day) {
+        document.getElementById('recipeModal').classList.add('active');
+    }
+
+    function closeRecipeModal() {
+        document.getElementById('recipeModal').classList.remove('active');
+    }
+
+    function showMoreDays() {
+        alert('Volledige week tonen');
+    }
+
+    // Client selection
+    document.querySelectorAll('.client-item').forEach(item => {
+        item.addEventListener('click', function() {
+            document.querySelectorAll('.client-item').forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+            // Load client meal plan
+        });
+    });
+</script>
+{% endblock %}

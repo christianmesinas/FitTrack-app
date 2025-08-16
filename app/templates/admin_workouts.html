@@ -1,0 +1,881 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Workout Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .workout-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .workout-filters {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .filter-select {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    .workout-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .workout-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s;
+        position: relative;
+    }
+
+    .workout-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .workout-image {
+        width: 100%;
+        height: 180px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .workout-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .workout-image-placeholder {
+        font-size: 48px;
+        color: white;
+        opacity: 0.8;
+    }
+
+    .workout-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .workout-content {
+        padding: 1.5rem;
+    }
+
+    .workout-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .workout-description {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .workout-meta {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .workout-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 13px;
+        color: var(--text-light);
+    }
+
+    .workout-meta-item i {
+        font-size: 14px;
+    }
+
+    .workout-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .workout-tag {
+        padding: 0.25rem 0.75rem;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .workout-actions {
+        display: flex;
+        gap: 0.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .workout-btn {
+        flex: 1;
+        padding: 0.5rem;
+        background: none;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+
+    .workout-btn:hover {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .workout-btn.delete:hover {
+        background: var(--danger-color);
+        border-color: var(--danger-color);
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: var(--bg-card);
+        border-radius: 16px;
+        width: 90%;
+        max-width: 800px;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .modal-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-size: 24px;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    .modal-close:hover {
+        background: var(--border-color);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .exercise-list {
+        list-style: none;
+        margin-top: 1rem;
+    }
+
+    .exercise-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        margin-bottom: 0.75rem;
+        cursor: move;
+    }
+
+    .exercise-item.dragging {
+        opacity: 0.5;
+    }
+
+    .exercise-handle {
+        color: var(--text-light);
+        cursor: move;
+    }
+
+    .exercise-number {
+        width: 30px;
+        height: 30px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .exercise-details {
+        flex: 1;
+    }
+
+    .exercise-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .exercise-info {
+        display: flex;
+        gap: 1rem;
+        font-size: 12px;
+        color: var(--text-light);
+    }
+
+    .exercise-remove {
+        background: none;
+        border: none;
+        color: var(--danger-color);
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+
+    .exercise-remove:hover {
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .add-exercise-btn {
+        width: 100%;
+        padding: 1rem;
+        background: var(--bg-primary);
+        border: 2px dashed var(--border-color);
+        border-radius: 10px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .add-exercise-btn:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-icon {
+        font-size: 64px;
+        color: var(--text-light);
+        margin-bottom: 1rem;
+    }
+
+    .empty-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-description {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .workout-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .workout-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .workout-filters {
+            flex-direction: column;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="workout-header">
+    <div>
+        <h1 class="page-title">Mijn Workouts</h1>
+        <div class="breadcrumb">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+            <span>Workouts</span>
+        </div>
+    </div>
+    
+    <button class="btn btn-primary" onclick="openWorkoutModal()">
+        <i class="fas fa-plus"></i>
+        Nieuwe Workout
+    </button>
+</div>
+
+<!-- Filters -->
+<div class="workout-filters">
+    <select class="filter-select">
+        <option>Alle Categorieën</option>
+        <option>Krachttraining</option>
+        <option>Cardio</option>
+        <option>HIIT</option>
+        <option>Yoga</option>
+        <option>Stretching</option>
+    </select>
+    
+    <select class="filter-select">
+        <option>Alle Niveaus</option>
+        <option>Beginner</option>
+        <option>Intermediate</option>
+        <option>Gevorderd</option>
+    </select>
+    
+    <select class="filter-select">
+        <option>Sorteer op</option>
+        <option>Nieuwste eerst</option>
+        <option>Oudste eerst</option>
+        <option>Meest gebruikt</option>
+        <option>Alfabetisch</option>
+    </select>
+</div>
+
+<!-- Workouts Grid -->
+<div class="workout-grid" id="workoutGrid">
+    <!-- Workout Card 1 -->
+    <div class="workout-card">
+        <div class="workout-image">
+            <i class="fas fa-dumbbell workout-image-placeholder"></i>
+            <span class="workout-badge">Krachttraining</span>
+        </div>
+        <div class="workout-content">
+            <h3 class="workout-title">Full Body Strength</h3>
+            <p class="workout-description">Complete full body workout gericht op kracht en spieropbouw met compound oefeningen.</p>
+            
+            <div class="workout-meta">
+                <span class="workout-meta-item">
+                    <i class="fas fa-clock"></i>
+                    45 min
+                </span>
+                <span class="workout-meta-item">
+                    <i class="fas fa-fire"></i>
+                    350 kcal
+                </span>
+                <span class="workout-meta-item">
+                    <i class="fas fa-layer-group"></i>
+                    8 oefeningen
+                </span>
+            </div>
+            
+            <div class="workout-tags">
+                <span class="workout-tag">Beginner</span>
+                <span class="workout-tag">Gym</span>
+                <span class="workout-tag">Spieropbouw</span>
+            </div>
+            
+            <div class="workout-actions">
+                <button class="workout-btn" onclick="editWorkout(1)">
+                    <i class="fas fa-edit"></i>
+                    Bewerken
+                </button>
+                <button class="workout-btn" onclick="assignWorkout(1)">
+                    <i class="fas fa-user-plus"></i>
+                    Toewijzen
+                </button>
+                <button class="workout-btn delete" onclick="deleteWorkout(1)">
+                    <i class="fas fa-trash"></i>
+                    Verwijder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workout Card 2 -->
+    <div class="workout-card">
+        <div class="workout-image" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <i class="fas fa-running workout-image-placeholder"></i>
+            <span class="workout-badge">HIIT</span>
+        </div>
+        <div class="workout-content">
+            <h3 class="workout-title">HIIT Cardio Blast</h3>
+            <p class="workout-description">Intensieve interval training voor maximale vetverbranding en conditieverbetering.</p>
+            
+            <div class="workout-meta">
+                <span class="workout-meta-item">
+                    <i class="fas fa-clock"></i>
+                    30 min
+                </span>
+                <span class="workout-meta-item">
+                    <i class="fas fa-fire"></i>
+                    450 kcal
+                </span>
+                <span class="workout-meta-item">
+                    <i class="fas fa-layer-group"></i>
+                    6 oefeningen
+                </span>
+            </div>
+            
+            <div class="workout-tags">
+                <span class="workout-tag">Gevorderd</span>
+                <span class="workout-tag">Thuis</span>
+                <span class="workout-tag">Vetverbranding</span>
+            </div>
+            
+            <div class="workout-actions">
+                <button class="workout-btn" onclick="editWorkout(2)">
+                    <i class="fas fa-edit"></i>
+                    Bewerken
+                </button>
+                <button class="workout-btn" onclick="assignWorkout(2)">
+                    <i class="fas fa-user-plus"></i>
+                    Toewijzen
+                </button>
+                <button class="workout-btn delete" onclick="deleteWorkout(2)">
+                    <i class="fas fa-trash"></i>
+                    Verwijder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workout Card 3 -->
+    <div class="workout-card">
+        <div class="workout-image" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+            <i class="fas fa-child workout-image-placeholder"></i>
+            <span class="workout-badge">Yoga</span>
+        </div>
+        <div class="workout-content">
+            <h3 class="workout-title">Morning Yoga Flow</h3>
+            <p class="workout-description">Rustige yoga flow om de dag mee te beginnen, focus op flexibiliteit en balans.</p>
+            
+            <div class="workout-meta">
+                <span class="workout-meta-item">
+                    <i class="fas fa-clock"></i>
+                    20 min
+                </span>
+                <span class="workout-meta-item">
+                    <i class="fas fa-fire"></i>
+                    100 kcal
+                </span>
+                <span class="workout-meta-item">
+                    <i class="fas fa-layer-group"></i>
+                    12 poses
+                </span>
+            </div>
+            
+            <div class="workout-tags">
+                <span class="workout-tag">Beginner</span>
+                <span class="workout-tag">Thuis</span>
+                <span class="workout-tag">Flexibiliteit</span>
+            </div>
+            
+            <div class="workout-actions">
+                <button class="workout-btn" onclick="editWorkout(3)">
+                    <i class="fas fa-edit"></i>
+                    Bewerken
+                </button>
+                <button class="workout-btn" onclick="assignWorkout(3)">
+                    <i class="fas fa-user-plus"></i>
+                    Toewijzen
+                </button>
+                <button class="workout-btn delete" onclick="deleteWorkout(3)">
+                    <i class="fas fa-trash"></i>
+                    Verwijder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workout Card 4 -->
+    <div class="workout-card">
+        <div class="workout-image" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <i class="fas fa-weight workout-image-placeholder"></i>
+            <span class="workout-badge">Upper Body</span>
+        </div>
+        <div class="workout-content">
+            <h3 class="workout-title">Upper Body Power</h3>
+            <p class="workout-description">Focus op bovenlichaam ontwikkeling met nadruk op borst, rug en armen.</p>
+            
+            <div class="workout-meta">
+                <span class="workout-meta-item">
+                    <i class="fas fa-clock"></i>
+                    50 min
+                </span>
+                <span class="workout-meta-item">
+                    <i class="fas fa-fire"></i>
+                    300 kcal
+                </span>
+                <span class="workout-meta-item">
+                    <i class="fas fa-layer-group"></i>
+                    10 oefeningen
+                </span>
+            </div>
+            
+            <div class="workout-tags">
+                <span class="workout-tag">Intermediate</span>
+                <span class="workout-tag">Gym</span>
+                <span class="workout-tag">Hypertrofie</span>
+            </div>
+            
+            <div class="workout-actions">
+                <button class="workout-btn" onclick="editWorkout(4)">
+                    <i class="fas fa-edit"></i>
+                    Bewerken
+                </button>
+                <button class="workout-btn" onclick="assignWorkout(4)">
+                    <i class="fas fa-user-plus"></i>
+                    Toewijzen
+                </button>
+                <button class="workout-btn delete" onclick="deleteWorkout(4)">
+                    <i class="fas fa-trash"></i>
+                    Verwijder
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Workout Modal -->
+<div class="modal" id="workoutModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Nieuwe Workout Maken</h3>
+            <button class="modal-close" onclick="closeWorkoutModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <form id="workoutForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Workout Naam</label>
+                        <input type="text" class="form-input" placeholder="Bijv. Full Body Strength">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Categorie</label>
+                        <select class="form-select">
+                            <option>Krachttraining</option>
+                            <option>Cardio</option>
+                            <option>HIIT</option>
+                            <option>Yoga</option>
+                            <option>Stretching</option>
+                            <option>CrossFit</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Beschrijving</label>
+                        <textarea class="form-textarea" placeholder="Beschrijf de workout..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Niveau</label>
+                        <select class="form-select">
+                            <option>Beginner</option>
+                            <option>Intermediate</option>
+                            <option>Gevorderd</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Duur (minuten)</label>
+                        <input type="number" class="form-input" placeholder="45">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Geschatte Calorieën</label>
+                        <input type="number" class="form-input" placeholder="350">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Locatie</label>
+                        <select class="form-select">
+                            <option>Gym</option>
+                            <option>Thuis</option>
+                            <option>Buiten</option>
+                            <option>Overal</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Thumbnail Afbeelding</label>
+                        <input type="file" class="form-input" accept="image/*">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Oefeningen</label>
+                    <ul class="exercise-list" id="exerciseList">
+                        <li class="exercise-item" draggable="true">
+                            <i class="fas fa-grip-vertical exercise-handle"></i>
+                            <span class="exercise-number">1</span>
+                            <div class="exercise-details">
+                                <div class="exercise-name">Bench Press</div>
+                                <div class="exercise-info">
+                                    <span>4 sets</span>
+                                    <span>8-10 reps</span>
+                                    <span>90 sec rust</span>
+                                </div>
+                            </div>
+                            <button type="button" class="exercise-remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </li>
+                        
+                        <li class="exercise-item" draggable="true">
+                            <i class="fas fa-grip-vertical exercise-handle"></i>
+                            <span class="exercise-number">2</span>
+                            <div class="exercise-details">
+                                <div class="exercise-name">Squats</div>
+                                <div class="exercise-info">
+                                    <span>4 sets</span>
+                                    <span>12 reps</span>
+                                    <span>2 min rust</span>
+                                </div>
+                            </div>
+                            <button type="button" class="exercise-remove">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <button type="button" class="add-exercise-btn" onclick="addExercise()">
+                        <i class="fas fa-plus"></i>
+                        Oefening Toevoegen
+                    </button>
+                </div>
+                
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Workout Opslaan
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeWorkoutModal()">
+                        <i class="fas fa-times"></i>
+                        Annuleren
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Workout Modal -->
+<div class="modal" id="assignModal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Workout Toewijzen aan Klanten</h3>
+            <button class="modal-close" onclick="closeAssignModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Selecteer Klanten</label>
+                <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 10px; padding: 0.5rem;">
+                    <label style="display: flex; align-items: center; padding: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" style="margin-right: 0.75rem;">
+                        <span>Emma de Vries</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" style="margin-right: 0.75rem;">
+                        <span>Jan Jansen</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" style="margin-right: 0.75rem;">
+                        <span>Lisa Bakker</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" style="margin-right: 0.75rem;">
+                        <span>Mark Peters</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 0.5rem; cursor: pointer;">
+                        <input type="checkbox" style="margin-right: 0.75rem;">
+                        <span>Sophie van den Berg</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Planning</label>
+                <select class="form-select">
+                    <option>Direct beschikbaar</option>
+                    <option>Volgende week</option>
+                    <option>Specifieke datum...</option>
+                </select>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="confirmAssign()">
+                    <i class="fas fa-check"></i>
+                    Toewijzen
+                </button>
+                <button class="btn btn-secondary" onclick="closeAssignModal()">
+                    <i class="fas fa-times"></i>
+                    Annuleren
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Modal Functions
+    function openWorkoutModal() {
+        document.getElementById('workoutModal').classList.add('active');
+    }
+
+    function closeWorkoutModal() {
+        document.getElementById('workoutModal').classList.remove('active');
+    }
+
+    function assignWorkout(id) {
+        document.getElementById('assignModal').classList.add('active');
+    }
+
+    function closeAssignModal() {
+        document.getElementById('assignModal').classList.remove('active');
+    }
+
+    function confirmAssign() {
+        alert('Workout succesvol toegewezen aan geselecteerde klanten!');
+        closeAssignModal();
+    }
+
+    function editWorkout(id) {
+        // Load workout data and open modal
+        openWorkoutModal();
+    }
+
+    function deleteWorkout(id) {
+        if (confirm('Weet je zeker dat je deze workout wilt verwijderen?')) {
+            // Delete workout
+            alert('Workout verwijderd!');
+        }
+    }
+
+    function addExercise() {
+        // Open exercise selection modal or add form
+        alert('Oefening toevoegen functionaliteit');
+    }
+
+    // Drag and Drop for exercises
+    let draggedElement = null;
+
+    document.querySelectorAll('.exercise-item').forEach(item => {
+        item.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+        });
+
+        item.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+        });
+
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(this.parentElement, e.clientY);
+            if (afterElement == null) {
+                this.parentElement.appendChild(draggedElement);
+            } else {
+                this.parentElement.insertBefore(draggedElement, afterElement);
+            }
+        });
+    });
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.exercise-item:not(.dragging)')];
+        
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    // Form submission
+    document.getElementById('workoutForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('Workout succesvol opgeslagen!');
+        closeWorkoutModal();
+    });
+</script>
+{% endblock %}

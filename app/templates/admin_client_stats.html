@@ -1,0 +1,852 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Klanten Statistieken{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .date-range-selector {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .date-input {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    .overview-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .overview-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .overview-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    }
+
+    .overview-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 1rem;
+    }
+
+    .overview-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .overview-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .overview-change {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 13px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .overview-change.positive {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .overview-change.negative {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+
+    .chart-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .chart-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .chart-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+
+    .distribution-chart {
+        height: 250px;
+        position: relative;
+    }
+
+    .leaderboard {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .leaderboard-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .leaderboard-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .leaderboard-tabs {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .leaderboard-tab {
+        padding: 0.5rem 1rem;
+        background: none;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .leaderboard-tab.active {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    .leaderboard-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .leaderboard-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.2s;
+    }
+
+    .leaderboard-item:hover {
+        background: var(--bg-primary);
+    }
+
+    .leaderboard-rank {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+        margin-right: 1rem;
+    }
+
+    .leaderboard-rank.gold {
+        background: linear-gradient(135deg, #FFD700, #FFA500);
+        color: white;
+    }
+
+    .leaderboard-rank.silver {
+        background: linear-gradient(135deg, #C0C0C0, #808080);
+        color: white;
+    }
+
+    .leaderboard-rank.bronze {
+        background: linear-gradient(135deg, #CD7F32, #8B4513);
+        color: white;
+    }
+
+    .leaderboard-rank.other {
+        background: var(--bg-primary);
+        color: var(--text-secondary);
+    }
+
+    .leaderboard-user {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .leaderboard-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .leaderboard-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .leaderboard-score {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .progress-table {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .progress-table-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .table-filters {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table thead {
+        background: var(--bg-primary);
+    }
+
+    .data-table th {
+        padding: 1rem;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .data-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        transition: background 0.2s;
+    }
+
+    .data-table tbody tr:hover {
+        background: var(--bg-primary);
+    }
+
+    .data-table td {
+        padding: 1rem;
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .client-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .progress-bar-cell {
+        width: 100px;
+    }
+
+    .progress-bar-mini {
+        height: 6px;
+        background: var(--bg-primary);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 0.25rem;
+    }
+
+    .progress-fill-mini {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        border-radius: 3px;
+        transition: width 0.3s;
+    }
+
+    .progress-text-mini {
+        font-size: 11px;
+        color: var(--text-secondary);
+    }
+
+    .trend-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .trend-indicator.up {
+        color: var(--success-color);
+    }
+
+    .trend-indicator.down {
+        color: var(--danger-color);
+    }
+
+    .trend-indicator.stable {
+        color: var(--text-secondary);
+    }
+
+    .export-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .export-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .export-description {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 1024px) {
+        .chart-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .overview-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .date-range-selector {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="stats-header">
+    <div>
+        <h1 class="page-title">Klanten Statistieken</h1>
+        <div class="breadcrumb">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+            <span>Statistieken</span>
+        </div>
+    </div>
+    
+    <div class="date-range-selector">
+        <input type="date" class="date-input" value="2024-11-01">
+        <span style="color: var(--text-secondary);">tot</span>
+        <input type="date" class="date-input" value="2024-11-30">
+        <button class="btn btn-primary">
+            <i class="fas fa-filter"></i>
+            Toepassen
+        </button>
+    </div>
+</div>
+
+<!-- Overview Cards -->
+<div class="overview-cards">
+    <div class="overview-card">
+        <div class="overview-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color);">
+            <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="overview-value">156</div>
+        <div class="overview-label">Totaal Workouts</div>
+        <span class="overview-change positive">
+            <i class="fas fa-arrow-up"></i>
+            23% vs vorige maand
+        </span>
+    </div>
+    
+    <div class="overview-card">
+        <div class="overview-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">
+            <i class="fas fa-fire"></i>
+        </div>
+        <div class="overview-value">45,280</div>
+        <div class="overview-label">Calorieën Verbrand</div>
+        <span class="overview-change positive">
+            <i class="fas fa-arrow-up"></i>
+            15% meer
+        </span>
+    </div>
+    
+    <div class="overview-card">
+        <div class="overview-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+            <i class="fas fa-weight"></i>
+        </div>
+        <div class="overview-value">-38.5 kg</div>
+        <div class="overview-label">Totaal Gewichtsverlies</div>
+        <span class="overview-change positive">
+            <i class="fas fa-arrow-up"></i>
+            Gemiddeld -1.6kg/klant
+        </span>
+    </div>
+    
+    <div class="overview-card">
+        <div class="overview-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+            <i class="fas fa-percentage"></i>
+        </div>
+        <div class="overview-value">92%</div>
+        <div class="overview-label">Aanwezigheidspercentage</div>
+        <span class="overview-change negative">
+            <i class="fas fa-arrow-down"></i>
+            3% lager
+        </span>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="chart-grid">
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Workout Activiteit</h3>
+            <select class="filter-select">
+                <option>Deze Maand</option>
+                <option>Vorige Maand</option>
+                <option>Dit Kwartaal</option>
+                <option>Dit Jaar</option>
+            </select>
+        </div>
+        <div class="chart-container">
+            <canvas id="activityChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-card">
+        <div class="chart-header">
+            <h3 class="chart-title">Doelen Verdeling</h3>
+        </div>
+        <div class="distribution-chart">
+            <canvas id="goalsChart"></canvas>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 12px;">
+                <div style="width: 12px; height: 12px; background: #6366f1; border-radius: 2px;"></div>
+                <span>Afvallen (35%)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 12px;">
+                <div style="width: 12px; height: 12px; background: #10b981; border-radius: 2px;"></div>
+                <span>Spieropbouw (28%)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 12px;">
+                <div style="width: 12px; height: 12px; background: #f59e0b; border-radius: 2px;"></div>
+                <span>Conditie (22%)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 12px;">
+                <div style="width: 12px; height: 12px; background: #8b5cf6; border-radius: 2px;"></div>
+                <span>Gezondheid (15%)</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaderboard -->
+<div class="leaderboard">
+    <div class="leaderboard-header">
+        <h3 class="leaderboard-title">Top Performers</h3>
+        <div class="leaderboard-tabs">
+            <button class="leaderboard-tab active" onclick="switchLeaderboard('workouts')">Workouts</button>
+            <button class="leaderboard-tab" onclick="switchLeaderboard('progress')">Voortgang</button>
+            <button class="leaderboard-tab" onclick="switchLeaderboard('consistency')">Consistentie</button>
+        </div>
+    </div>
+    
+    <div class="leaderboard-list">
+        <div class="leaderboard-item">
+            <span class="leaderboard-rank gold">1</span>
+            <div class="leaderboard-user">
+                <div class="leaderboard-avatar">EV</div>
+                <span class="leaderboard-name">Emma de Vries</span>
+            </div>
+            <span class="leaderboard-score">28 workouts</span>
+        </div>
+        
+        <div class="leaderboard-item">
+            <span class="leaderboard-rank silver">2</span>
+            <div class="leaderboard-user">
+                <div class="leaderboard-avatar" style="background: linear-gradient(135deg, #10b981, #059669);">JJ</div>
+                <span class="leaderboard-name">Jan Jansen</span>
+            </div>
+            <span class="leaderboard-score">25 workouts</span>
+        </div>
+        
+        <div class="leaderboard-item">
+            <span class="leaderboard-rank bronze">3</span>
+            <div class="leaderboard-user">
+                <div class="leaderboard-avatar" style="background: linear-gradient(135deg, #ec4899, #be185d);">SB</div>
+                <span class="leaderboard-name">Sophie van den Berg</span>
+            </div>
+            <span class="leaderboard-score">24 workouts</span>
+        </div>
+        
+        <div class="leaderboard-item">
+            <span class="leaderboard-rank other">4</span>
+            <div class="leaderboard-user">
+                <div class="leaderboard-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">TH</div>
+                <span class="leaderboard-name">Tom Hendriks</span>
+            </div>
+            <span class="leaderboard-score">22 workouts</span>
+        </div>
+        
+        <div class="leaderboard-item">
+            <span class="leaderboard-rank other">5</span>
+            <div class="leaderboard-user">
+                <div class="leaderboard-avatar" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">LB</div>
+                <span class="leaderboard-name">Lisa Bakker</span>
+            </div>
+            <span class="leaderboard-score">20 workouts</span>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Table -->
+<div class="progress-table">
+    <div class="progress-table-header">
+        <h3 class="chart-title">Individuele Voortgang</h3>
+        <div class="table-filters">
+            <select class="filter-select">
+                <option>Alle Klanten</option>
+                <option>Actieve Klanten</option>
+                <option>Nieuwe Klanten</option>
+            </select>
+            <button class="btn btn-secondary">
+                <i class="fas fa-download"></i>
+                Export
+            </button>
+        </div>
+    </div>
+    
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Klant</th>
+                    <th>Workouts</th>
+                    <th>Doel Voortgang</th>
+                    <th>Gewicht</th>
+                    <th>Vetpercentage</th>
+                    <th>Consistentie</th>
+                    <th>Trend</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="client-cell">
+                            <div class="leaderboard-avatar">EV</div>
+                            <span>Emma de Vries</span>
+                        </div>
+                    </td>
+                    <td>28</td>
+                    <td>
+                        <div class="progress-bar-cell">
+                            <div class="progress-bar-mini">
+                                <div class="progress-fill-mini" style="width: 75%;"></div>
+                            </div>
+                            <span class="progress-text-mini">75% compleet</span>
+                        </div>
+                    </td>
+                    <td>-5.2 kg</td>
+                    <td>-3.1%</td>
+                    <td>95%</td>
+                    <td>
+                        <span class="trend-indicator up">
+                            <i class="fas fa-arrow-up"></i>
+                            Stijgend
+                        </span>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="client-cell">
+                            <div class="leaderboard-avatar" style="background: linear-gradient(135deg, #10b981, #059669);">JJ</div>
+                            <span>Jan Jansen</span>
+                        </div>
+                    </td>
+                    <td>25</td>
+                    <td>
+                        <div class="progress-bar-cell">
+                            <div class="progress-bar-mini">
+                                <div class="progress-fill-mini" style="width: 60%;"></div>
+                            </div>
+                            <span class="progress-text-mini">60% compleet</span>
+                        </div>
+                    </td>
+                    <td>+2.8 kg</td>
+                    <td>-1.5%</td>
+                    <td>88%</td>
+                    <td>
+                        <span class="trend-indicator up">
+                            <i class="fas fa-arrow-up"></i>
+                            Stijgend
+                        </span>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="client-cell">
+                            <div class="leaderboard-avatar" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">LB</div>
+                            <span>Lisa Bakker</span>
+                        </div>
+                    </td>
+                    <td>20</td>
+                    <td>
+                        <div class="progress-bar-cell">
+                            <div class="progress-bar-mini">
+                                <div class="progress-fill-mini" style="width: 45%;"></div>
+                            </div>
+                            <span class="progress-text-mini">45% compleet</span>
+                        </div>
+                    </td>
+                    <td>-1.5 kg</td>
+                    <td>-0.8%</td>
+                    <td>72%</td>
+                    <td>
+                        <span class="trend-indicator stable">
+                            <i class="fas fa-minus"></i>
+                            Stabiel
+                        </span>
+                    </td>
+                </tr>
+                
+                <tr>
+                    <td>
+                        <div class="client-cell">
+                            <div class="leaderboard-avatar" style="background: linear-gradient(135deg, #f59e0b, #d97706);">MP</div>
+                            <span>Mark Peters</span>
+                        </div>
+                    </td>
+                    <td>18</td>
+                    <td>
+                        <div class="progress-bar-cell">
+                            <div class="progress-bar-mini">
+                                <div class="progress-fill-mini" style="width: 30%;"></div>
+                            </div>
+                            <span class="progress-text-mini">30% compleet</span>
+                        </div>
+                    </td>
+                    <td>-0.5 kg</td>
+                    <td>+0.2%</td>
+                    <td>65%</td>
+                    <td>
+                        <span class="trend-indicator down">
+                            <i class="fas fa-arrow-down"></i>
+                            Dalend
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Export Section -->
+<div class="export-section" style="margin-top: 2rem;">
+    <h3 class="export-title">Rapporten Genereren</h3>
+    <p class="export-description">Download gedetailleerde rapporten voor analyse en administratie</p>
+    <div class="export-buttons">
+        <button class="btn btn-secondary">
+            <i class="fas fa-file-pdf"></i>
+            PDF Rapport
+        </button>
+        <button class="btn btn-secondary">
+            <i class="fas fa-file-excel"></i>
+            Excel Export
+        </button>
+        <button class="btn btn-secondary">
+            <i class="fas fa-file-csv"></i>
+            CSV Data
+        </button>
+        <button class="btn btn-primary">
+            <i class="fas fa-envelope"></i>
+            Email Rapport
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+    // Activity Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityChart = new Chart(activityCtx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+            datasets: [{
+                label: 'Totaal Workouts',
+                data: [32, 38, 42, 44],
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Unieke Klanten',
+                data: [18, 20, 22, 21],
+                borderColor: 'rgb(34, 211, 238)',
+                backgroundColor: 'rgba(34, 211, 238, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(148, 163, 184, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Goals Distribution Chart
+    const goalsCtx = document.getElementById('goalsChart').getContext('2d');
+    const goalsChart = new Chart(goalsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Afvallen', 'Spieropbouw', 'Conditie', 'Gezondheid'],
+            datasets: [{
+                data: [35, 28, 22, 15],
+                backgroundColor: [
+                    'rgb(99, 102, 241)',
+                    'rgb(16, 185, 129)',
+                    'rgb(245, 158, 11)',
+                    'rgb(139, 92, 246)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    function switchLeaderboard(type) {
+        document.querySelectorAll('.leaderboard-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Update leaderboard content based on type
+        // This would fetch different data in a real application
+    }
+</script>
+{% endblock %}

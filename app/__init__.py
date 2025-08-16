@@ -42,6 +42,35 @@ def load_user(user_id):
         logger.error(f"Fout bij laden van gebruiker met id {user_id}: {str(e)}")
         return None
 
+
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+
+    # Initialize extensions
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login.init_app(app)
+    moment.init_app(app)
+
+    # Register blueprints
+    from app.main import bp as main_bp
+    app.register_blueprint(main_bp)
+
+    from app.auth import bp as auth_bp
+    app.register_blueprint(auth_bp)
+
+    from app.profile import bp as profile_bp
+    app.register_blueprint(profile_bp)
+
+    # Admin blueprint - gebruik de juiste import
+    from app.admin import admin
+    app.register_blueprint(admin)
+
+    return app
+
+
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
