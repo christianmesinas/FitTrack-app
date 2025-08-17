@@ -1,14 +1,11 @@
-# app/admin/routes.py
+# app/admin/routes_choice.py
 
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
+from flask import render_template, redirect, url_for, flash, request, jsonify, session
 from datetime import datetime, timedelta
 import json
 
-
-
-
-# Create admin blueprint
-
+# Import the admin blueprint from __init__.py
+from app.admin import admin
 
 
 # Mock data for development
@@ -751,6 +748,3 @@ def inject_common_variables():
         'unread_notifications': get_unread_notifications(),
         'current_year': datetime.now().year
     }
-
-# Register blueprint in your main app file:
-# app.register_blueprint(admin)
