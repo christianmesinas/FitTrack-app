@@ -1,498 +1,455 @@
-{% extends "base_admin.html" %}
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %} - FitPro</title>
 
-{% block title %}Dashboard{% endblock %}
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-{% block extra_css %}
-<style>
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .stat-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
-    }
-
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        margin-bottom: 1rem;
-    }
-
-    .stat-icon.blue {
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-        color: white;
-    }
-
-    .stat-icon.green {
-        background: linear-gradient(135deg, #10b981, #059669);
-        color: white;
-    }
-
-    .stat-icon.purple {
-        background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-        color: white;
-    }
-
-    .stat-icon.orange {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: white;
-    }
-
-    .stat-value {
-        font-size: 32px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
-    }
-
-    .stat-label {
-        font-size: 14px;
-        color: var(--text-secondary);
-        margin-bottom: 1rem;
-    }
-
-    .stat-change {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        font-size: 13px;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-weight: 500;
-    }
-
-    .stat-change.positive {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success-color);
-    }
-
-    .stat-change.negative {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-    }
-
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 1.5rem;
-    }
-
-    .activity-list {
-        list-style: none;
-    }
-
-    .activity-item {
-        display: flex;
-        align-items: flex-start;
-        gap: 1rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .activity-item:last-child {
-        border-bottom: none;
-    }
-
-    .activity-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-    }
-
-    .activity-content {
-        flex: 1;
-    }
-
-    .activity-title {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-primary);
-        margin-bottom: 0.25rem;
-    }
-
-    .activity-time {
-        font-size: 12px;
-        color: var(--text-light);
-    }
-
-    .quick-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-
-    .quick-action-btn {
-        padding: 1.5rem;
-        background: var(--bg-primary);
-        border: 2px dashed var(--border-color);
-        border-radius: 12px;
-        text-align: center;
-        text-decoration: none;
-        color: var(--text-secondary);
-        transition: all 0.3s;
-    }
-
-    .quick-action-btn:hover {
-        border-color: var(--primary-color);
-        border-style: solid;
-        background: var(--bg-card);
-        transform: translateY(-3px);
-    }
-
-    .quick-action-btn i {
-        font-size: 24px;
-        margin-bottom: 0.5rem;
-        display: block;
-    }
-
-    .chart-container {
-        height: 300px;
-        position: relative;
-        margin-top: 1rem;
-    }
-
-    .upcoming-list {
-        list-style: none;
-    }
-
-    .upcoming-item {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 0.75rem;
-        background: var(--bg-primary);
-        border-radius: 10px;
-        margin-bottom: 0.75rem;
-    }
-
-    .upcoming-time {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--primary-color);
-        min-width: 50px;
-    }
-
-    .upcoming-client {
-        flex: 1;
-    }
-
-    .upcoming-name {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-primary);
-    }
-
-    .upcoming-type {
-        font-size: 12px;
-        color: var(--text-light);
-    }
-
-    @media (max-width: 1024px) {
-        .dashboard-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
+    <!-- Base CSS -->
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #22d3ee;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-light: #94a3b8;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
-        .quick-actions {
-            grid-template-columns: 1fr;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-    }
-</style>
-{% endblock %}
 
-{% block content %}
-<div class="page-header">
-    <h1 class="page-title">Welkom terug, {{ current_user.name | default('Trainer') }}! 👋</h1>
-    <div class="breadcrumb">
-        <a href="#">Home</a>
-        <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
-        <span>Dashboard</span>
-    </div>
-</div>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
 
-<!-- Statistics Cards -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon blue">
-            <i class="fas fa-users"></i>
-        </div>
-        <div class="stat-value">24</div>
-        <div class="stat-label">Actieve Klanten</div>
-        <span class="stat-change positive">
-            <i class="fas fa-arrow-up"></i>
-            12% deze maand
-        </span>
-    </div>
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
 
-    <div class="stat-card">
-        <div class="stat-icon green">
-            <i class="fas fa-dumbbell"></i>
-        </div>
-        <div class="stat-value">156</div>
-        <div class="stat-label">Workouts Deze Maand</div>
-        <span class="stat-change positive">
-            <i class="fas fa-arrow-up"></i>
-            8% meer dan vorige maand
-        </span>
-    </div>
+        .sidebar {
+            width: 280px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
 
-    <div class="stat-card">
-        <div class="stat-icon purple">
-            <i class="fas fa-video"></i>
-        </div>
-        <div class="stat-value">45</div>
-        <div class="stat-label">Video's Geüpload</div>
-        <span class="stat-change positive">
-            <i class="fas fa-arrow-up"></i>
-            5 nieuwe deze week
-        </span>
-    </div>
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
 
-    <div class="stat-card">
-        <div class="stat-icon orange">
-            <i class="fas fa-star"></i>
-        </div>
-        <div class="stat-value">4.8</div>
-        <div class="stat-label">Gemiddelde Beoordeling</div>
-        <span class="stat-change positive">
-            <i class="fas fa-arrow-up"></i>
-            0.2 punten hoger
-        </span>
-    </div>
-</div>
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
 
-<div class="dashboard-grid">
-    <!-- Recent Activity -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Recente Activiteit</h3>
-            <button class="btn btn-secondary">
-                <i class="fas fa-filter"></i>
-                Filter
-            </button>
-        </div>
-        
-        <ul class="activity-list">
-            <li class="activity-item">
-                <div class="activity-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary-color);">
-                    <i class="fas fa-user-plus"></i>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-title">Nieuwe klant toegevoegd: Emma de Vries</div>
-                    <div class="activity-time">2 uur geleden</div>
-                </div>
-            </li>
-            
-            <li class="activity-item">
-                <div class="activity-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--success-color);">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-title">Jan Jansen heeft workout voltooid</div>
-                    <div class="activity-time">3 uur geleden</div>
-                </div>
-            </li>
-            
-            <li class="activity-item">
-                <div class="activity-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
-                    <i class="fas fa-video"></i>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-title">Nieuwe video geüpload: "Full Body HIIT"</div>
-                    <div class="activity-time">5 uur geleden</div>
-                </div>
-            </li>
-            
-            <li class="activity-item">
-                <div class="activity-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
-                    <i class="fas fa-utensils"></i>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-title">Voedingsschema bijgewerkt voor Lisa Bakker</div>
-                    <div class="activity-time">1 dag geleden</div>
-                </div>
-            </li>
-            
-            <li class="activity-item">
-                <div class="activity-icon" style="background: rgba(34, 211, 238, 0.1); color: var(--secondary-color);">
-                    <i class="fas fa-comment"></i>
-                </div>
-                <div class="activity-content">
-                    <div class="activity-title">Nieuwe feedback ontvangen van Mark Peters</div>
-                    <div class="activity-time">1 dag geleden</div>
-                </div>
-            </li>
-        </ul>
-    </div>
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
 
-    <!-- Right Column -->
-    <div>
-        <!-- Quick Actions -->
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Snelle Acties</h3>
-            </div>
-            
-            <div class="quick-actions">
-                <a href="{{ url_for('admin.add_client') }}" class="quick-action-btn">
-                    <i class="fas fa-user-plus"></i>
-                    <span>Nieuwe Klant</span>
-                </a>
-                <a href="{{ url_for('admin.workouts') }}" class="quick-action-btn">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Workout Maken</span>
-                </a>
-                <a href="{{ url_for('admin.workout_videos') }}" class="quick-action-btn">
-                    <i class="fas fa-upload"></i>
-                    <span>Video Uploaden</span>
-                </a>
-                <a href="{{ url_for('admin.nutrition_plans') }}" class="quick-action-btn">
-                    <i class="fas fa-clipboard-list"></i>
-                    <span>Voedingsplan</span>
-                </a>
-            </div>
-        </div>
+        .menu-section {
+            margin-bottom: 1.5rem;
+        }
 
-        <!-- Upcoming Sessions -->
-        <div class="card" style="margin-top: 1.5rem;">
-            <div class="card-header">
-                <h3 class="card-title">Komende Sessies</h3>
-            </div>
-            
-            <ul class="upcoming-list">
-                <li class="upcoming-item">
-                    <span class="upcoming-time">09:00</span>
-                    <div class="upcoming-client">
-                        <div class="upcoming-name">Sophie van den Berg</div>
-                        <div class="upcoming-type">Personal Training</div>
-                    </div>
-                </li>
-                <li class="upcoming-item">
-                    <span class="upcoming-time">10:30</span>
-                    <div class="upcoming-client">
-                        <div class="upcoming-name">Tom Hendriks</div>
-                        <div class="upcoming-type">Krachttraining</div>
-                    </div>
-                </li>
-                <li class="upcoming-item">
-                    <span class="upcoming-time">14:00</span>
-                    <div class="upcoming-client">
-                        <div class="upcoming-name">Groepsles</div>
-                        <div class="upcoming-type">HIIT Training (8 personen)</div>
-                    </div>
-                </li>
-                <li class="upcoming-item">
-                    <span class="upcoming-time">16:00</span>
-                    <div class="upcoming-client">
-                        <div class="upcoming-name">Anna de Jong</div>
-                        <div class="upcoming-type">Voedingsconsult</div>
-                    </div>
-                </li>
-            </ul>
-        </div>
-    </div>
-</div>
+        .menu-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            padding: 0 1.5rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
 
-<!-- Performance Chart -->
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Klant Voortgang Deze Week</h3>
-        <select class="btn btn-secondary">
-            <option>Deze Week</option>
-            <option>Deze Maand</option>
-            <option>Dit Jaar</option>
-        </select>
-    </div>
-    
-    <div class="chart-container">
-        <canvas id="performanceChart"></canvas>
-    </div>
-</div>
-{% endblock %}
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
 
-{% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-<script>
-    // Performance Chart
-    const ctx = document.getElementById('performanceChart').getContext('2d');
-    const performanceChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo'],
-            datasets: [{
-                label: 'Voltooide Workouts',
-                data: [12, 19, 15, 25, 22, 30, 28],
-                borderColor: 'rgb(99, 102, 241)',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                tension: 0.4
-            }, {
-                label: 'Actieve Klanten',
-                data: [8, 12, 10, 15, 14, 18, 16],
-                borderColor: 'rgb(34, 211, 238)',
-                backgroundColor: 'rgba(34, 211, 238, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(148, 163, 184, 0.1)'
-                    }
-                },
-                x: {
-                    grid: {
-                        color: 'rgba(148, 163, 184, 0.1)'
-                    }
-                }
+        .menu-item:hover,
+        .menu-item.active {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .menu-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            padding: 0.5rem 1rem 0.5rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            width: 300px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-color);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5451e5;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .user-menu {
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .notification-badge {
+            position: relative;
+        }
+
+        .notification-badge::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            background: var(--danger-color);
+            border-radius: 50%;
+            border: 2px solid var(--bg-card);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
             }
         }
-    });
-</script>
-{% endblock %}
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-dumbbell"></i>
+                    FitPro Admin
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="menu-section">
+                    <div class="menu-section-title">Hoofdmenu</div>
+                    <a href="{{ url_for('admin.dashboard') }}" class="menu-item">
+                        <i class="fas fa-chart-line"></i>
+                        Dashboard
+                    </a>
+                    <a href="{{ url_for('admin.clients') }}" class="menu-item">
+                        <i class="fas fa-users"></i>
+                        Klanten
+                        <span class="badge">{{ client_count | default(0) }}</span>
+                    </a>
+                    <a href="{{ url_for('admin.workouts') }}" class="menu-item">
+                        <i class="fas fa-dumbbell"></i>
+                        Workouts
+                    </a>
+                    <a href="{{ url_for('admin.workout_videos') }}" class="menu-item">
+                        <i class="fas fa-video"></i>
+                        Video Gallery
+                    </a>
+                    <a href="{{ url_for('admin.nutrition_plans') }}" class="menu-item">
+                        <i class="fas fa-utensils"></i>
+                        Voedingsplannen
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-section-title">Analyses</div>
+                    <a href="{{ url_for('admin.client_stats') }}" class="menu-item">
+                        <i class="fas fa-chart-bar"></i>
+                        Statistieken
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-section-title">Instellingen</div>
+                    <a href="{{ url_for('admin.profile') }}" class="menu-item">
+                        <i class="fas fa-user-cog"></i>
+                        Profiel
+                    </a>
+                    <a href="{{ url_for('admin.settings') }}" class="menu-item">
+                        <i class="fas fa-cog"></i>
+                        Instellingen
+                    </a>
+                    <a href="{{ url_for('admin.appearance') }}" class="menu-item">
+                        <i class="fas fa-palette"></i>
+                        Uiterlijk
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-section-title">Account</div>
+                    <a href="{{ url_for('auth.logout') }}" class="menu-item">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Uitloggen
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="btn btn-secondary" id="sidebarToggle" style="display: none;">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="search-input" placeholder="Zoeken...">
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button class="btn btn-secondary notification-badge">
+                        <i class="fas fa-bell"></i>
+                    </button>
+
+                    <div class="user-menu">
+                        <div class="user-avatar">
+                            {{ current_user.name[0] if current_user and current_user.name else 'A' }}
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="content">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}" style="margin-bottom: 1rem; padding: 1rem; border-radius: 8px; border-left: 4px solid var(--{{ category }}-color);">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Base JavaScript -->
+    <script>
+        // Sidebar toggle for mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.sidebar');
+
+            if (window.innerWidth <= 1024) {
+                sidebarToggle.style.display = 'inline-flex';
+            }
+
+            sidebarToggle?.addEventListener('click', function() {
+                sidebar.classList.toggle('open');
+            });
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 1024) {
+                    if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                        sidebar.classList.remove('open');
+                    }
+                }
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 1024) {
+                    sidebar.classList.remove('open');
+                    sidebarToggle.style.display = 'none';
+                } else {
+                    sidebarToggle.style.display = 'inline-flex';
+                }
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

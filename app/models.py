@@ -131,6 +131,25 @@ class Category(str, Enum):
     PLYOMETRICS = "plyometrics"
 
 class User(db.Model):
+    # Account type: 'user' voor normale gebruikers, 'trainer' voor coaches
+    account_type: so.Mapped[Optional[str]] = so.mapped_column(sa.String(20), nullable=True)
+
+    # Trainer-specifieke velden (optional)
+    company_name: so.Mapped[Optional[str]] = so.mapped_column(sa.String(100), nullable=True)
+    specialization: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50), nullable=True)
+    experience_years: so.Mapped[Optional[str]] = so.mapped_column(sa.String(20), nullable=True)
+    certification: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True)
+
+    # Voeg ook deze property toe voor makkelijke checks:
+    @property
+    def is_trainer(self):
+        """Check of de gebruiker een trainer is"""
+        return self.account_type == 'trainer'
+
+    @property
+    def is_regular_user(self):
+        """Check of de gebruiker een normale gebruiker is"""
+        return self.account_type == 'user'
     """
     Model voor gebruikers in de FitTrack-applicatie.
 

@@ -1,9 +1,190 @@
 {% extends "base.html" %}
-{% block title %}FitTrack+ – Kies je account{% endblock %}
+{% block title %}FitTrack+ – Start je Fitness Journey{% endblock %}
 
 {% block head %}
   {{ super() }}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/landings.css') }}">
+  <style>
+    .form-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+      animation: slideUp 0.6s ease-out;
+      margin: 0 auto;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .form-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+
+    .form-subtitle {
+      color: #666;
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 0.95rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #FF6B35;
+      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    .goals-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .goal-card {
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .goal-card input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .goal-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+      border: 2px solid #e0e0e0;
+      border-radius: 15px;
+      background: white;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .goal-card input[type="radio"]:checked + .goal-label {
+      border-color: #FF6B35;
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.05) 0%, rgba(255, 140, 66, 0.05) 100%);
+      box-shadow: 0 5px 20px rgba(255, 107, 53, 0.2);
+    }
+
+    .goal-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .goal-text {
+      font-weight: 500;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .input-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 5px 20px rgba(255, 107, 53, 0.3);
+      margin-top: 1rem;
+    }
+
+    .submit-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 1.5rem;
+      color: #FF6B35;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      text-align: center;
+      width: 100%;
+    }
+
+    .back-link:hover {
+      color: #FF8C42;
+      text-decoration: underline;
+    }
+
+    .info-text {
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.05) 0%, rgba(255, 140, 66, 0.05) 100%);
+      border-left: 3px solid #FF6B35;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .form-container {
+        padding: 2rem;
+        margin: 1rem;
+      }
+
+      .goals-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .input-group {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 {% endblock %}
 
 {% block content %}
@@ -15,9 +196,9 @@
         <div class="shape shape3"></div>
     </div>
 
-    <!-- content center-->
-    <div class="content">
-        <div class="logo">
+    <!-- Form Container -->
+    <div class="form-container">
+        <div class="logo" style="margin-bottom: 2rem;">
             <div class="logo-icon">
                 <svg viewBox="0 0 24 24">
                     <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
@@ -26,10 +207,74 @@
             <span class="logo-text">FitTrack+</span>
         </div>
 
-        <div class="button-row">
-            <a href="{{ url_for('signup_particular') }}" class="orange-btn">Nieuwe gebruiker</a>
-            <a href="{{ url_for('signup_coach') }}" class="orange-btn secondary">Coach</a>
-        </div>
+        <h2 class="form-title">Begin je Fitness Journey</h2>
+        <p class="form-subtitle">Laten we je profiel personaliseren</p>
+
+        <form method="POST" action="{{ url_for('signup.signup_particular') }}">
+            {{ csrf_token() }}
+
+            <div class="form-group">
+                <label class="form-label" for="name">Hoe mogen we je noemen? *</label>
+                <input type="text" class="form-input" id="name" name="name" required
+                       placeholder="Je naam" value="{{ current_user.email.split('@')[0] }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Wat is je fitness doel? *</label>
+                <div class="goals-grid">
+                    <div class="goal-card">
+                        <input type="radio" id="goal-lose" name="fitness_goal" value="lose_weight" required>
+                        <label class="goal-label" for="goal-lose">
+                            <span class="goal-icon">🔥</span>
+                            <span class="goal-text">Afvallen</span>
+                        </label>
+                    </div>
+                    <div class="goal-card">
+                        <input type="radio" id="goal-gain" name="fitness_goal" value="gain_muscle">
+                        <label class="goal-label" for="goal-gain">
+                            <span class="goal-icon">💪</span>
+                            <span class="goal-text">Spieropbouw</span>
+                        </label>
+                    </div>
+                    <div class="goal-card">
+                        <input type="radio" id="goal-maintain" name="fitness_goal" value="maintain">
+                        <label class="goal-label" for="goal-maintain">
+                            <span class="goal-icon">⚡</span>
+                            <span class="goal-text">Gezond blijven</span>
+                        </label>
+                    </div>
+                    <div class="goal-card">
+                        <input type="radio" id="goal-endurance" name="fitness_goal" value="endurance">
+                        <label class="goal-label" for="goal-endurance">
+                            <span class="goal-icon">🏃</span>
+                            <span class="goal-text">Conditie</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-text">
+                💡 Je kunt deze informatie later altijd aanpassen in je profiel
+            </div>
+
+            <div class="input-group">
+                <div class="form-group">
+                    <label class="form-label" for="current_weight">Huidig gewicht (kg)</label>
+                    <input type="number" class="form-input" id="current_weight" name="current_weight"
+                           step="0.1" min="30" max="300" placeholder="Bijv. 75">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="target_weight">Doel gewicht (kg)</label>
+                    <input type="number" class="form-input" id="target_weight" name="target_weight"
+                           step="0.1" min="30" max="300" placeholder="Bijv. 70">
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Start met Trainen</button>
+        </form>
+
+        <a href="{{ url_for('signup.signup_choice') }}" class="back-link">← Terug naar keuze</a>
     </div>
 </div>
 {% endblock %}

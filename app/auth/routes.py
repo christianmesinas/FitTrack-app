@@ -77,21 +77,36 @@ def callback():
 
         # Zoek of maak gebruiker
         user = User.query.filter_by(email=userinfo['email']).first()
+        is_new_user = False
+
         if not user:
+            # Nieuwe gebruiker aanmaken
             user = User(
                 email=userinfo['email'],
                 auth0_id=userinfo['sub'],
             )
             db.session.add(user)
             db.session.commit()
+            is_new_user = True
+            logger.debug(f"Nieuwe gebruiker aangemaakt: {user.email}")
 
         login_user(user)
-        logger.debug(f"User ingelogd: id={user.get_id()}, name={user.name}")
+        logger.debug(f"User ingelogd: id={user.get_id()}, email={user.email}")
 
-        # Markeer als bestaande gebruiker
+        # Check of dit een nieuwe gebruiker is of een gebruiker zonder account type
+        if is_new_user or not hasattr(user, 'account_type') or user.account_type is None:
+            session['new_user'] = True
+            logger.debug("Nieuwe gebruiker - redirect naar signup keuze")
+            return redirect(url_for('signup.signup_choice'))
+
+        # Bestaande gebruiker met account type
         session['new_user'] = False
 
-        # Controleer onboarding-status
+        # Check of het een trainer is
+        if user.account_type == 'trainer':
+            return redirect(url_for('admin.dashboard'))
+
+        # Controleer onboarding-status voor normale gebruikers
         onboarding_redirect = check_onboarding_status(user)
         if onboarding_redirect:
             return redirect(onboarding_redirect)

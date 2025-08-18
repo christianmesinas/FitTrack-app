@@ -8,9 +8,14 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_session import Session
 from authlib.integrations.flask_client import OAuth
+
+import app
 from config import Config
 from flask_moment import Moment
 from flask_wtf import CSRFProtect
+
+
+
 
 
 
@@ -21,7 +26,6 @@ login = LoginManager()
 oauth = OAuth()
 csrf = CSRFProtect()
 moment = Moment()
-
 
 # Stel logging in
 logger = logging.getLogger(__name__)
@@ -42,35 +46,7 @@ def load_user(user_id):
         logger.error(f"Fout bij laden van gebruiker met id {user_id}: {str(e)}")
         return None
 
-
-def create_app(config_class=Config):
-    app = Flask(__name__)
-    app.config.from_object(config_class)
-
-    # Initialize extensions
-    db.init_app(app)
-    migrate.init_app(app, db)
-    login.init_app(app)
-    moment.init_app(app)
-
-    # Register blueprints
-    from app.main import bp as main_bp
-    app.register_blueprint(main_bp)
-
-    from app.auth import bp as auth_bp
-    app.register_blueprint(auth_bp)
-
-    from app.profile import bp as profile_bp
-    app.register_blueprint(profile_bp)
-
-    # Admin blueprint - gebruik de juiste import
-    from app.admin import admin
-    app.register_blueprint(admin)
-
-    return app
-
-
-
+# MAAR ÉÉN create_app functie!
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
@@ -91,7 +67,6 @@ def create_app(config_class=Config):
     # Maak upload-mappen
     os.makedirs(os.path.abspath(os.path.join('app', 'static', 'img', 'exercises')), exist_ok=True)
     os.makedirs(os.path.abspath(os.path.join('app', 'static', 'videos', 'exercises')), exist_ok=True)
-
 
     # Initialiseer extensies met de app
     db.init_app(app)        # Database-ORM
@@ -136,10 +111,51 @@ def create_app(config_class=Config):
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)  # Geen prefix, voor error handling
 
+    # ADMIN BLUEPRINT TOEVOEGEN
+    from app.admin import admin
+    app.register_blueprint(admin)
+
     # Importeer modellen om database-tabellen te registreren
     from app import models
 
     csrf.init_app(app)  # Activeer CSRF-bescherming
 
+    # Registreer signup blueprint
+    from app.signup import signup_bp
+    app.register_blueprint(signup_bp, url_prefix='/signup')
+
+    # Het complete blueprint registratie gedeelte zou er zo uit moeten zien:
+
+    # Registreer blueprints
+    from app.main import bp as main_bp
+    app.register_blueprint(main_bp)  # Geen prefix, voor algemene routes
+
+    from app.auth import bp as auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    from app.workouts import bp as workouts_bp
+    app.register_blueprint(workouts_bp, url_prefix='/workouts')
+
+    from app.sessions import bp as sessions_bp
+    app.register_blueprint(sessions_bp, url_prefix='/sessions')
+
+    from app.profile import bp as profile_bp
+    app.register_blueprint(profile_bp, url_prefix='/profile')
+
+    # VOEG DIT TOE:
+    from app.signup import signup_bp
+    app.register_blueprint(signup_bp, url_prefix='/signup')
+
+    from app.api import bp as api_bp
+    app.register_blueprint(api_bp, url_prefix='/api')
+
+    from app.errors import bp as errors_bp
+    app.register_blueprint(errors_bp)  # Geen prefix, voor error handling
+
+    # Admin blueprint
+    from app.admin import admin
+    app.register_blueprint(admin)
 
     return app
+
+
