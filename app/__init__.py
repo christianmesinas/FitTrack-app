@@ -15,10 +15,6 @@ from flask_moment import Moment
 from flask_wtf import CSRFProtect
 
 
-
-
-
-
 # Initialiseer extensies globaal
 db = SQLAlchemy()
 migrate = Migrate()
@@ -45,6 +41,7 @@ def load_user(user_id):
     except Exception as e:
         logger.error(f"Fout bij laden van gebruiker met id {user_id}: {str(e)}")
         return None
+
 
 # MAAR ÉÉN create_app functie!
 def create_app(config_class=Config):
@@ -74,10 +71,12 @@ def create_app(config_class=Config):
     moment.init_app(app)  # Tijdformattering
     login.init_app(app)     # Gebruikersauthenticatie
     oauth.init_app(app)  # OAuth voor Auth0
+    csrf.init_app(app)  # Activeer CSRF-bescherming
 
     # Stel login-view in voor Flask-Login
     login.login_view = 'auth.login'  # Verwijs naar de login-route in de auth blueprint
 
+    # Configureer OAuth voor Auth0
     auth0_domain = app.config['AUTH0_DOMAIN']
     oauth.register(
         name='auth0',
@@ -105,57 +104,19 @@ def create_app(config_class=Config):
     from app.profile import bp as profile_bp
     app.register_blueprint(profile_bp, url_prefix='/profile')
 
+    from app.signup import signup_bp
+    app.register_blueprint(signup_bp, url_prefix='/signup')
+
     from app.api import bp as api_bp
     app.register_blueprint(api_bp, url_prefix='/api')
 
     from app.errors import bp as errors_bp
     app.register_blueprint(errors_bp)  # Geen prefix, voor error handling
 
-    # ADMIN BLUEPRINT TOEVOEGEN
     from app.admin import admin
     app.register_blueprint(admin)
 
     # Importeer modellen om database-tabellen te registreren
     from app import models
 
-    csrf.init_app(app)  # Activeer CSRF-bescherming
-
-    # Registreer signup blueprint
-    from app.signup import signup_bp
-    app.register_blueprint(signup_bp, url_prefix='/signup')
-
-    # Het complete blueprint registratie gedeelte zou er zo uit moeten zien:
-
-    # Registreer blueprints
-    from app.main import bp as main_bp
-    app.register_blueprint(main_bp)  # Geen prefix, voor algemene routes
-
-    from app.auth import bp as auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/auth')
-
-    from app.workouts import bp as workouts_bp
-    app.register_blueprint(workouts_bp, url_prefix='/workouts')
-
-    from app.sessions import bp as sessions_bp
-    app.register_blueprint(sessions_bp, url_prefix='/sessions')
-
-    from app.profile import bp as profile_bp
-    app.register_blueprint(profile_bp, url_prefix='/profile')
-
-    # VOEG DIT TOE:
-    from app.signup import signup_bp
-    app.register_blueprint(signup_bp, url_prefix='/signup')
-
-    from app.api import bp as api_bp
-    app.register_blueprint(api_bp, url_prefix='/api')
-
-    from app.errors import bp as errors_bp
-    app.register_blueprint(errors_bp)  # Geen prefix, voor error handling
-
-    # Admin blueprint
-    from app.admin import admin
-    app.register_blueprint(admin)
-
     return app
-
-
