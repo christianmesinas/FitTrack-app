@@ -6,14 +6,25 @@ from app.models import WorkoutPlan, WorkoutPlanExercise
 
 
 def check_onboarding_status(user):
-    #    Controleer de onboarding-status van een gebruiker.
-    if not user.name:
-        return url_for('auth.onboarding_name')
-    elif not user.current_weight:
-        return url_for('auth.onboarding_current_weight')
-    elif not user.fitness_goal:
-        return url_for('auth.onboarding_goal_weight')
-    return None  # Onboarding is klaar
+    """
+    LEGACY: Controleer de onboarding-status van een gebruiker.
+    Nu redirect naar nieuwe signup flow.
+    """
+    # Nieuwe flow - check account type eerst
+    if not hasattr(user, 'account_type') or user.account_type is None:
+        return url_for('signup.signup_choice')
+
+    # Voor normale gebruikers - check of profiel compleet is
+    if user.account_type == 'user':
+        if not user.name or not user.current_weight or not user.fitness_goal:
+            return url_for('signup.signup_particular')
+
+    # Voor trainers - redirect naar admin
+    if user.account_type == 'trainer':
+        return url_for('admin.dashboard')
+
+    return None  # Alles is compleet
+
 
 def fix_image_path(path):
     """Normaliseer bestandspaden voor afbeeldingen met regex."""
@@ -41,13 +52,15 @@ def fix_image_path(path):
     # Als het pad leeg is of ongeldig, gebruik standaardafbeelding
     return path if path and path.startswith('img/exercises/') else 'img/exercises/default.jpg'
 
+
 def clean_instruction_text(text):
-    #Reinig instructietekst door speciale tekens te vervangen.
+    """Reinig instructietekst door speciale tekens te vervangen."""
     return text.replace('\ufffd', '¾')
 
 
 def owns_workout_plan(f):
-    #    Decorator om eigendom van een workout-plan te controleren.
+    """Decorator om eigendom van een workout-plan te controleren."""
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         # Probeer plan_id uit URL-parameters of JSON te halen
@@ -71,20 +84,21 @@ def owns_workout_plan(f):
 
     return decorated_function
 
+
 def get_user_workout_plans(user_id, archived=False):
-    #    Haal workout-plannen op voor een specifieke gebruiker.
+    """Haal workout-plannen op voor een specifieke gebruiker."""
     # Basisquery voor gebruikersplannen
     query = WorkoutPlan.query.filter_by(user_id=user_id)
     # Filter op archived-status indien opgegeven
     if archived is not None:
         query = query.filter_by(is_archived=archived)
-        # Sorteer op aanmaaktijd (descending)
 
+    # Sorteer op aanmaaktijd (descending)
     return query.order_by(WorkoutPlan.created_at.desc()).all()
 
 
 def get_workout_data(plans):
-    #    Bereid workout-data voor met gekoppelde oefeningen.
+    """Bereid workout-data voor met gekoppelde oefeningen."""
     workout_data = []
     for plan in plans:
         # Haal oefeningen op, gesorteerd op volgorde
@@ -95,4 +109,3 @@ def get_workout_data(plans):
             'exercises': [entry.exercise for entry in exercises]
         })
     return workout_data
-

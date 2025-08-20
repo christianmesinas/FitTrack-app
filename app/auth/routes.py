@@ -106,11 +106,13 @@ def callback():
         if user.account_type == 'trainer':
             return redirect(url_for('admin.dashboard'))
 
-        # Controleer onboarding-status voor normale gebruikers
-        onboarding_redirect = check_onboarding_status(user)
-        if onboarding_redirect:
-            return redirect(onboarding_redirect)
+        # Voor normale gebruikers - check of alle velden zijn ingevuld
+        if not user.name or not user.current_weight or not user.fitness_goal:
+            # Als niet alle velden zijn ingevuld, stuur naar particulier signup om te voltooien
+            flash('Vul je profiel aan om verder te gaan.', 'info')
+            return redirect(url_for('signup.signup_particular'))
 
+        # Alles compleet - ga naar hoofdpagina
         return redirect(url_for('main.index'))
 
     except Exception as e:
@@ -131,62 +133,26 @@ def logout():
                     '&returnTo=' + url_for('main.landing', _external=True))
 
 
+# OUDE ONBOARDING ROUTES - BEHOUDEN MAAR NIET MEER ACTIEF GEBRUIKT
 @auth.route('/onboarding/name', methods=['GET', 'POST'])
 @login_required
 def onboarding_name():
-    """Verwerk de naam-invoerstap van onboarding."""
-    user = current_user
-    form = NameForm()
-
-    if form.validate_on_submit():
-        # Update de naam van de gebruiker in de database
-        user.name = escape(form.name.data)
-        db.session.commit()
-        logger.debug(f"Onboarding naam voltooid voor {user.name}")
-
-        # Redirect naar de volgende onboarding stap
-        return redirect(url_for('auth.onboarding_current_weight'))
-
-    return render_template('onboarding_name.html', form=form, user=user)
+    """LEGACY: Verwerk de naam-invoerstap van onboarding."""
+    # Redirect naar nieuwe signup flow
+    return redirect(url_for('signup.signup_particular'))
 
 
 @auth.route('/onboarding/current_weight', methods=['GET', 'POST'])
 @login_required
 def onboarding_current_weight():
-    """Verwerk de huidige gewicht-invoerstap van onboarding."""
-    form = CurrentWeightForm()
-
-    if form.validate_on_submit():
-        current_user.current_weight = form.current_weight.data
-        db.session.commit()
-        logger.debug(
-            f"Onboarding huidig gewicht voltooid voor {current_user.name}, huidig gewicht: {current_user.current_weight}")
-        return redirect(url_for('auth.onboarding_goal_weight'))
-
-    return render_template('onboarding_current_weight.html', form=form)
+    """LEGACY: Verwerk de huidige gewicht-invoerstap van onboarding."""
+    # Redirect naar nieuwe signup flow
+    return redirect(url_for('signup.signup_particular'))
 
 
 @auth.route('/onboarding/goal_weight', methods=['GET', 'POST'])
 @login_required
 def onboarding_goal_weight():
-    """Verwerk de doelgewicht-invoerstap van onboarding."""
-    form = GoalWeightForm()
-
-    if form.validate_on_submit():
-        current_user.fitness_goal = form.fitness_goal.data
-        db.session.commit()
-        logger.debug(f"Onboarding doelgewicht voltooid voor {current_user.name}, doel: {current_user.fitness_goal}")
-
-        # Controleer of er meer onboarding-stappen zijn
-        onboarding_redirect = check_onboarding_status(current_user)
-        if onboarding_redirect:
-            return redirect(onboarding_redirect)
-
-        flash('Welkom bij FitTrack! Je profiel is compleet.', 'success')
-        return redirect(url_for('main.index'))
-
-    return render_template(
-        'onboarding_goal_weight.html',
-        form=form,
-        user=current_user
-    )
+    """LEGACY: Verwerk de doelgewicht-invoerstap van onboarding."""
+    # Redirect naar nieuwe signup flow
+    return redirect(url_for('signup.signup_particular'))

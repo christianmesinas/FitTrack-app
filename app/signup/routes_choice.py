@@ -16,9 +16,19 @@ def signup_choice():
     # Check of gebruiker al een account type heeft
     if hasattr(current_user, 'account_type') and current_user.account_type:
         logger.debug(f"Gebruiker heeft al account type: {current_user.account_type}")
-        if current_user.account_type == 'trainer':
-            return redirect(url_for('admin.dashboard'))
-        else:
-            return redirect(url_for('main.index'))
 
+        if current_user.account_type == 'trainer':
+            flash('Je bent al geregistreerd als trainer.', 'info')
+            return redirect(url_for('admin.dashboard'))
+        elif current_user.account_type == 'user':
+            # Check of profiel compleet is
+            if not current_user.name or not current_user.current_weight or not current_user.fitness_goal:
+                flash('Vul je profiel aan om verder te gaan.', 'info')
+                return redirect(url_for('signup.signup_particular'))
+            else:
+                flash('Je bent al geregistreerd als gebruiker.', 'info')
+                return redirect(url_for('main.index'))
+
+    # Nieuwe gebruiker - toon keuze scherm
+    logger.debug("Toon keuze scherm voor nieuwe gebruiker")
     return render_template('signup_choice.html')

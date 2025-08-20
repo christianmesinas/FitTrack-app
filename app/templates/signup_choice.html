@@ -1,9 +1,10 @@
-{% extends "base.html" %}
-{% block title %}FitTrack+ – Kies je account{% endblock %}
-
-{% block head %}
-  {{ super() }}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/landings.css') }}">
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitTrack+ – Kies je account</title>
+  <link rel="stylesheet" href="/static/css/landings.css">
   <style>
     .choice-container {
       max-width: 600px;
@@ -99,51 +100,51 @@
       }
     }
   </style>
-{% endblock %}
-
-{% block content %}
-<div class="container">
+</head>
+<body>
+  <div class="container">
     <!-- achtergrond vormen -->
     <div class="background-shapes">
-        <div class="shape shape1"></div>
-        <div class="shape shape2"></div>
-        <div class="shape shape3"></div>
+      <div class="shape shape1"></div>
+      <div class="shape shape2"></div>
+      <div class="shape shape3"></div>
     </div>
 
     <!-- Content -->
     <div class="choice-container">
-        <div class="logo">
-            <div class="logo-icon">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
-                </svg>
-            </div>
-            <span class="logo-text">FitTrack+</span>
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"></path>
+          </svg>
         </div>
+        <span class="logo-text">FitTrack+</span>
+      </div>
 
-        <p class="welcome-text">Welkom! Hoe wil je FitTrack+ gebruiken?</p>
+      <p class="welcome-text">Welkom! Hoe wil je FitTrack+ gebruiken?</p>
 
-        <div class="choice-cards">
-            <a href="{{ url_for('signup.signup_particular') }}" class="choice-card">
-                <div class="choice-icon">
-                    <span style="color: white;">💪</span>
-                </div>
-                <h3 class="choice-title">Fitness Gebruiker</h3>
-                <p class="choice-description">
-                    Start je persoonlijke fitness journey met gepersonaliseerde workouts en tracking
-                </p>
-            </a>
+      <div class="choice-cards">
+        <a href="/signup/particular" class="choice-card">
+          <div class="choice-icon">
+            <span style="color: white;">💪</span>
+          </div>
+          <h3 class="choice-title">Fitness Gebruiker</h3>
+          <p class="choice-description">
+            Start je persoonlijke fitness journey met gepersonaliseerde workouts en tracking
+          </p>
+        </a>
 
-            <a href="{{ url_for('signup.signup_coach') }}" class="choice-card trainer">
-                <div class="choice-icon">
-                    <span style="color: white;">🏆</span>
-                </div>
-                <h3 class="choice-title">Personal Trainer</h3>
-                <p class="choice-description">
-                    Beheer je klanten, maak trainingsschema's en volg hun vooruitgang
-                </p>
-            </a>
-        </div>
+        <a href="/signup/coach" class="choice-card trainer">
+          <div class="choice-icon">
+            <span style="color: white;">🏆</span>
+          </div>
+          <h3 class="choice-title">Personal Trainer</h3>
+          <p class="choice-description">
+            Beheer je klanten, maak trainingsschema's en volg hun vooruitgang
+          </p>
+        </a>
+      </div>
     </div>
-</div>
-{% endblock %}
+  </div>
+</body>
+</html>
