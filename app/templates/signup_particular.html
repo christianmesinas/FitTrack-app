@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitTrack+ – Start je Fitness Journey</title>
-    <link rel="stylesheet" href="path/to/landings.css"> <!-- remplace par ton fichier CSS réel -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landings.css') }}">
     <style>
         .form-container {
             background: rgba(255, 255, 255, 0.95);
@@ -76,12 +76,14 @@
             <h2 class="form-title">Begin je Fitness Journey</h2>
             <p class="form-subtitle">Laten we je profiel personaliseren</p>
 
-            <form method="POST" action="signup_particular_url_here">
-                <!-- remplace par ton token CSRF si nécessaire -->
+            <form method="POST" action="{{ url_for('signup.signup_particular') }}">
+                <!-- WERKENDE CSRF TOKEN -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
                 <div class="form-group">
                     <label class="form-label" for="name">Hoe mogen we je noemen? *</label>
-                    <input type="text" class="form-input" id="name" name="name" required placeholder="Je naam" value="">
+                    <input type="text" class="form-input" id="name" name="name" required placeholder="Je naam"
+                           value="{{ current_user.name if current_user and current_user.name else '' }}">
                 </div>
 
                 <div class="form-group">
@@ -125,19 +127,23 @@
                 <div class="input-group">
                     <div class="form-group">
                         <label class="form-label" for="current_weight">Huidig gewicht (kg)</label>
-                        <input type="number" class="form-input" id="current_weight" name="current_weight" step="0.1" min="30" max="300" placeholder="Bijv. 75">
+                        <input type="number" class="form-input" id="current_weight" name="current_weight"
+                               step="0.1" min="30" max="300" placeholder="Bijv. 75"
+                               value="{{ current_user.current_weight if current_user and current_user.current_weight else '' }}">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="target_weight">Doel gewicht (kg)</label>
-                        <input type="number" class="form-input" id="target_weight" name="target_weight" step="0.1" min="30" max="300" placeholder="Bijv. 70">
+                        <input type="number" class="form-input" id="target_weight" name="target_weight"
+                               step="0.1" min="30" max="300" placeholder="Bijv. 70"
+                               value="{{ current_user.fitness_goal if current_user and current_user.fitness_goal else '' }}">
                     </div>
                 </div>
 
                 <button type="submit" class="submit-btn">Start met Trainen</button>
             </form>
 
-            <a href="signup_choice_url_here" class="back-link">← Terug naar keuze</a>
+            <a href="{{ url_for('signup.signup_choice') }}" class="back-link">← Terug naar keuze</a>
         </div>
     </div>
 </body>

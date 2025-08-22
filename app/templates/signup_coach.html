@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitTrack+ – Registreer als Trainer</title>
-    <link rel="stylesheet" href="css/landings.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landings.css') }}">
     <style>
         .form-container {
             background: rgba(255, 255, 255, 0.95);
@@ -113,20 +113,21 @@
         <h2 class="form-title">Registreer als Trainer</h2>
         <p class="form-subtitle">Help anderen hun fitness doelen te bereiken</p>
 
-        <form method="POST" action="/signup_coach">
-            <!-- CSRF token placeholder -->
-            <input type="hidden" name="csrf_token" value="voorbeeld_token">
+        <form method="POST" action="{{ url_for('signup.signup_coach') }}">
+            <!-- WERKENDE CSRF TOKEN -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
             <div class="form-group">
                 <label class="form-label" for="name">Volledige Naam *</label>
                 <input type="text" class="form-input" id="name" name="name" required
-                       placeholder="John Doe" value="Voornaam">
+                       placeholder="John Doe" value="{{ current_user.name if current_user and current_user.name else '' }}">
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="company_name">Bedrijfsnaam / Gym</label>
                 <input type="text" class="form-input" id="company_name" name="company_name"
-                       placeholder="FitGym Amsterdam">
+                       placeholder="FitGym Amsterdam"
+                       value="{{ current_user.company_name if current_user and current_user.company_name else '' }}">
             </div>
 
             <div class="form-group">
@@ -159,13 +160,13 @@
             <div class="form-group">
                 <label class="form-label" for="certification">Certificeringen</label>
                 <textarea class="form-textarea" id="certification" name="certification"
-                          placeholder="Bijv. NASM Certified Personal Trainer, ACE Fitness Nutrition Specialist"></textarea>
+                          placeholder="Bijv. NASM Certified Personal Trainer, ACE Fitness Nutrition Specialist">{{ current_user.certification if current_user and current_user.certification else '' }}</textarea>
             </div>
 
             <button type="submit" class="submit-btn">Start als Trainer</button>
         </form>
 
-        <a href="/signup_choice" class="back-link">← Terug naar keuze</a>
+        <a href="{{ url_for('signup.signup_choice') }}" class="back-link">← Terug naar keuze</a>
     </div>
 </div>
 </body>
