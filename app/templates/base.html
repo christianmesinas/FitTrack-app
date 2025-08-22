@@ -1,56 +1,111 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
+<html lang="nl">
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     {% if title %}
-    <title>{{ title }} - FitTrack</title>
+    <title>{{ title }} - FitTrack+</title>
     {% else %}
-    <title>Welcome to FitTrack</title>
+    <title>Welkom bij FitTrack+</title>
     {% endif %}
-  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='Fittrack-icon.svg') }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='Fittrack-icon.svg') }}">
+
+    <!-- CSS Files -->
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-{% if csrf_token %}
+
+    <!-- Font Awesome voor icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSRF Token -->
+    {% if csrf_token %}
     <meta name="csrf-token" content="{{ csrf_token() }}">
-{% endif %}
+    {% endif %}
 
-      {% block head %}
-  {% endblock %}
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+            <script>
+                // Auto-hide flash messages na 5 seconden
+                setTimeout(function() {
+                    const alerts = document.querySelectorAll('.flash-messages .alert');
+                    alerts.forEach(function(alert) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    });
+                }, 5000);
+            </script>
+        {% endif %}
+    {% endwith %}
 
-  </head>
-  <body>
+    <!-- Main Content -->
     <div class="">
-      {% block content %}{% endblock %}
+        {% block content %}{% endblock %}
     </div>
 
-
-{% if current_user.is_authenticated and request.endpoint not in [
-    'auth.onboarding_name',
-    'auth.onboarding_current_weight',
-    'auth.onboarding_goal_weight'
-] %}
-    <nav class="navbar ">
-        <a href="{{ url_for('main.index') }}">Home</a>
-        <a aria-current="page" href="{{ url_for('profile.profile') }}">Profile</a>
-        <!-- Hardcoded link om de error te vermijden -->
-        <a href="/admin/dashboard" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 500;">
-            Trainer Dashboard
+    <!-- Navigation Bar (alleen voor authenticated users, niet tijdens onboarding) -->
+    {% if current_user.is_authenticated and request.endpoint not in [
+        'auth.onboarding_name',
+        'auth.onboarding_current_weight',
+        'auth.onboarding_goal_weight'
+    ] %}
+    <nav class="navbar">
+        <a href="{{ url_for('main.index') }}" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
         </a>
-        <a aria-current="page" href="{{ url_for('auth.logout') }}">Logout</a>
+
+        <a href="{{ url_for('profile.profile') }}" class="nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profiel</span>
+        </a>
+
+        <!-- Trainer Dashboard -->
+        <a href="/admin/dashboard" class="nav-item trainer-btn">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <span>Trainer</span>
+        </a>
+
+        <a href="{{ url_for('auth.logout') }}" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Uitloggen</span>
+        </a>
     </nav>
     {% endif %}
 
+    <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
             crossorigin="anonymous"></script>
+
+    <!-- Moment.js -->
     {{ moment.include_moment() }}
+
+    <!-- Message count script (behouden van origineel) -->
     <script>
-      function set_message_count(n) {
-        const count = document.getElementById('message_count');
-        count.innerText = n;
-        count.style.visibility = n ? 'visible' : 'hidden';
-      }
+        function set_message_count(n) {
+            const count = document.getElementById('message_count');
+            if (count) {
+                count.innerText = n;
+                count.style.visibility = n ? 'visible' : 'hidden';
+            }
+        }
     </script>
-  </body>
+
+    {% block scripts %}{% endblock %}
+</body>
 </html>

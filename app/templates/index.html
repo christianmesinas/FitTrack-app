@@ -2,50 +2,216 @@
 {% import "bootstrap_wtf.html" as wtf %}
 
 {% block content %}
-    {% if current_user %}
-        <section class="home-intro">
-            <h1 class="home-welcome">Hi, {{ current_user.name }}! Welcome to fittrack</h1>
-        </section>
+{% if current_user.is_authenticated %}
+    <!-- Hero Section met welkom bericht -->
+    <section class="home-hero">
+        <div class="hero-background">
+            <div class="hero-shape hero-shape1"></div>
+            <div class="hero-shape hero-shape2"></div>
+        </div>
 
+        <div class="hero-content">
+            <div class="welcome-section">
+                <h1 class="welcome-title">
+                    Welkom terug, <span class="highlight-name">{{ current_user.name }}</span>! 💪
+                </h1>
+                <p class="welcome-subtitle">Klaar voor je volgende workout?</p>
+            </div>
 
-<section class="workout-blok-section">
-    {% for workout_info in workout_data %}
-        <section class="workout-block" id="workout-{{ workout_info.plan.id }}">
-            <h2>{{ workout_info.plan.name }}</h2>
-            <ul>
-                {% for exercise in workout_info.exercises %}
-                    <li>{{ exercise.name }}</li>
-                {% else %}
-                    <li>Geen oefeningen toegevoegd</li>
-                {% endfor %}
-            </ul>
-            <a href="{{ url_for('sessions.start_workout', plan_id=workout_info.plan.id) }}" class="orange-btn workout-start-btn">Start</a>
-            <div class="setting-dots-wrapper">
-                <a href="#" class="setting-dots-workout">...</a>
-                <div class="settings-menu">
-                    <a href="{{ url_for('workouts.edit_workout', plan_id=workout_info.plan.id) }}">Bewerk workout</a>
-                    <a href="#" class="archive-workout" data-workout-id="{{ workout_info.plan.id }}">Verberg workout</a>
+            <!-- Quick Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-number">{{ workout_data|length }}</span>
+                        <span class="stat-label">Workouts</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-number">12</span>
+                        <span class="stat-label">Deze maand</span>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-number">5</span>
+                        <span class="stat-label">Streak</span>
+                    </div>
                 </div>
             </div>
-        </section>
-    {% else %}
-        <p>Er zijn nog geen workouts in je huidige plan.</p>
-    {% endfor %}
-    <a href="{{ url_for('workouts.add_workout') }}" class="orange-btn-outline add-new-workout-btn home-btn">Add new workout</a>
-    <a href="{{ url_for('profile.workout_history') }}" class="orange-btn-outline add-new-workout-btn home-btn">
-        📅 Bekijk Workout Historiek
-    </a>
-<a href="{{ url_for('profile.archived_plans') }}" class="orange-btn-outline home-btn archive-home-btn">📁 Bekijk Gearchiveerde Workouts</a>
-</section>
+        </div>
+    </section>
 
+    <!-- Workouts Section -->
+    <section class="workouts-section">
+        <div class="section-header">
+            <h2 class="section-title">Jouw Workouts</h2>
+            <a href="{{ url_for('workouts.add_workout') }}" class="add-workout-fab">
+                <i class="fas fa-plus"></i>
+            </a>
+        </div>
 
-    {% else %}
-            <p>je bent niet ingelogd</p>
-    {% endif %}
+        <div class="workouts-container">
+            {% if workout_data %}
+                {% for workout_info in workout_data %}
+                    <div class="workout-card" id="workout-{{ workout_info.plan.id }}">
+                        <div class="workout-card-header">
+                            <div class="workout-icon">
+                                <i class="fas fa-dumbbell"></i>
+                            </div>
+                            <div class="workout-menu">
+                                <button class="menu-toggle" data-workout-id="{{ workout_info.plan.id }}">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <div class="dropdown-menu" id="menu-{{ workout_info.plan.id }}">
+                                    <a href="{{ url_for('workouts.edit_workout', plan_id=workout_info.plan.id) }}" class="dropdown-item">
+                                        <i class="fas fa-edit"></i> Bewerken
+                                    </a>
+                                    <a href="#" class="dropdown-item archive-workout" data-workout-id="{{ workout_info.plan.id }}">
+                                        <i class="fas fa-archive"></i> Archiveren
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
 
+                        <div class="workout-card-body">
+                            <h3 class="workout-name">{{ workout_info.plan.name }}</h3>
 
-        <script src="{{ url_for('static', filename='js/archive.js') }}" defer></script>
+                            <div class="exercise-list">
+                                {% if workout_info.exercises %}
+                                    {% for exercise in workout_info.exercises[:3] %}
+                                        <div class="exercise-item">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>{{ exercise.name }}</span>
+                                        </div>
+                                    {% endfor %}
+                                    {% if workout_info.exercises|length > 3 %}
+                                        <div class="exercise-item more">
+                                            <span>+{{ workout_info.exercises|length - 3 }} meer oefeningen</span>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="no-exercises">
+                                        <i class="fas fa-info-circle"></i>
+                                        <span>Nog geen oefeningen toegevoegd</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
 
-        <script src="{{ url_for('static', filename='js/menu.js') }}" defer></script>
+                        <div class="workout-card-footer">
+                            <a href="{{ url_for('sessions.start_workout', plan_id=workout_info.plan.id) }}" class="btn-start-workout">
+                                <span>Start Workout</span>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <!-- Add New Workout Card -->
+                <div class="workout-card add-new-card">
+                    <a href="{{ url_for('workouts.add_workout') }}" class="add-new-link">
+                        <div class="add-icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <span class="add-text">Nieuwe Workout</span>
+                    </a>
+                </div>
+            {% else %}
+                <!-- Empty State -->
+                <div class="empty-state-container">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-dumbbell"></i>
+                    </div>
+                    <h3 class="empty-state-title">Nog geen workouts</h3>
+                    <p class="empty-state-text">Begin met het maken van je eerste workout routine!</p>
+                    <a href="{{ url_for('workouts.add_workout') }}" class="btn-create-first">
+                        <i class="fas fa-plus"></i>
+                        Maak je eerste workout
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="{{ url_for('profile.workout_history') }}" class="action-btn">
+                <i class="fas fa-history"></i>
+                <span>Workout Historiek</span>
+            </a>
+            <a href="{{ url_for('profile.archived_plans') }}" class="action-btn">
+                <i class="fas fa-archive"></i>
+                <span>Gearchiveerd</span>
+            </a>
+        </div>
+    </section>
+
+{% else %}
+    <!-- Not Logged In State -->
+    <div class="not-logged-in">
+        <div class="login-prompt">
+            <div class="prompt-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2>Je bent niet ingelogd</h2>
+            <p>Log in om je workouts te bekijken</p>
+            <a href="{{ url_for('auth.login') }}" class="btn-login">
+                Inloggen
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Scripts -->
+<script src="{{ url_for('static', filename='js/archive.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/menu.js') }}" defer></script>
+
+<script>
+    // Dropdown menu toggle
+    document.querySelectorAll('.menu-toggle').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const workoutId = this.dataset.workoutId;
+            const menu = document.getElementById(`menu-${workoutId}`);
+
+            // Sluit alle andere menus
+            document.querySelectorAll('.dropdown-menu').forEach(m => {
+                if (m !== menu) m.classList.remove('show');
+            });
+
+            menu.classList.toggle('show');
+        });
+    });
+
+    // Sluit menu wanneer je ergens anders klikt
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    });
+
+    // Archive workout
+    document.querySelectorAll('.archive-workout').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const workoutId = this.dataset.workoutId;
+            if (confirm('Weet je zeker dat je deze workout wilt archiveren?')) {
+                // Archive logic hier
+                document.getElementById(`workout-${workoutId}`).style.display = 'none';
+            }
+        });
+    });
+</script>
 
 {% endblock %}
