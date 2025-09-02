@@ -1,10 +1,1024 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block head %}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css' rel='stylesheet' />
+<style>
+    /* Styles personnalisés pour l'agenda */
+    .calendar-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        padding-bottom: 100px;
+    }
+
+    .calendar-header {
+        background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+        color: white;
+        padding: 30px 20px;
+        border-radius: 20px 20px 0 0;
+        margin-bottom: -10px;
+    }
+
+    .calendar-header h1 {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .calendar-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+    }
+
+    #calendar {
+        background: white;
+        padding: 20px;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        min-height: 600px;
+    }
+
+    /* Personnalisation FullCalendar */
+    .fc {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    }
+
+    .fc-toolbar-title {
+        font-size: 1.5rem !important;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .fc-button-primary {
+        background: #FF6B35 !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .fc-button-primary:hover {
+        background: #e55a2b !important;
+        transform: translateY(-2px);
+    }
+
+    .fc-button-primary:not(:disabled):active {
+        background: #d04a1b !important;
+    }
+
+    .fc-today-button:disabled {
+        opacity: 0.5;
+    }
+
+    .fc-day-today {
+        background: rgba(255, 107, 53, 0.1) !important;
+    }
+
+    .fc-event {
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 4px 8px !important;
+        font-weight: 500 !important;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .fc-event:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .fc-daygrid-event {
+        white-space: normal !important;
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .quick-action-btn {
+        padding: 12px 24px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 50px;
+        color: #333;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .quick-action-btn:hover {
+        border-color: #FF6B35;
+        color: #FF6B35;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255,107,53,0.2);
+    }
+
+    .quick-action-btn.primary {
+        background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+        color: white;
+        border: none;
+    }
+
+    .quick-action-btn.primary:hover {
+        box-shadow: 0 8px 20px rgba(255,107,53,0.3);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .modal-content {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from { 
+            opacity: 0;
+            transform: translate(-50%, -40%);
+        }
+        to { 
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        color: #333;
+        font-size: 1.5rem;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #999;
+        transition: color 0.3s ease;
+    }
+
+    .modal-close:hover {
+        color: #333;
+    }
+
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #333;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #FF6B35;
+        box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    /* Event Type Selector */
+    .event-type-selector {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .event-type-option {
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .event-type-option:hover {
+        border-color: #FF6B35;
+    }
+
+    .event-type-option.selected {
+        background: #FF6B35;
+        color: white;
+        border-color: #FF6B35;
+    }
+
+    /* Color Picker */
+    .color-picker {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .color-option {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .color-option:hover {
+        transform: scale(1.1);
+    }
+
+    .color-option.selected {
+        border-color: #333;
+    }
+
+    /* Stats Cards */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(255,140,66,0.1) 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .calendar-container {
+            padding: 10px;
+        }
+
+        .fc-toolbar {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fc-toolbar-title {
+            font-size: 1.2rem !important;
+        }
+
+        .fc-button {
+            padding: 6px 12px !important;
+            font-size: 0.9rem !important;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .event-type-selector {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-actions {
+            flex-direction: column;
+        }
+
+        .quick-action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Checkbox custom */
+    .checkbox-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .checkbox-wrapper input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    /* Success animation */
+    @keyframes successPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .event-success {
+        animation: successPulse 0.5s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="calendar-container">
+    <!-- Header -->
+    <div class="calendar-header">
+        <h1>📅 Mon Agenda Fitness</h1>
+        <p>Planifiez vos séances et suivez votre progression</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-value" id="weekCount">0</div>
+            <div class="stat-label">Cette semaine</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-value" id="monthCount">0</div>
+            <div class="stat-label">Ce mois</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="completedCount">0</div>
+            <div class="stat-label">Complétées</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⏰</div>
+            <div class="stat-value" id="nextWorkout">--</div>
+            <div class="stat-label">Prochaine séance</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <button class="quick-action-btn primary" onclick="openAddEventModal()">
+            <span>➕</span> Ajouter une séance
+        </button>
+        <button class="quick-action-btn" onclick="addQuickWorkout()">
+            <span>⚡</span> Séance rapide
+        </button>
+        <button class="quick-action-btn" onclick="calendar.changeView('dayGridMonth')">
+            <span>📅</span> Vue mois
+        </button>
+        <button class="quick-action-btn" onclick="calendar.changeView('timeGridWeek')">
+            <span>📊</span> Vue semaine
+        </button>
+        <button class="quick-action-btn" onclick="calendar.changeView('listWeek')">
+            <span>📋</span> Liste
+        </button>
+    </div>
+
+    <!-- Calendar -->
+    <div id="calendar"></div>
+</div>
+
+<!-- Add/Edit Event Modal -->
+<div id="eventModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Ajouter une séance</h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+
+        <form id="eventForm">
+            <input type="hidden" id="eventId">
+            
+            <div class="form-group">
+                <label for="eventTitle">Titre *</label>
+                <input type="text" class="form-control" id="eventTitle" required 
+                       placeholder="Ex: Séance jambes, Cardio matin...">
+            </div>
+
+            <div class="form-group">
+                <label for="eventType">Type de séance</label>
+                <div class="event-type-selector">
+                    <div class="event-type-option" data-type="workout" onclick="selectEventType(this)">
+                        💪 Musculation
+                    </div>
+                    <div class="event-type-option" data-type="cardio" onclick="selectEventType(this)">
+                        🏃 Cardio
+                    </div>
+                    <div class="event-type-option" data-type="rest" onclick="selectEventType(this)">
+                        😴 Repos
+                    </div>
+                    <div class="event-type-option" data-type="other" onclick="selectEventType(this)">
+                        📝 Autre
+                    </div>
+                </div>
+                <input type="hidden" id="eventType" value="workout">
+            </div>
+
+            <div class="form-group">
+                <label for="workoutPlan">Workout plan (optionnel)</label>
+                <select class="form-control" id="workoutPlan">
+                    <option value="">-- Aucun --</option>
+                    {% for plan in workout_plans %}
+                    <option value="{{ plan.id }}">{{ plan.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="eventDate">Date *</label>
+                    <input type="date" class="form-control" id="eventDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="eventTime">Heure *</label>
+                    <input type="time" class="form-control" id="eventTime" required value="18:00">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="eventDuration">Durée (minutes)</label>
+                <input type="number" class="form-control" id="eventDuration" 
+                       value="60" min="15" max="300" step="15">
+            </div>
+
+            <div class="form-group">
+                <label for="eventDescription">Description</label>
+                <textarea class="form-control" id="eventDescription" 
+                          placeholder="Notes, objectifs, exercices prévus..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Couleur</label>
+                <div class="color-picker">
+                    <div class="color-option selected" style="background: #FF6B35" 
+                         data-color="#FF6B35" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #4CAF50" 
+                         data-color="#4CAF50" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #2196F3" 
+                         data-color="#2196F3" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #9C27B0" 
+                         data-color="#9C27B0" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #FFC107" 
+                         data-color="#FFC107" onclick="selectColor(this)"></div>
+                    <div class="color-option" style="background: #607D8B" 
+                         data-color="#607D8B" onclick="selectColor(this)"></div>
+                </div>
+                <input type="hidden" id="eventColor" value="#FF6B35">
+            </div>
+
+            <div class="form-group">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="isRecurring" onchange="toggleRecurrence()">
+                    <label for="isRecurring">Séance récurrente</label>
+                </div>
+            </div>
+
+            <div id="recurrenceOptions" style="display: none;">
+                <div class="form-group">
+                    <label for="recurrencePattern">Répéter</label>
+                    <select class="form-control" id="recurrencePattern">
+                        <option value="daily">Chaque jour</option>
+                        <option value="weekly" selected>Chaque semaine</option>
+                        <option value="monthly">Chaque mois</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="recurrenceCount">Nombre de répétitions</label>
+                    <input type="number" class="form-control" id="recurrenceCount" 
+                           value="4" min="1" max="52">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="reminderMinutes">Rappel</label>
+                <select class="form-control" id="reminderMinutes">
+                    <option value="">Pas de rappel</option>
+                    <option value="15">15 minutes avant</option>
+                    <option value="30">30 minutes avant</option>
+                    <option value="60">1 heure avant</option>
+                    <option value="120">2 heures avant</option>
+                    <option value="1440">1 jour avant</option>
+                </select>
+            </div>
+
+            <div class="form-actions" style="display: flex; gap: 10px; margin-top: 30px;">
+                <button type="submit" class="quick-action-btn primary" style="flex: 1;">
+                    Enregistrer
+                </button>
+                <button type="button" class="quick-action-btn" onclick="closeModal()" style="flex: 1;">
+                    Annuler
+                </button>
+                <button type="button" id="deleteBtn" class="quick-action-btn" 
+                        style="background: #f44336; color: white; border: none; display: none;"
+                        onclick="deleteEvent()">
+                    🗑️ Supprimer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+<script>
+    let calendar;
+    let currentEvent = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendarEl = document.getElementById('calendar');
+        
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            firstDay: 1,
+            height: 'auto',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            buttonText: {
+                today: "Aujourd'hui",
+                month: 'Mois',
+                week: 'Semaine',
+                list: 'Liste'
+            },
+            events: '{{ url_for("calendar.get_events") }}',
+            editable: true,
+            eventStartEditable: true,
+            eventDurationEditable: true,
+            eventResizableFromStart: true,
+            
+            dateClick: function(info) {
+                openAddEventModal(info.date);
+            },
+            
+            eventClick: function(info) {
+                openEditEventModal(info.event);
+            },
+            
+            eventDrop: function(info) {
+                updateEventDateTime(info.event);
+            },
+            
+            eventResize: function(info) {
+                updateEventDateTime(info.event);
+            },
+            
+            eventDidMount: function(info) {
+                // Ajouter des tooltips
+                info.el.title = info.event.extendedProps.description || info.event.title;
+                
+                // Ajouter une icône selon le type
+                const eventType = info.event.extendedProps.event_type;
+                let icon = '';
+                switch(eventType) {
+                    case 'workout': icon = '💪 '; break;
+                    case 'cardio': icon = '🏃 '; break;
+                    case 'rest': icon = '😴 '; break;
+                    case 'completed_workout': icon = '✅ '; break;
+                    default: icon = '📝 ';
+                }
+                
+                if (icon && !info.event.title.startsWith(icon)) {
+                    info.el.querySelector('.fc-event-title').textContent = icon + info.event.title;
+                }
+            }
+        });
+        
+        calendar.render();
+        updateStats();
+    });
+
+    function openAddEventModal(date = null) {
+        document.getElementById('modalTitle').textContent = 'Ajouter une séance';
+        document.getElementById('eventForm').reset();
+        document.getElementById('eventId').value = '';
+        document.getElementById('deleteBtn').style.display = 'none';
+        
+        // Pré-remplir la date si fournie
+        if (date) {
+            const dateStr = date.toISOString().split('T')[0];
+            document.getElementById('eventDate').value = dateStr;
+        } else {
+            // Date par défaut: demain
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('eventDate').value = tomorrow.toISOString().split('T')[0];
+        }
+        
+        // Reset les sélections
+        document.querySelectorAll('.event-type-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelector('[data-type="workout"]').classList.add('selected');
+        
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+        document.querySelector('[data-color="#FF6B35"]').classList.add('selected');
+        
+        document.getElementById('eventModal').style.display = 'block';
+    }
+
+    function openEditEventModal(event) {
+        currentEvent = event;
+        document.getElementById('modalTitle').textContent = 'Modifier la séance';
+        document.getElementById('eventId').value = event.id;
+        document.getElementById('deleteBtn').style.display = 'inline-block';
+        
+        // Remplir le formulaire
+        document.getElementById('eventTitle').value = event.title.replace(/^[^\s]+ /, ''); // Enlever l'icône
+        document.getElementById('eventDescription').value = event.extendedProps.description || '';
+        
+        const start = new Date(event.start);
+        document.getElementById('eventDate').value = start.toISOString().split('T')[0];
+        document.getElementById('eventTime').value = start.toTimeString().slice(0, 5);
+        
+        if (event.end) {
+            const duration = (event.end - event.start) / 60000;
+            document.getElementById('eventDuration').value = duration;
+        }
+        
+        // Type d'événement
+        const eventType = event.extendedProps.event_type || 'workout';
+        document.getElementById('eventType').value = eventType;
+        document.querySelectorAll('.event-type-option').forEach(opt => {
+            opt.classList.toggle('selected', opt.dataset.type === eventType);
+        });
+        
+        // Workout plan
+        document.getElementById('workoutPlan').value = event.extendedProps.workout_plan_id || '';
+        
+        // Couleur
+        const color = event.backgroundColor || '#FF6B35';
+        document.getElementById('eventColor').value = color;
+        document.querySelectorAll('.color-option').forEach(opt => {
+            opt.classList.toggle('selected', opt.dataset.color === color);
+        });
+        
+        document.getElementById('eventModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('eventModal').style.display = 'none';
+        currentEvent = null;
+    }
+
+    function selectEventType(element) {
+        document.querySelectorAll('.event-type-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        document.getElementById('eventType').value = element.dataset.type;
+    }
+
+    function selectColor(element) {
+        document.querySelectorAll('.color-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        element.classList.add('selected');
+        document.getElementById('eventColor').value = element.dataset.color;
+    }
+
+    function toggleRecurrence() {
+        const isRecurring = document.getElementById('isRecurring').checked;
+        document.getElementById('recurrenceOptions').style.display = isRecurring ? 'block' : 'none';
+    }
+
+    document.getElementById('eventForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const eventId = document.getElementById('eventId').value;
+        const title = document.getElementById('eventTitle').value;
+        const description = document.getElementById('eventDescription').value;
+        const date = document.getElementById('eventDate').value;
+        const time = document.getElementById('eventTime').value;
+        const duration = parseInt(document.getElementById('eventDuration').value);
+        const eventType = document.getElementById('eventType').value;
+        const workoutPlanId = document.getElementById('workoutPlan').value;
+        const color = document.getElementById('eventColor').value;
+        const isRecurring = document.getElementById('isRecurring').checked;
+        const recurrencePattern = document.getElementById('recurrencePattern').value;
+        const recurrenceCount = parseInt(document.getElementById('recurrenceCount').value);
+        const reminderMinutes = document.getElementById('reminderMinutes').value;
+        
+        const start = new Date(date + 'T' + time);
+        const end = new Date(start.getTime() + duration * 60000);
+        
+        const eventData = {
+            title,
+            description,
+            start: start.toISOString(),
+            end: end.toISOString(),
+            event_type: eventType,
+            workout_plan_id: workoutPlanId || null,
+            color,
+            is_recurring: isRecurring,
+            recurrence_pattern: isRecurring ? recurrencePattern : null,
+            recurrence_count: isRecurring ? recurrenceCount : null,
+            reminder_minutes: reminderMinutes || null
+        };
+        
+        try {
+            let url, method;
+            if (eventId) {
+                url = `{{ url_for("calendar.update_event", event_id=0) }}`.replace('/0', '/' + eventId);
+                method = 'PUT';
+            } else {
+                url = '{{ url_for("calendar.create_event") }}';
+                method = 'POST';
+            }
+            
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(eventData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                calendar.refetchEvents();
+                closeModal();
+                showToast(result.message, 'success');
+                updateStats();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Erreur lors de l\'enregistrement', 'error');
+        }
+    });
+
+    async function deleteEvent() {
+        if (!currentEvent || !confirm('Êtes-vous sûr de vouloir supprimer cette séance ?')) {
+            return;
+        }
+        
+        try {
+            const eventId = currentEvent.id.replace('session_', '');
+            const response = await fetch(`{{ url_for("calendar.delete_event", event_id=0) }}`.replace('/0', '/' + eventId), {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                currentEvent.remove();
+                closeModal();
+                showToast('Séance supprimée', 'success');
+                updateStats();
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Erreur lors de la suppression', 'error');
+        }
+    }
+
+    async function updateEventDateTime(event) {
+        try {
+            const eventData = {
+                start: event.start.toISOString(),
+                end: event.end ? event.end.toISOString() : new Date(event.start.getTime() + 3600000).toISOString()
+            };
+            
+            const eventId = event.id.replace('session_', '');
+            const response = await fetch(`{{ url_for("calendar.update_event", event_id=0) }}`.replace('/0', '/' + eventId), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(eventData)
+            });
+            
+            const result = await response.json();
+            
+            if (!result.success) {
+                event.revert();
+                showToast(result.message, 'error');
+            } else {
+                showToast('Séance déplacée', 'success');
+                updateStats();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            event.revert();
+            showToast('Erreur lors de la mise à jour', 'error');
+        }
+    }
+
+    function addQuickWorkout() {
+        // Ajouter une séance rapide pour aujourd'hui
+        const now = new Date();
+        const startTime = new Date();
+        startTime.setHours(18, 0, 0, 0);
+        
+        openAddEventModal(now);
+        document.getElementById('eventTitle').value = 'Séance rapide';
+        document.getElementById('eventTime').value = '18:00';
+        document.getElementById('eventDuration').value = '45';
+    }
+
+    async function updateStats() {
+        const events = calendar.getEvents();
+        const now = new Date();
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay() + 1);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        
+        let weekCount = 0;
+        let monthCount = 0;
+        let completedCount = 0;
+        let nextWorkout = null;
+        
+        events.forEach(event => {
+            const eventDate = new Date(event.start);
+            
+            // Cette semaine
+            if (eventDate >= weekStart && eventDate <= weekEnd) {
+                weekCount++;
+            }
+            
+            // Ce mois
+            if (eventDate >= monthStart && eventDate <= monthEnd) {
+                monthCount++;
+            }
+            
+            // Complétées
+            if (event.extendedProps.status === 'completed' || 
+                event.extendedProps.event_type === 'completed_workout') {
+                completedCount++;
+            }
+            
+            // Prochaine séance
+            if (eventDate > now && (!nextWorkout || eventDate < nextWorkout)) {
+                nextWorkout = eventDate;
+            }
+        });
+        
+        document.getElementById('weekCount').textContent = weekCount;
+        document.getElementById('monthCount').textContent = monthCount;
+        document.getElementById('completedCount').textContent = completedCount;
+        
+        if (nextWorkout) {
+            const days = Math.floor((nextWorkout - now) / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((nextWorkout - now) / (1000 * 60 * 60)) % 24;
+            
+            if (days > 0) {
+                document.getElementById('nextWorkout').textContent = `${days}j ${hours}h`;
+            } else if (hours > 0) {
+                document.getElementById('nextWorkout').textContent = `${hours}h`;
+            } else {
+                document.getElementById('nextWorkout').textContent = 'Bientôt';
+            }
+        } else {
+            document.getElementById('nextWorkout').textContent = '--';
+        }
+    }
+
+    function showToast(message, type = 'success') {
+        // Créer un toast notification
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+            color: white;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: slideUp 0.3s ease;
+        `;
+        
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Raccourcis clavier
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+        if (e.ctrlKey && e.key === 'n') {
+            e.preventDefault();
+            openAddEventModal();
+        }
+    });
+
+    // Click outside to close modal
+    document.getElementById('eventModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+</script>
+
+<style>
+    @keyframes fadeOut {
+        to {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+    }
+</style>
+{% endblock %}
