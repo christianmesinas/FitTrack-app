@@ -1890,3 +1890,426 @@ select {
         font-size: 1.3rem;
     }
 }
+
+
+/* extra css voor moderne design voor alle anderen pagins */
+
+
+/* ===========================
+   MODERN DESIGN SYSTEM
+   Voeg dit toe aan app/static/main.css
+   =========================== */
+
+/* Root Variables voor consistent kleurgebruik */
+:root {
+  --primary-gradient: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+  --secondary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --card-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  --card-shadow-hover: 0 15px 40px rgba(0,0,0,0.15);
+  --glass-bg: rgba(255, 255, 255, 0.95);
+  --border-radius: 20px;
+  --border-radius-small: 12px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Moderniseer ALLE workout blocks automatisch */
+.workout-block,
+.exercise-block,
+.active-workout-block,
+.history-block,
+.card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(10px);
+  border-radius: var(--border-radius) !important;
+  box-shadow: var(--card-shadow) !important;
+  border: none !important;
+  transition: var(--transition);
+  overflow: hidden;
+  position: relative;
+}
+
+.workout-block:hover,
+.exercise-block:hover,
+.active-workout-block:hover,
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--card-shadow-hover) !important;
+}
+
+/* Moderniseer exercise blocks */
+.exercise-block-content {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  border-radius: var(--border-radius-small) !important;
+  padding: 1.5rem !important;
+}
+
+/* Headers met gradient accent */
+.header-section {
+  position: relative;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+}
+
+.header-section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: var(--primary-gradient);
+  border-radius: 2px;
+}
+
+.header-section h1 {
+  font-weight: 700;
+  background: linear-gradient(135deg, #333 0%, #666 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Moderniseer ALLE buttons */
+.orange-btn,
+.orange-btn-outline,
+.btn-primary,
+.submit-btn {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 50px !important;
+  padding: 0.75rem 2rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 5px 20px rgba(255, 107, 53, 0.3) !important;
+  transition: var(--transition);
+  text-transform: none !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.orange-btn:hover,
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4) !important;
+}
+
+/* Glanzend effect voor buttons */
+.orange-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.orange-btn:hover::before {
+  left: 100%;
+}
+
+/* Outline buttons modern */
+.orange-btn-outline,
+.btn-secondary {
+  background: white !important;
+  color: #FF6B35 !important;
+  border: 2px solid #FF6B35 !important;
+  box-shadow: 0 5px 15px rgba(255, 107, 53, 0.2) !important;
+}
+
+.orange-btn-outline:hover {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+/* Top bar modern */
+.top-bar {
+  background: var(--primary-gradient) !important;
+  box-shadow: 0 5px 20px rgba(255, 107, 53, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.top-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -200px;
+  width: 200px;
+  height: 200px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  animation: float 15s infinite ease-in-out;
+}
+
+/* Form inputs modern */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  background: white !important;
+  border: 2px solid #e0e0e0 !important;
+  border-radius: 12px !important;
+  padding: 0.75rem 1rem !important;
+  transition: var(--transition);
+  font-size: 1rem;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #FF6B35 !important;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1) !important;
+  outline: none !important;
+}
+
+/* Tables modern */
+.table {
+  background: white;
+  border-radius: var(--border-radius-small);
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.table thead {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.table thead th {
+  border: none !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  padding: 1rem !important;
+}
+
+.table tbody tr {
+  transition: var(--transition);
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 107, 53, 0.05);
+}
+
+/* Stats cards */
+.stat-item {
+  background: white;
+  padding: 1rem;
+  border-radius: var(--border-radius-small);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  transition: var(--transition);
+}
+
+.stat-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+/* Alert messages modern */
+.alert {
+  border: none !important;
+  border-radius: var(--border-radius-small) !important;
+  padding: 1rem 1.5rem !important;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+  backdrop-filter: blur(10px);
+}
+
+.alert-success {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%) !important;
+  color: #059669;
+  border-left: 4px solid #10b981 !important;
+}
+
+.alert-warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%) !important;
+  color: #d97706;
+  border-left: 4px solid #f59e0b !important;
+}
+
+.alert-danger,
+.alert-error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%) !important;
+  color: #dc2626;
+  border-left: 4px solid #ef4444 !important;
+}
+
+/* Search tags modern */
+.search-tags p {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+  color: #495057 !important;
+  padding: 0.5rem 1.5rem !important;
+  border-radius: 25px !important;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: var(--transition);
+}
+
+.search-tags p:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Exercise labels modern */
+.exercise-labels-list li {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  padding: 0.5rem 1.5rem !important;
+  border-radius: 25px !important;
+  font-weight: 500;
+  box-shadow: 0 3px 10px rgba(255, 107, 53, 0.2);
+}
+
+/* Page sections with subtle background */
+.exercise-blok-section,
+.workout-blok-section,
+.profile-section {
+  position: relative;
+  padding: 2rem 0;
+}
+
+.exercise-blok-section::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 107, 53, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
+}
+
+/* Empty states modern */
+.empty-state {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: var(--border-radius);
+  padding: 3rem 2rem;
+  text-align: center;
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.empty-state h3 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.empty-state p {
+  color: #6c757d;
+  margin-bottom: 2rem;
+}
+
+/* Pagination modern */
+.pagination {
+  gap: 0.5rem;
+}
+
+.pagination-btn,
+.page-link {
+  background: white !important;
+  color: #FF6B35 !important;
+  border: 2px solid #FF6B35 !important;
+  border-radius: 12px !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 500;
+  transition: var(--transition);
+  text-decoration: none !important;
+}
+
+.pagination-btn:hover,
+.page-link:hover {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 107, 53, 0.2);
+}
+
+.page-item.active .page-link {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  border-color: transparent !important;
+}
+
+/* Smooth animations voor alle transities */
+* {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Loading states */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.loading {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* Fade animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply animations to new content */
+.workout-block,
+.exercise-block,
+.card {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  :root {
+    --border-radius: 15px;
+    --border-radius-small: 10px;
+  }
+
+  .header-section h1 {
+    font-size: 1.75rem;
+  }
+
+  .workout-block,
+  .exercise-block {
+    margin-bottom: 1rem;
+  }
+}
+
+
+
+
+

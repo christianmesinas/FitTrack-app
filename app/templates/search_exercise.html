@@ -8,52 +8,636 @@
     </a>
 </div>
 
-<div class="workout-name">
-    <h1>Add exercise</h1>
-<a href="{{ url_for('workouts.add_new_exercise', plan_id=plan_id|default(0)) }}" class="btn btn-primary">Maak nieuwe Exercise</a>
+<!-- Header avec contexte -->
+<div class="search-header-context">
+    <div class="workout-name">
+        <h1>🎯 Selecteer oefeningen voor je workout</h1>
+        {% if plan_id and plan_id != 0 %}
+            <p class="workout-context">Je voegt oefeningen toe aan: <strong>{{ request.args.get('workout_name', 'Je workout') }}</strong></p>
+        {% endif %}
+    </div>
+
+    <!-- Quick action button -->
+    <div class="header-actions">
+        <a href="{{ url_for('workouts.add_new_exercise', plan_id=plan_id|default(0)) }}" class="btn btn-primary create-exercise-btn">
+            <span>✨</span> Maak eigen oefening
+        </a>
+    </div>
 </div>
 
-<form class="filter-form" method="GET" id="filter-form">
+<!-- Search guide -->
+<div class="search-guide">
+    <div class="guide-card">
+        <div class="guide-icon">💡</div>
+        <div class="guide-content">
+            <h3>Hoe werkt het?</h3>
+            <ol class="guide-steps">
+                <li>Gebruik de filters hieronder of zoek op naam</li>
+                <li>Klik op de <span class="highlight-plus">+</span> knop bij een oefening om deze toe te voegen</li>
+                <li>Je kunt meerdere oefeningen toevoegen</li>
+                <li>Ga terug naar je workout om sets en reps in te stellen</li>
+            </ol>
+        </div>
+    </div>
+</div>
+
+<!-- Popular categories for quick selection -->
+<div class="popular-categories">
+    <h3>🔥 Populaire categorieën</h3>
+    <div class="category-buttons">
+        <button class="category-btn" onclick="setFilter('category', 'STRENGTH')">
+            💪 Strength
+        </button>
+        <button class="category-btn" onclick="setFilter('category', 'CARDIO')">
+            🏃 Cardio
+        </button>
+        <button class="category-btn" onclick="setFilter('difficulty', 'BEGINNER')">
+            🌱 Beginner
+        </button>
+        <button class="category-btn" onclick="setFilter('equipment', 'BODY_ONLY')">
+            🤸 Bodyweight
+        </button>
+        <button class="category-btn" onclick="setFilter('equipment', 'DUMBBELL')">
+            🏋️ Dumbbell
+        </button>
+    </div>
+</div>
+
+<!-- Filter form met verbeterde UI -->
+<form class="filter-form enhanced-filters" method="GET" id="filter-form">
     {{ form.hidden_tag() }}
     <input type="hidden" name="plan_id" value="{{ plan_id|default(0) }}">
-    <div class="form-group">
-        {{ wtf.form_field(form.difficulty) }}
+
+    <div class="filter-header">
+        <h3>🔍 Filters</h3>
+        <button type="button" class="reset-filters-btn" onclick="resetFilters()">
+            Reset alles
+        </button>
     </div>
-    <div class="form-group">
-        {{ wtf.form_field(form.mechanic) }}
+
+    <div class="filter-grid">
+        <div class="form-group">
+            <label>Moeilijkheid</label>
+            {{ form.difficulty(class="form-control", id="difficulty-filter") }}
+        </div>
+        <div class="form-group">
+            <label>Mechaniek</label>
+            {{ form.mechanic(class="form-control") }}
+        </div>
+        <div class="form-group">
+            <label>Apparatuur</label>
+            {{ form.equipment(class="form-control", id="equipment-filter") }}
+        </div>
+        <div class="form-group">
+            <label>Categorie</label>
+            {{ form.category(class="form-control", id="category-filter") }}
+        </div>
     </div>
-    <div class="form-group">
-        {{ wtf.form_field(form.equipment) }}
-    </div>
-    <div class="form-group">
-        {{ wtf.form_field(form.category) }}
-    </div>
+
     <div class="form-group-search">
-        {{ wtf.form_field(form.search_term) }}
+        <label>Zoek op naam</label>
+        <div class="search-input-wrapper">
+            {{ form.search_term(placeholder="bijv. Squat, Bench Press, Deadlift...", class="search-input") }}
+            <span class="search-icon">🔍</span>
+        </div>
     </div>
+
     <div class="form-group-buttons">
-        <button type="submit" class="orange-btn-outline add-new-workout-btn">{{ form.submit.label.text }}</button>
-        <a href="{{ url_for('workouts.search_exercise', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Reset Filters</a>
-       <a href="{{ url_for('workouts.add_new_exercise', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Maak nieuwe Exercise</a>
-        <a href="{{ url_for('workouts.edit_workout', plan_id=plan_id|default(0)) }}" class="btn btn-secondary">Terug naar Workout</a>
+        <button type="submit" class="orange-btn-outline search-btn">
+            <span>🔍</span> Zoek oefeningen
+        </button>
+        <span class="results-count" id="results-count" style="display: none;">
+            <span class="count-number">0</span> oefeningen gevonden
+        </span>
     </div>
 </form>
 
-<section class="exercise-blok-section" id="exercise-list" data-plan-id="{{ plan_id|default(0) }}">
-    {% include '_exercise_items.html' %}
+<!-- Exercise results met verbeterde presentatie -->
+<section class="exercise-results-section">
+    {% if not exercises %}
+        <!-- Empty state -->
+        <div class="no-results-state">
+            <div class="no-results-icon">🔍</div>
+            <h3>Geen oefeningen gevonden</h3>
+            <p>Probeer andere filters of zoektermen</p>
+            <button onclick="resetFilters()" class="btn-try-again">
+                Probeer opnieuw
+            </button>
+        </div>
+    {% else %}
+        <!-- Success indicator -->
+        <div class="results-header">
+            <h3>✨ Gevonden oefeningen</h3>
+            <p class="results-tip">Klik op de + om een oefening toe te voegen aan je workout</p>
+        </div>
+    {% endif %}
+
+    <section class="exercise-blok-section" id="exercise-list" data-plan-id="{{ plan_id|default(0) }}">
+        {% include '_exercise_items.html' %}
+    </section>
 </section>
 
-{% if pagination.has_next %}
-    <button id="load-more-btn" data-next-page="{{ pagination.next_num }}" class="btn btn-primary">Load More</button>
+{% if pagination and pagination.has_next %}
+    <button id="load-more-btn" data-next-page="{{ pagination.next_num }}" class="btn btn-primary load-more">
+        Laad meer oefeningen
+    </button>
 {% endif %}
 
+<!-- Floating success message -->
+<div class="success-toast" id="success-toast" style="display: none;">
+    <span class="toast-icon">✅</span>
+    <span class="toast-message">Oefening toegevoegd!</span>
+</div>
+
+<!-- Back to workout button (floating) -->
+{% if plan_id and plan_id != 0 %}
+<a href="{{ url_for('workouts.edit_workout', plan_id=plan_id|default(0)) }}" class="floating-back-btn">
+    <span class="btn-text">Terug naar workout</span>
+    <span class="btn-icon">→</span>
+</a>
+{% endif %}
+
+<style>
+/* Header context */
+.search-header-context {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.workout-context {
+    color: #666;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+.workout-context strong {
+    color: #FF914B;
+}
+
+.create-exercise-btn {
+    background: linear-gradient(135deg, #FF914B, #FF6B35);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 25px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    border: none;
+    font-weight: 500;
+}
+
+.create-exercise-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 145, 75, 0.3);
+    color: white;
+}
+
+/* Search guide */
+.search-guide {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.guide-card {
+    background: linear-gradient(135deg, rgba(255,145,75,0.05) 0%, rgba(255,145,75,0.1) 100%);
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    animation: slideIn 0.5s ease;
+}
+
+.guide-icon {
+    font-size: 40px;
+    flex-shrink: 0;
+}
+
+.guide-content h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.guide-steps {
+    margin: 0;
+    padding-left: 20px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.highlight-plus {
+    display: inline-block;
+    background: #FF914B;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 20px;
+    font-weight: bold;
+}
+
+/* Popular categories */
+.popular-categories {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.popular-categories h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.category-btn {
+    padding: 10px 20px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.category-btn:hover {
+    background: #FF914B;
+    color: white;
+    border-color: #FF914B;
+    transform: translateY(-2px);
+}
+
+.category-btn.active {
+    background: #FF914B;
+    color: white;
+    border-color: #FF914B;
+}
+
+/* Enhanced filters */
+.enhanced-filters {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.filter-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.reset-filters-btn {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 5px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.reset-filters-btn:hover {
+    background: #f0f0f0;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.search-input-wrapper {
+    position: relative;
+}
+
+.search-input {
+    padding-right: 40px;
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+}
+
+.search-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.results-count {
+    margin-left: 20px;
+    color: #666;
+    font-size: 14px;
+}
+
+.count-number {
+    font-weight: bold;
+    color: #FF914B;
+}
+
+/* Results section */
+.exercise-results-section {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.results-header {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 10px;
+    animation: fadeIn 0.5s ease;
+}
+
+.results-header h3 {
+    margin: 0 0 5px 0;
+    color: #333;
+}
+
+.results-tip {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* No results state */
+.no-results-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f9f9f9;
+    border-radius: 15px;
+    margin: 30px 0;
+}
+
+.no-results-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.no-results-state h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.no-results-state p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.btn-try-again {
+    background: #FF914B;
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-try-again:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 145, 75, 0.3);
+}
+
+/* Success toast */
+.success-toast {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #4CAF50;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+    z-index: 1000;
+    animation: slideUp 0.3s ease forwards;
+}
+
+@keyframes slideUp {
+    to {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.toast-icon {
+    font-size: 20px;
+}
+
+/* Floating back button */
+.floating-back-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    background: #FF914B;
+    color: white;
+    padding: 15px 25px;
+    border-radius: 50px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 5px 20px rgba(255, 145, 75, 0.3);
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.floating-back-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(255, 145, 75, 0.4);
+    color: white;
+}
+
+/* Load more button */
+.load-more {
+    display: block;
+    margin: 50px auto 150px;
+    padding: 12px 40px;
+    background: white;
+    color: #FF914B;
+    border: 2px solid #FF914B;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.load-more:hover {
+    background: #FF914B;
+    color: white;
+}
+
+/* Improved exercise blocks */
+.exercise-block-link {
+    transition: all 0.3s ease;
+}
+
+.exercise-block {
+    transition: all 0.3s ease;
+}
+
+.exercise-block:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.add-exercise {
+    transition: all 0.2s ease;
+}
+
+.add-exercise:hover {
+    background: #FF914B;
+    color: white;
+    transform: scale(1.2);
+}
+
+.add-exercise.completed {
+    background: #4CAF50;
+    color: white;
+    pointer-events: none;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filter-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .category-buttons {
+        justify-content: center;
+    }
+
+    .guide-card {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .floating-back-btn {
+        bottom: 90px;
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+}
+</style>
+
 <script>
+// Set filter from category buttons
+function setFilter(filterType, value) {
+    const filterElement = document.getElementById(`${filterType}-filter`);
+    if (filterElement) {
+        filterElement.value = value;
+
+        // Visual feedback
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // Auto submit form
+        document.getElementById('filter-form').submit();
+    }
+}
+
+// Reset all filters
+function resetFilters() {
+    document.getElementById('filter-form').reset();
+    document.getElementById('filter-form').submit();
+}
+
+// Show success toast
+function showSuccessToast(message = 'Oefening toegevoegd!') {
+    const toast = document.getElementById('success-toast');
+    const toastMessage = toast.querySelector('.toast-message');
+    toastMessage.textContent = message;
+
+    toast.style.display = 'flex';
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            toast.style.display = 'none';
+            toast.style.opacity = '1';
+        }, 300);
+    }, 2000);
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const loadMoreBtn = document.getElementById("load-more-btn");
     const exerciseList = document.getElementById("exercise-list");
     const filterForm = document.getElementById("filter-form");
     const planId = exerciseList.getAttribute('data-plan-id');
     const csrfToken = "{{ form.csrf_token._value() }}";
+
+    // Count exercises on load
+    const exerciseCount = document.querySelectorAll('.exercise-block').length;
+    if (exerciseCount > 0) {
+        const countElement = document.getElementById('results-count');
+        if (countElement) {
+            countElement.style.display = 'inline';
+            countElement.querySelector('.count-number').textContent = exerciseCount;
+        }
+    }
 
     // Handle form submission for search/filter
     if (filterForm) {
@@ -63,7 +647,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const formData = new FormData(filterForm);
             const params = new URLSearchParams(formData);
 
-            // Make sure plan_id is included
             if (planId && planId !== '0') {
                 params.set('plan_id', planId);
             }
@@ -77,11 +660,17 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(data => {
                 exerciseList.innerHTML = data;
 
-                // Update URL without page reload
                 const newUrl = `${window.location.pathname}?${params.toString()}`;
                 window.history.pushState({}, '', newUrl);
 
-                // Hide/show load more button based on results
+                // Update count
+                const newCount = exerciseList.querySelectorAll('.exercise-block').length;
+                const countElement = document.getElementById('results-count');
+                if (countElement) {
+                    countElement.style.display = newCount > 0 ? 'inline' : 'none';
+                    countElement.querySelector('.count-number').textContent = newCount;
+                }
+
                 const hasResults = exerciseList.children.length > 0;
                 if (loadMoreBtn) {
                     loadMoreBtn.style.display = hasResults ? 'block' : 'none';
@@ -120,9 +709,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     exerciseList.appendChild(child);
                 });
 
-                // Volgende pagina bijwerken
                 const newNextPage = parseInt(nextPage) + 1;
                 this.setAttribute("data-next-page", newNextPage);
+
+                // Update count
+                const newCount = exerciseList.querySelectorAll('.exercise-block').length;
+                const countElement = document.getElementById('results-count');
+                if (countElement) {
+                    countElement.querySelector('.count-number').textContent = newCount;
+                }
             })
             .catch(error => {
                 console.error("Fout bij laden van oefeningen:", error);
@@ -130,7 +725,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Add exercise to plan
+    // Add exercise to plan with improved feedback
     exerciseList.addEventListener("click", function(e) {
         if (e.target.classList.contains("add-exercise")) {
             e.preventDefault();
@@ -138,12 +733,16 @@ document.addEventListener("DOMContentLoaded", function () {
             const exerciseId = e.target.getAttribute("data-exercise-id");
             const nextUrl = e.target.getAttribute("data-next");
             if (!exerciseId || !planId || planId === '0') {
-                alert("Geen workout geselecteerd of ongeldige oefening.");
+                alert("Maak eerst een workout aan voordat je oefeningen toevoegt.");
                 return;
             }
 
             const baseUrl = "{{ url_for('workouts.add_exercise_to_workout', plan_id=0, exercise_id=0) }}";
             const url = baseUrl.replace('/0/', `/${planId}/`).replace('/0', `/${exerciseId}`);
+
+            // Visual feedback - disable button
+            e.target.classList.add('loading');
+            e.target.textContent = '...';
 
             fetch(url, {
                 method: "POST",
@@ -164,14 +763,28 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .then(data => {
                 if (data.success) {
-                    alert("Oefening toegevoegd!");
+                    showSuccessToast('✅ Oefening toegevoegd aan je workout!');
                     e.target.textContent = "✓";
-                    e.target.classList.add("completed", "disabled");
+                    e.target.classList.remove('loading');
+                    e.target.classList.add("completed");
+
+                    // Animate the exercise block
+                    const exerciseBlock = e.target.closest('.exercise-block');
+                    if (exerciseBlock) {
+                        exerciseBlock.style.backgroundColor = '#f0fff0';
+                        setTimeout(() => {
+                            exerciseBlock.style.backgroundColor = '';
+                        }, 1000);
+                    }
                 } else {
+                    e.target.classList.remove('loading');
+                    e.target.textContent = '+';
                     alert("Kon oefening niet toevoegen: " + (data.message || "Onbekende fout"));
                 }
             })
             .catch(err => {
+                e.target.classList.remove('loading');
+                e.target.textContent = '+';
                 console.error("Fout bij toevoegen oefening:", err);
                 alert("Netwerkfout: " + err.message);
             });

@@ -7,235 +7,1229 @@
   </a>
 </div>
 
-<!-- CSRF Token voor JavaScript -->
+<!-- CSRF Token pour JavaScript -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-<section class="header-section">
-  <form method="POST" action="{{ url_for('workouts.edit_workout', plan_id=workout_plan.id) }}" class="add-workout-form" id="main-workout-form">
-    {{ form.hidden_tag() }}
-
-    <div class="workout-name">
-      <h1>{{ form.name.label }}</h1>
-      {{ form.name(placeholder="Naam van workout", required=True, value=workout_plan.name) }}
-      {% if form.name.errors %}
-        <ul class="errors">
-          {% for error in form.name.errors %}
-            <li>{{ error }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
+<!-- Workout Header avec stats -->
+<div class="workout-edit-header">
+  <div class="header-content">
+    <div class="workout-title-section">
+      <h1>📝 Bewerk je Workout</h1>
+      <form method="POST" action="{{ url_for('workouts.edit_workout', plan_id=workout_plan.id) }}" class="workout-name-form" id="main-workout-form">
+        {{ form.hidden_tag() }}
+        <div class="name-input-wrapper">
+          <input type="text"
+                 name="name"
+                 value="{{ workout_plan.name }}"
+                 class="workout-name-input-edit"
+                 placeholder="Workout naam..."
+                 required>
+          <span class="edit-icon">✏️</span>
+        </div>
+      </form>
     </div>
 
-    <section class="exercise-blok-section">
-      {% if exercise_pairs %}
-        {% for plan_exercise, exercise_form in exercise_pairs %}
-          {% set exercise_obj = exercises_dict.get(plan_exercise.exercise_id|string) %}
-          <section class="active-workout-block" data-exercise-id="{{ plan_exercise.exercise_id }}">
-            <h2>{{ exercise_obj.name if exercise_obj else "Onbekende oefening" }}</h2>
+    <!-- Workout Stats -->
+    <div class="workout-stats-bar">
+      <div class="stat-item">
+        <span class="stat-icon">💪</span>
+        <span class="stat-value" id="exercise-count">{{ exercise_pairs|length }}</span>
+        <span class="stat-label">Oefeningen</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">🔄</span>
+        <span class="stat-value" id="total-sets">0</span>
+        <span class="stat-label">Sets totaal</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">⏱️</span>
+        <span class="stat-value" id="estimated-time">0</span>
+        <span class="stat-label">Min. geschat</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-icon">📅</span>
+        <span class="stat-value">{{ workout_plan.created_at.strftime('%d-%m') }}</span>
+        <span class="stat-label">Aangemaakt</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-            {% if exercise_obj and exercise_obj.images_list %}
-              <img class="exercise-block-img" src="{{ url_for('static', filename='img/exercises/' + exercise_obj.images_list[0]) }}" alt="{{ exercise_obj.name }}">
-            {% else %}
-              <p>Geen afbeeldingen beschikbaar</p>
-            {% endif %}
+<!-- Quick Actions Bar -->
+<div class="quick-actions-bar">
+  <button class="action-btn" onclick="expandAllExercises()">
+    <span>👁️</span> Alles uitklappen
+  </button>
+  <button class="action-btn" onclick="collapseAllExercises()">
+    <span>👁️‍🗨️</span> Alles inklappen
+  </button>
+  <button class="action-btn" onclick="resetOrder()">
+    <span>🔢</span> Reset volgorde
+  </button>
+  <button class="action-btn preview-btn" onclick="previewWorkout()">
+    <span>👀</span> Preview
+  </button>
+</div>
 
+<!-- Main Content -->
+<section class="exercise-edit-section">
+  {% if not exercise_pairs %}
+    <!-- Empty State -->
+    <div class="empty-exercises-state">
+      <div class="empty-icon">🏋️‍♀️</div>
+      <h2>Nog geen oefeningen in deze workout</h2>
+      <p>Begin met het toevoegen van oefeningen om je perfecte workout samen te stellen</p>
+      <a href="{{ url_for('workouts.search_exercise', plan_id=workout_plan.id) }}" class="btn-add-first">
+        <span>➕</span> Voeg je eerste oefening toe
+      </a>
+    </div>
+  {% else %}
+    <!-- Exercise List -->
+    <div class="exercises-edit-list" id="exercises-container">
+      {% for plan_exercise, exercise_form in exercise_pairs %}
+        {% set exercise_obj = exercises_dict.get(plan_exercise.exercise_id|string) %}
+        <div class="exercise-edit-card"
+             data-exercise-id="{{ plan_exercise.exercise_id }}"
+             data-order="{{ loop.index0 }}"
+             draggable="true">
 
-            <div class="exercise-details displayNone">
-              {{ exercise_form.hidden_tag() }}
-     <input type="hidden" name="exercises-{{ loop.index0 }}-exercise_id" value="{{ plan_exercise.exercise_id }}">                {{ exercise_form.order(type="hidden", value=loop.index0) }}
+          <!-- Drag Handle -->
+          <div class="drag-handle">
+            <span>⋮⋮</span>
+          </div>
+
+          <!-- Exercise Content -->
+          <div class="exercise-content">
+            <!-- Exercise Header -->
+            <div class="exercise-header" onclick="toggleExercise(this)">
+              <div class="exercise-info">
+                <h3 class="exercise-name">
+                  <span class="exercise-number">{{ loop.index }}.</span>
+                  {{ exercise_obj.name if exercise_obj else "Onbekende oefening" }}
+                </h3>
+                <div class="exercise-badges">
+                  {% if exercise_obj %}
+                    {% if exercise_obj.equipment %}
+                      <span class="badge equipment">{{ exercise_obj.equipment }}</span>
+                    {% endif %}
+                    {% if exercise_obj.level %}
+                      <span class="badge level">{{ exercise_obj.level }}</span>
+                    {% endif %}
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Quick Stats -->
+              <div class="exercise-quick-stats">
+                <span class="quick-stat">
+                  <strong>{{ plan_exercise.sets or 3 }}</strong> sets
+                </span>
+                <span class="quick-stat">
+                  <strong>{{ plan_exercise.reps or 10 }}</strong> reps
+                </span>
+                {% if plan_exercise.weight %}
+                  <span class="quick-stat">
+                    <strong>{{ plan_exercise.weight }}</strong> kg
+                  </span>
+                {% endif %}
+              </div>
+
+              <!-- Expand Icon -->
+              <span class="expand-icon">▼</span>
+            </div>
+
+            <!-- Exercise Details (Collapsible) -->
+            <div class="exercise-details-panel" style="display: none;">
+              <!-- Exercise Image -->
+              {% if exercise_obj and exercise_obj.images_list %}
+                <div class="exercise-image-preview">
+                  <img src="{{ url_for('static', filename='img/exercises/' + exercise_obj.images_list[0]) }}"
+                       alt="{{ exercise_obj.name }}"
+                       onerror="this.src='{{ url_for('static', filename='img/placeholder.png') }}'">
+                </div>
+              {% endif %}
+
+              <!-- Edit Form -->
+              <div class="exercise-edit-form">
+                {{ exercise_form.hidden_tag() }}
+                <input type="hidden" name="exercises-{{ loop.index0 }}-exercise_id" value="{{ plan_exercise.exercise_id }}">
+                {{ exercise_form.order(type="hidden", value=loop.index0) }}
                 {{ exercise_form.is_edit(type="hidden", value=1) }}
 
-                <div class="form-group">
-                <label for="{{ exercise_form.sets.id }}">Sets</label>
-                {{ exercise_form.sets(class="form-control", type="number", min="0", value=plan_exercise.sets) }}
-                {% if exercise_form.sets.errors %}
-                  <ul class="errors">
-                    {% for error in exercise_form.sets.errors %}
-                      <li>{{ error }}</li>
-                    {% endfor %}
-                  </ul>
-                {% endif %}
-              </div>
+                <div class="form-row">
+                  <div class="form-group-inline">
+                    <label>
+                      <span class="label-icon">🔄</span>
+                      Sets
+                    </label>
+                    <div class="input-with-buttons">
+                      <button type="button" class="btn-decrease" onclick="decreaseValue(this)">−</button>
+                      {{ exercise_form.sets(
+                        class="form-control-inline",
+                        type="number",
+                        min="1",
+                        max="10",
+                        value=plan_exercise.sets or 3,
+                        onchange="updateStats()"
+                      ) }}
+                      <button type="button" class="btn-increase" onclick="increaseValue(this)">+</button>
+                    </div>
+                  </div>
 
-              <div class="form-group">
-                <label for="{{ exercise_form.reps.id }}">Reps</label>
-                {{ exercise_form.reps(class="form-control", type="number", min="0", value=plan_exercise.reps) }}
-                {% if exercise_form.reps.errors %}
-                  <ul class="errors">
-                    {% for error in exercise_form.reps.errors %}
-                      <li>{{ error }}</li>
-                    {% endfor %}
-                  </ul>
-                {% endif %}
-              </div>
+                  <div class="form-group-inline">
+                    <label>
+                      <span class="label-icon">💪</span>
+                      Reps
+                    </label>
+                    <div class="input-with-buttons">
+                      <button type="button" class="btn-decrease" onclick="decreaseValue(this)">−</button>
+                      {{ exercise_form.reps(
+                        class="form-control-inline",
+                        type="number",
+                        min="1",
+                        max="50",
+                        value=plan_exercise.reps or 10,
+                        onchange="updateStats()"
+                      ) }}
+                      <button type="button" class="btn-increase" onclick="increaseValue(this)">+</button>
+                    </div>
+                  </div>
 
-              <div class="form-group">
-                <label for="{{ exercise_form.weight.id }}">Gewicht (kg)</label>
-                {{ exercise_form.weight(class="form-control", type="number", step="0.1", min="0", value=plan_exercise.weight) }}
-                {% if exercise_form.weight.errors %}
-                  <ul class="errors">
-                    {% for error in exercise_form.weight.errors %}
-                      <li>{{ error }}</li>
-                    {% endfor %}
-                  </ul>
-                {% endif %}
+                  <div class="form-group-inline">
+                    <label>
+                      <span class="label-icon">⚖️</span>
+                      Gewicht (kg)
+                    </label>
+                    <div class="input-with-buttons">
+                      <button type="button" class="btn-decrease" onclick="decreaseValue(this, 2.5)">−</button>
+                      {{ exercise_form.weight(
+                        class="form-control-inline",
+                        type="number",
+                        step="2.5",
+                        min="0",
+                        max="500",
+                        value=plan_exercise.weight or 0
+                      ) }}
+                      <button type="button" class="btn-increase" onclick="increaseValue(this, 2.5)">+</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Exercise Actions -->
+                <div class="exercise-actions">
+                  <button type="button" class="btn-action duplicate" onclick="duplicateExercise('{{ plan_exercise.exercise_id }}')">
+                    <span>📋</span> Dupliceer
+                  </button>
+                  <button type="button" class="btn-action delete" onclick="removeExercise('{{ plan_exercise.exercise_id }}', '{{ exercise_obj.name if exercise_obj else "deze oefening" }}')">
+                    <span>🗑️</span> Verwijder
+                  </button>
+                  <a href="{{ url_for('workouts.exercise_detail', exercise_id=plan_exercise.exercise_id) }}"
+                     class="btn-action info"
+                     target="_blank">
+                    <span>ℹ️</span> Details
+                  </a>
+                </div>
               </div>
             </div>
-          </section>
-        {% endfor %}
-      {% else %}
-        <p>Je hebt nog geen oefeningen toegevoegd.</p>
-      {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
 
-      <a href="{{ url_for('workouts.search_exercise', plan_id=workout_plan.id) }}" class="second-grey-cta-btn">Add exercise</a>
-      {{ form.submit(value="Update workout", class="orange-btn-outline add-new-workout-btn update-workout-btn") }}
+    <!-- Add Exercise Button -->
+    <div class="add-exercise-section">
+      <a href="{{ url_for('workouts.search_exercise', plan_id=workout_plan.id) }}"
+         class="btn-add-exercise">
+        <span class="plus-icon">+</span>
+        <span>Voeg meer oefeningen toe</span>
+      </a>
+    </div>
+  {% endif %}
 
-      <button class="btn btn-warning orange-btn-outline add-new-workout-btn archive-workout-btn"
-          data-workout-id="{{ workout_plan.id }}"
-          style="margin-top: 20px;">
-    📁 Archiveer workout
-  </button>
+  <!-- Action Buttons -->
+  <div class="workout-actions-bottom">
+    {{ form.submit(value="💾 Sla wijzigingen op", class="btn-save-workout", form="main-workout-form") }}
 
-    </section>
-  </form>
+    <button class="btn-archive-workout"
+            data-workout-id="{{ workout_plan.id }}"
+            type="button">
+      📁 Archiveer workout
+    </button>
 
-  <!-- Archiveer knop in plaats van verwijder knop -->
-
-  <!-- Hidden form for exercise deletion -->
-  <form method="POST" id="delete-exercise-form" style="display:none;">
-    {{ delete_exercise_form.csrf_token }}
-    <input type="hidden" name="workout_plan_exercise_id" id="delete-wpe-id">
-  </form>
+    <a href="{{ url_for('sessions.start_workout', plan_id=workout_plan.id) }}"
+       class="btn-start-workout">
+      ▶️ Start deze workout
+    </a>
+  </div>
 </section>
 
-<script>
-// Archive workout functionaliteit
-document.addEventListener('DOMContentLoaded', function() {
-    const archiveBtn = document.querySelector('.archive-workout-btn');
+<!-- Preview Modal -->
+<div id="preview-modal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <span class="close" onclick="closePreview()">&times;</span>
+    <h2>🎯 Workout Preview</h2>
+    <div id="preview-content"></div>
+  </div>
+</div>
 
+<!-- Success Toast -->
+<div class="toast success-toast" id="success-toast" style="display: none;">
+  <span class="toast-icon">✅</span>
+  <span class="toast-message"></span>
+</div>
+
+<style>
+/* Workout Edit Header */
+.workout-edit-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 30px 20px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.header-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.workout-title-section h1 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.workout-name-form {
+  margin-bottom: 20px;
+}
+
+.name-input-wrapper {
+  position: relative;
+  max-width: 400px;
+}
+
+.workout-name-input-edit {
+  width: 100%;
+  padding: 12px 40px 12px 15px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.workout-name-input-edit:hover {
+  border-color: #FF914B;
+}
+
+.workout-name-input-edit:focus {
+  outline: none;
+  border-color: #FF914B;
+  box-shadow: 0 0 0 3px rgba(255, 145, 75, 0.1);
+}
+
+.edit-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Stats Bar */
+.workout-stats-bar {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.stat-icon {
+  font-size: 1.2rem;
+}
+
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #FF914B;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Quick Actions Bar */
+.quick-actions-bar {
+  max-width: 900px;
+  margin: 0 auto 30px;
+  padding: 0 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.action-btn:hover {
+  background: #f8f9fa;
+  border-color: #FF914B;
+  transform: translateY(-1px);
+}
+
+.preview-btn {
+  background: linear-gradient(135deg, #FF914B, #FF6B35);
+  color: white;
+  border: none;
+}
+
+.preview-btn:hover {
+  box-shadow: 0 5px 15px rgba(255, 145, 75, 0.3);
+}
+
+/* Exercise Edit Section */
+.exercise-edit-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 20px 100px;
+}
+
+/* Empty State */
+.empty-exercises-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: #f9f9f9;
+  border-radius: 15px;
+  margin: 30px 0;
+}
+
+.empty-icon {
+  font-size: 60px;
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.btn-add-first {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 30px;
+  background: linear-gradient(135deg, #FF914B, #FF6B35);
+  color: white;
+  text-decoration: none;
+  border-radius: 25px;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+}
+
+.btn-add-first:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 145, 75, 0.3);
+  color: white;
+}
+
+/* Exercise Cards */
+.exercises-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.exercise-edit-card {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.exercise-edit-card:hover {
+  border-color: #FF914B;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.exercise-edit-card.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+}
+
+.drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: #999;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+  background: #FF914B;
+  color: white;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.exercise-content {
+  margin-left: 40px;
+}
+
+.exercise-header {
+  padding: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s ease;
+}
+
+.exercise-header:hover {
+  background: #f8f9fa;
+}
+
+.exercise-info {
+  flex: 1;
+}
+
+.exercise-name {
+  font-size: 1.1rem;
+  margin: 0 0 8px 0;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.exercise-number {
+  background: #FF914B;
+  color: white;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.exercise-badges {
+  display: flex;
+  gap: 8px;
+}
+
+.badge {
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.badge.equipment {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.badge.level {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.exercise-quick-stats {
+  display: flex;
+  gap: 15px;
+  margin-right: 20px;
+}
+
+.quick-stat {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.quick-stat strong {
+  color: #333;
+}
+
+.expand-icon {
+  color: #999;
+  transition: transform 0.3s ease;
+}
+
+.exercise-header.expanded .expand-icon {
+  transform: rotate(180deg);
+}
+
+/* Exercise Details Panel */
+.exercise-details-panel {
+  padding: 0 20px 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+.exercise-image-preview {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.exercise-image-preview img {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.exercise-edit-form {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.form-group-inline {
+  flex: 1;
+  min-width: 150px;
+}
+
+.form-group-inline label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.label-icon {
+  font-size: 1rem;
+}
+
+.input-with-buttons {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-decrease,
+.btn-increase {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-decrease:hover,
+.btn-increase:hover {
+  background: #FF914B;
+  color: white;
+  border-color: #FF914B;
+}
+
+.form-control-inline {
+  width: 80px;
+  text-align: center;
+  padding: 6px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.form-control-inline:focus {
+  outline: none;
+  border-color: #FF914B;
+}
+
+/* Exercise Actions */
+.exercise-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
+}
+
+.btn-action {
+  padding: 6px 12px;
+  border: 1px solid #e0e0e0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  color: #333;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.btn-action.duplicate:hover {
+  background: #4CAF50;
+  color: white;
+  border-color: #4CAF50;
+}
+
+.btn-action.delete:hover {
+  background: #f44336;
+  color: white;
+  border-color: #f44336;
+}
+
+.btn-action.info:hover {
+  background: #2196F3;
+  color: white;
+  border-color: #2196F3;
+}
+
+/* Add Exercise Section */
+.add-exercise-section {
+  margin: 30px 0;
+  text-align: center;
+}
+
+.btn-add-exercise {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 30px;
+  background: white;
+  border: 2px dashed #FF914B;
+  border-radius: 12px;
+  color: #FF914B;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-add-exercise:hover {
+  background: linear-gradient(135deg, #FF914B, #FF6B35);
+  color: white;
+  border: 2px solid transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 145, 75, 0.3);
+}
+
+.plus-icon {
+  font-size: 1.5rem;
+  font-weight: 300;
+}
+
+/* Bottom Actions */
+.workout-actions-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 40px;
+}
+
+.btn-save-workout {
+  padding: 15px;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-save-workout:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
+}
+
+.btn-archive-workout {
+  padding: 15px;
+  background: white;
+  color: #FF914B;
+  border: 2px solid #FF914B;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-archive-workout:hover {
+  background: #FF914B;
+  color: white;
+}
+
+.btn-start-workout {
+  padding: 15px;
+  background: linear-gradient(135deg, #FF914B, #FF6B35);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-start-workout:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(255, 145, 75, 0.3);
+  color: white;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: none;
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto;
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover {
+  color: #000;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 30px;
+  border-radius: 50px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  animation: slideUp 0.3s ease;
+}
+
+.success-toast {
+  background: #4CAF50;
+  color: white;
+  box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateX(-50%) translateY(100px);
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .workout-stats-bar {
+    gap: 15px;
+  }
+
+  .stat-item {
+    padding: 8px 12px;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .exercise-quick-stats {
+    display: none;
+  }
+
+  .exercise-actions {
+    flex-wrap: wrap;
+  }
+
+  .quick-actions-bar {
+    justify-content: center;
+  }
+}
+</style>
+
+<script>
+// Toggle exercise details
+function toggleExercise(header) {
+    const panel = header.nextElementSibling;
+    const card = header.closest('.exercise-edit-card');
+
+    if (panel.style.display === 'none' || !panel.style.display) {
+        panel.style.display = 'block';
+        header.classList.add('expanded');
+        card.classList.add('expanded');
+    } else {
+        panel.style.display = 'none';
+        header.classList.remove('expanded');
+        card.classList.remove('expanded');
+    }
+}
+
+// Expand all exercises
+function expandAllExercises() {
+    document.querySelectorAll('.exercise-details-panel').forEach(panel => {
+        panel.style.display = 'block';
+        panel.previousElementSibling.classList.add('expanded');
+    });
+}
+
+// Collapse all exercises
+function collapseAllExercises() {
+    document.querySelectorAll('.exercise-details-panel').forEach(panel => {
+        panel.style.display = 'none';
+        panel.previousElementSibling.classList.remove('expanded');
+    });
+}
+
+// Increase/Decrease values
+function increaseValue(btn, step = 1) {
+    const input = btn.previousElementSibling;
+    const currentValue = parseFloat(input.value) || 0;
+    const max = parseFloat(input.max) || Infinity;
+    const newValue = Math.min(currentValue + step, max);
+    input.value = newValue;
+    input.dispatchEvent(new Event('change'));
+}
+
+function decreaseValue(btn, step = 1) {
+    const input = btn.nextElementSibling;
+    const currentValue = parseFloat(input.value) || 0;
+    const min = parseFloat(input.min) || 0;
+    const newValue = Math.max(currentValue - step, min);
+    input.value = newValue;
+    input.dispatchEvent(new Event('change'));
+}
+
+// Update workout stats
+function updateStats() {
+    // Count exercises
+    const exerciseCount = document.querySelectorAll('.exercise-edit-card').length;
+    document.getElementById('exercise-count').textContent = exerciseCount;
+
+    // Calculate total sets
+    let totalSets = 0;
+    document.querySelectorAll('[name*="sets"]').forEach(input => {
+        totalSets += parseInt(input.value) || 0;
+    });
+    document.getElementById('total-sets').textContent = totalSets;
+
+    // Estimate time (3 minutes per set average)
+    const estimatedTime = totalSets * 3;
+    document.getElementById('estimated-time').textContent = estimatedTime;
+}
+
+// Preview workout
+function previewWorkout() {
+    const modal = document.getElementById('preview-modal');
+    const content = document.getElementById('preview-content');
+
+    let html = '<div class="preview-list">';
+
+    document.querySelectorAll('.exercise-edit-card').forEach((card, index) => {
+        const name = card.querySelector('.exercise-name').textContent.trim();
+        const sets = card.querySelector('[name*="sets"]').value;
+        const reps = card.querySelector('[name*="reps"]').value;
+        const weight = card.querySelector('[name*="weight"]').value;
+
+        html += `
+            <div class="preview-exercise">
+                <h4>${name}</h4>
+                <p>${sets} sets × ${reps} reps ${weight > 0 ? `@ ${weight}kg` : ''}</p>
+            </div>
+        `;
+    });
+
+    html += '</div>';
+    content.innerHTML = html;
+    modal.style.display = 'block';
+}
+
+// Close preview
+function closePreview() {
+    document.getElementById('preview-modal').style.display = 'none';
+}
+
+// Remove exercise
+function removeExercise(exerciseId, exerciseName) {
+    if (confirm(`Weet je zeker dat je "${exerciseName}" wilt verwijderen?`)) {
+        const card = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
+        if (card) {
+            card.style.transition = 'all 0.3s ease';
+            card.style.transform = 'translateX(-100%)';
+            card.style.opacity = '0';
+            setTimeout(() => {
+                card.remove();
+                updateStats();
+                reorderExercises();
+                showToast('Oefening verwijderd!');
+            }, 300);
+        }
+    }
+}
+
+// Duplicate exercise
+function duplicateExercise(exerciseId) {
+    const originalCard = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
+    if (originalCard) {
+        const clone = originalCard.cloneNode(true);
+        // Update form field names
+        const inputs = clone.querySelectorAll('input');
+        inputs.forEach(input => {
+            if (input.name && input.name.includes('exercises-')) {
+                const match = input.name.match(/exercises-(\d+)-/);
+                if (match) {
+                    const newIndex = document.querySelectorAll('.exercise-edit-card').length;
+                    input.name = input.name.replace(`exercises-${match[1]}-`, `exercises-${newIndex}-`);
+                }
+            }
+        });
+        originalCard.parentNode.insertBefore(clone, originalCard.nextSibling);
+        updateStats();
+        reorderExercises();
+        showToast('Oefening gedupliceerd!');
+    }
+}
+
+// Reorder exercises after changes
+function reorderExercises() {
+    const cards = document.querySelectorAll('.exercise-edit-card');
+    cards.forEach((card, index) => {
+        card.dataset.order = index;
+        const numberSpan = card.querySelector('.exercise-number');
+        if (numberSpan) {
+            numberSpan.textContent = index + 1;
+        }
+        // Update hidden order input
+        const orderInput = card.querySelector('[name*="order"]');
+        if (orderInput) {
+            orderInput.value = index;
+        }
+    });
+}
+
+// Reset order
+function resetOrder() {
+    reorderExercises();
+    showToast('Volgorde gereset!');
+}
+
+// Show toast notification
+function showToast(message) {
+    const toast = document.getElementById('success-toast');
+    const messageEl = toast.querySelector('.toast-message');
+    messageEl.textContent = message;
+    toast.style.display = 'flex';
+
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => {
+            toast.style.display = 'none';
+            toast.style.opacity = '1';
+        }, 300);
+    }, 2000);
+}
+
+// Drag and Drop functionality
+let draggedElement = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize stats
+    updateStats();
+
+    // Setup drag and drop
+    const cards = document.querySelectorAll('.exercise-edit-card');
+
+    cards.forEach(card => {
+        card.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        });
+
+        card.addEventListener('dragend', function() {
+            this.classList.remove('dragging');
+        });
+
+        card.addEventListener('dragover', function(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+
+            const afterElement = getDragAfterElement(card.parentNode, e.clientY);
+            if (afterElement == null) {
+                card.parentNode.appendChild(draggedElement);
+            } else {
+                card.parentNode.insertBefore(draggedElement, afterElement);
+            }
+
+            return false;
+        });
+    });
+
+    // Archive workout functionality
+    const archiveBtn = document.querySelector('.btn-archive-workout');
     if (archiveBtn) {
         archiveBtn.addEventListener('click', function(e) {
             e.preventDefault();
 
-            if (!confirm('Weet je zeker dat je deze workout wilt archiveren? Deze wordt verplaatst naar je gearchiveerde workouts.')) {
+            if (!confirm('Weet je zeker dat je deze workout wilt archiveren?')) {
                 return;
             }
 
             const workoutId = this.getAttribute('data-workout-id');
-            console.log('🎯 Archiveren workout:', workoutId);
-
-            // CSRF token ophalen
             const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
-
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-
-            if (csrfToken) {
-                headers['X-CSRFToken'] = csrfToken;
-            }
-
-            // Disable button tijdens request
-            this.disabled = true;
-            this.textContent = '⏳ Archiveren...';
 
             fetch(`/workouts/${workoutId}/archive`, {
                 method: 'POST',
-                headers: headers,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
                 body: JSON.stringify({})
             })
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error(`HTTP error! status: ${response.status}`);
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('✅ Workout gearchiveerd:', data);
-
-                // Success feedback
-                this.textContent = '✅ Gearchiveerd!';
-                this.classList.remove('btn-warning');
-                this.classList.add('btn-success');
-
-                // Redirect naar home na 1.5 seconden
-                setTimeout(() => {
-                    window.location.href = '{{ url_for("main.index") }}';
-                }, 1500);
+                if (data.success) {
+                    showToast('Workout gearchiveerd!');
+                    setTimeout(() => {
+                        window.location.href = '{{ url_for("main.index") }}';
+                    }, 1500);
+                }
             })
             .catch(error => {
-                console.error('❌ Archiveer fout:', error);
-
-                // Error feedback
-                this.textContent = '❌ Fout opgetreden';
-                this.classList.remove('btn-warning');
-                this.classList.add('btn-danger');
-                this.disabled = false;
-
-                // Reset na 3 seconden
-                setTimeout(() => {
-                    this.textContent = '📁 Archiveer workout';
-                    this.classList.remove('btn-danger');
-                    this.classList.add('btn-warning');
-                }, 3000);
+                console.error('Error:', error);
+                alert('Er ging iets mis bij het archiveren.');
             });
         });
     }
-});
 
-// JavaScript voor toggle menu bij de drie-puntjes
-document.querySelectorAll('.setting-dots-workout').forEach(dot => {
-  dot.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Sluit andere menu's
-    document.querySelectorAll('.settings-menu').forEach(menu => {
-      if (menu !== dot.nextElementSibling) {
-        menu.style.display = 'none';
-      }
+    // Auto-save reminder
+    let unsavedChanges = false;
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('change', () => {
+            unsavedChanges = true;
+        });
     });
 
-    // Toggle dit menu
-    const menu = dot.nextElementSibling;
-    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-  });
+    window.addEventListener('beforeunload', (e) => {
+        if (unsavedChanges) {
+            e.preventDefault();
+            e.returnValue = 'Je hebt onopgeslagen wijzigingen. Weet je zeker dat je wilt vertrekken?';
+        }
+    });
+
+    // Save success handler
+    document.getElementById('main-workout-form').addEventListener('submit', () => {
+        unsavedChanges = false;
+    });
 });
 
-// Handle exercise deletion
-document.querySelectorAll('.btn-delete-exercise').forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+// Helper function for drag and drop
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.exercise-edit-card:not(.dragging)')];
 
-    if (confirm('Weet je zeker dat je deze oefening wilt verwijderen?')) {
-      const planId = btn.getAttribute('data-plan-id');
-      const wpeId = btn.getAttribute('data-wpe-id');
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
 
-      // Set the hidden form values
-      document.getElementById('delete-wpe-id').value = wpeId;
-
-      // Submit the hidden form to the correct endpoint
-      const deleteForm = document.getElementById('delete-exercise-form');
-      deleteForm.action = `/delete_exercise_from_plan/${planId}`;
-      deleteForm.submit();
-    }
-
-    // Close the menu
-    btn.closest('.settings-menu').style.display = 'none';
-  });
-});
-
-// Sluit menu als ergens anders geklikt wordt
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.setting-dots-workout') && !e.target.closest('.settings-menu')) {
-    document.querySelectorAll('.settings-menu').forEach(menu => menu.style.display = 'none');
-  }
-});
-
-// Debug: Log form submission
-document.getElementById('main-workout-form').addEventListener('submit', function(e) {
-  console.log('Form being submitted with name:', document.querySelector('input[name="name"]').value);
-});
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
 </script>
+
 {% endblock %}

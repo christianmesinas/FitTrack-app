@@ -15,10 +15,10 @@
                 <h1 class="welcome-title">
                     Welkom terug, <span class="highlight-name">{{ current_user.name }}</span>! 💪
                 </h1>
-                <p class="welcome-subtitle">Klaar voor je volgende workout?</p>
+                <p class="welcome-subtitle">{{ motivational_quote }}</p>
             </div>
 
-            <!-- Quick Stats Cards -->
+            <!-- Quick Stats Cards UITGEBREID -->
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-icon">
@@ -35,7 +35,7 @@
                         <i class="fas fa-calendar-check"></i>
                     </div>
                     <div class="stat-content">
-                        <span class="stat-number">12</span>
+                        <span class="stat-number">{{ workouts_this_month }}</span>
                         <span class="stat-label">Deze maand</span>
                     </div>
                 </div>
@@ -45,27 +45,138 @@
                         <i class="fas fa-trophy"></i>
                     </div>
                     <div class="stat-content">
-                        <span class="stat-number">5</span>
+                        <span class="stat-number">{{ streak_days }}</span>
                         <span class="stat-label">Streak</span>
+                    </div>
+                </div>
+
+        </div>
+    </section>
+
+    <!-- NIEUW: Quick Start Section -->
+    {% if last_workout %}
+    <section class="quick-start-section">
+        <div class="quick-start-card">
+            <div class="quick-start-header">
+                <h3><i class="fas fa-bolt"></i> Quick Start</h3>
+                <span class="last-workout-date">Laatste workout: {{ last_workout.date }}</span>
+            </div>
+            <div class="quick-start-content">
+                <p class="workout-name">{{ last_workout.name }}</p>
+                <p class="workout-info">{{ last_workout.exercise_count }} oefeningen • {{ last_workout.duration }} min</p>
+                <a href="{{ url_for('sessions.start_workout', plan_id=last_workout.id) }}" class="btn-repeat-workout">
+                    <i class="fas fa-redo"></i> Herhaal deze workout
+                </a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- NIEUW: Progress Tracking Section -->
+    <section class="progress-section">
+        <div class="progress-container">
+            <h3 class="section-title">Jouw Vooruitgang</h3>
+
+            <div class="progress-cards">
+                <!-- Doel Progress -->
+                <div class="progress-card">
+                    <h4>Gewichtsdoel</h4>
+                    <div class="circular-progress" data-percentage="{{ goal_progress }}">
+                        <svg>
+                            <circle cx="70" cy="70" r="60"></circle>
+                            <circle cx="70" cy="70" r="60" class="progress-circle"></circle>
+                        </svg>
+                        <div class="progress-number">
+                            <span>{{ goal_progress }}%</span>
+                        </div>
+                    </div>
+                    <p class="progress-info">
+                        Huidig: {{ current_user.current_weight|round(1) }}kg<br>
+                        Doel: {{ current_user.fitness_goal|round(1) }}kg
+                    </p>
+                </div>
+
+                <!-- Weekly Activity -->
+                <div class="progress-card">
+                    <h4>Deze Week</h4>
+                    <div class="week-grid">
+                        {% for day in week_activity %}
+                        <div class="day-box {{ 'active' if day.completed else '' }}" title="{{ day.name }}">
+                            <span>{{ day.letter }}</span>
+                            {% if day.completed %}<i class="fas fa-check"></i>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <p class="progress-info">{{ workouts_this_week }} van {{ weekly_goal }} workouts voltooid</p>
+                </div>
+
+                <!-- Personal Records -->
+                <div class="progress-card">
+                    <h4>Personal Records</h4>
+                    <div class="pr-list">
+                        {% for pr in personal_records[:3] %}
+                        <div class="pr-item">
+                            <span class="pr-exercise">{{ pr.exercise }}</span>
+                            <span class="pr-value">{{ pr.value }}</span>
+                        </div>
+                        {% else %}
+                        <p class="no-pr">Start met trainen om PRs te zetten!</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Workouts Section -->
+    <!-- NIEUW: Workout Suggesties -->
+    <section class="suggestions-section">
+        <div class="suggestions-container">
+            <h3 class="section-title">Aanbevolen voor jou</h3>
+            <div class="suggestion-cards">
+                {% for suggestion in workout_suggestions %}
+                <div class="suggestion-card">
+                    <div class="suggestion-icon">
+                        <i class="{{ suggestion.icon }}"></i>
+                    </div>
+                    <h4>{{ suggestion.title }}</h4>
+                    <p>{{ suggestion.description }}</p>
+                    <a href="{{ suggestion.link }}" class="btn-try-suggestion">Probeer nu</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Workouts Section (BESTAAND, maar met kleine verbeteringen) -->
     <section class="workouts-section">
         <div class="section-header">
             <h2 class="section-title">Jouw Workouts</h2>
-            <a href="{{ url_for('workouts.add_workout') }}" class="add-workout-fab">
-                <i class="fas fa-plus"></i>
-            </a>
+            <div class="header-actions">
+                <button class="btn-filter" onclick="toggleFilter()">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+                <a href="{{ url_for('workouts.add_workout') }}" class="add-workout-fab">
+                    <i class="fas fa-plus"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- NIEUW: Filter opties -->
+        <div class="filter-bar" id="filterBar" style="display: none;">
+            <button class="filter-chip active" data-filter="all">Alle</button>
+            <button class="filter-chip" data-filter="recent">Recent</button>
+            <button class="filter-chip" data-filter="favorite">Favorieten</button>
+            <button class="filter-chip" data-filter="strength">Kracht</button>
+            <button class="filter-chip" data-filter="cardio">Cardio</button>
         </div>
 
         <div class="workouts-container">
             {% if workout_data %}
                 {% for workout_info in workout_data %}
-                    <div class="workout-card" id="workout-{{ workout_info.plan.id }}">
+                    <div class="workout-card" id="workout-{{ workout_info.plan.id }}" data-category="{{ workout_info.category }}">
+                        <!-- Favoriet indicator -->
+
+
                         <div class="workout-card-header">
                             <div class="workout-icon">
                                 <i class="fas fa-dumbbell"></i>
@@ -75,8 +186,17 @@
                                     <i class="fas fa-ellipsis-v"></i>
                                 </button>
                                 <div class="dropdown-menu" id="menu-{{ workout_info.plan.id }}">
+                                    <a href="{{ url_for('sessions.start_workout', plan_id=workout_info.plan.id) }}" class="dropdown-item">
+                                        <i class="fas fa-play"></i> Start direct
+                                    </a>
                                     <a href="{{ url_for('workouts.edit_workout', plan_id=workout_info.plan.id) }}" class="dropdown-item">
                                         <i class="fas fa-edit"></i> Bewerken
+                                    </a>
+                                    <a href="#" class="dropdown-item duplicate-workout" data-workout-id="{{ workout_info.plan.id }}">
+                                        <i class="fas fa-copy"></i> Dupliceer
+                                    </a>
+                                    <a href="#" class="dropdown-item share-workout" data-workout-id="{{ workout_info.plan.id }}">
+                                        <i class="fas fa-share"></i> Delen
                                     </a>
                                     <a href="#" class="dropdown-item archive-workout" data-workout-id="{{ workout_info.plan.id }}">
                                         <i class="fas fa-archive"></i> Archiveren
@@ -87,6 +207,13 @@
 
                         <div class="workout-card-body">
                             <h3 class="workout-name">{{ workout_info.plan.name }}</h3>
+
+                            <!-- Last performed badge -->
+                            {% if workout_info.last_performed %}
+                            <span class="last-performed-badge">
+                                <i class="fas fa-clock"></i> {{ workout_info.last_performed }}
+                            </span>
+                            {% endif %}
 
                             <div class="exercise-list">
                                 {% if workout_info.exercises %}
@@ -107,6 +234,16 @@
                                         <span>Nog geen oefeningen toegevoegd</span>
                                     </div>
                                 {% endif %}
+                            </div>
+
+                            <!-- Estimated duration -->
+                            <div class="workout-meta">
+                                <span class="meta-item">
+                                    <i class="fas fa-clock"></i> ~{{ workout_info.estimated_duration }} min
+                                </span>
+                                <span class="meta-item">
+                                    <i class="fas fa-fire"></i> ~{{ workout_info.estimated_calories }} cal
+                                </span>
                             </div>
                         </div>
 
@@ -134,8 +271,8 @@
                     <div class="empty-state-icon">
                         <i class="fas fa-dumbbell"></i>
                     </div>
-                    <h3 class="empty-state-title">Nog geen workouts</h3>
-                    <p class="empty-state-text">Begin met het maken van je eerste workout routine!</p>
+                    <h3 class="empty-state-title">Begin je fitness journey!</h3>
+                    <p class="empty-state-text">Maak je eerste workout en start met trainen</p>
                     <a href="{{ url_for('workouts.add_workout') }}" class="btn-create-first">
                         <i class="fas fa-plus"></i>
                         Maak je eerste workout
@@ -150,12 +287,22 @@
                 <i class="fas fa-history"></i>
                 <span>Workout Historiek</span>
             </a>
+            <a href="{{ url_for('profile.profile') }}" class="action-btn">
+                <i class="fas fa-chart-line"></i>
+                <span>Statistieken</span>
+            </a>
             <a href="{{ url_for('profile.archived_plans') }}" class="action-btn">
                 <i class="fas fa-archive"></i>
                 <span>Gearchiveerd</span>
             </a>
+            <a href="#" class="action-btn" onclick="showTutorial()">
+                <i class="fas fa-question-circle"></i>
+                <span>Hulp</span>
+            </a>
         </div>
     </section>
+
+
 
 {% else %}
     <!-- Not Logged In State -->
@@ -173,11 +320,133 @@
     </div>
 {% endif %}
 
+<!-- Tutorial Modal -->
+<div id="tutorialModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeTutorial()">&times;</button>
+        <h2>Welkom bij FitTrack+!</h2>
+        <div class="tutorial-steps">
+            <div class="tutorial-step">
+                <div class="step-number">1</div>
+                <h4>Maak een workout</h4>
+                <p>Klik op de + knop om je eerste workout te maken</p>
+            </div>
+            <div class="tutorial-step">
+                <div class="step-number">2</div>
+                <h4>Voeg oefeningen toe</h4>
+                <p>Zoek en voeg oefeningen toe aan je workout</p>
+            </div>
+            <div class="tutorial-step">
+                <div class="step-number">3</div>
+                <h4>Start trainen</h4>
+                <p>Klik op "Start Workout" en log je sets en reps</p>
+            </div>
+            <div class="tutorial-step">
+                <div class="step-number">4</div>
+                <h4>Volg je vooruitgang</h4>
+                <p>Bekijk je statistieken en zie je verbetering</p>
+            </div>
+        </div>
+        <button class="btn-got-it" onclick="closeTutorial()">Begrepen!</button>
+    </div>
+</div>
+
 <!-- Scripts -->
 <script src="{{ url_for('static', filename='js/archive.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/menu.js') }}" defer></script>
 
 <script>
+    // Filter functionality
+    function toggleFilter() {
+        const filterBar = document.getElementById('filterBar');
+        filterBar.style.display = filterBar.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    // Filter chips
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', function() {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+
+            const filter = this.dataset.filter;
+            // Implementeer filter logica hier
+            console.log('Filter:', filter);
+        });
+    });
+
+    // Favorite toggle
+    document.querySelectorAll('.btn-favorite').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.classList.toggle('active');
+            const workoutId = this.dataset.workoutId;
+            // Save favorite status
+            console.log('Toggle favorite:', workoutId);
+        });
+    });
+
+    // Tutorial
+    function showTutorial() {
+        document.getElementById('tutorialModal').style.display = 'flex';
+    }
+
+    function closeTutorial() {
+        document.getElementById('tutorialModal').style.display = 'none';
+        // Save that user has seen tutorial
+        localStorage.setItem('tutorialSeen', 'true');
+    }
+
+    // Show tutorial for new users
+    if (!localStorage.getItem('tutorialSeen')) {
+        setTimeout(showTutorial, 2000);
+    }
+
+    // Circular progress animation
+    document.addEventListener('DOMContentLoaded', function() {
+        const circles = document.querySelectorAll('.progress-circle');
+        circles.forEach(circle => {
+            const percentage = circle.closest('.circular-progress').dataset.percentage;
+            const radius = circle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = circumference;
+
+            setTimeout(() => {
+                const offset = circumference - (percentage / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+            }, 100);
+        });
+    });
+
+    // Share workout
+    document.querySelectorAll('.share-workout').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const workoutId = this.dataset.workoutId;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Check mijn workout!',
+                    text: 'Bekijk mijn workout op FitTrack+',
+                    url: window.location.href
+                });
+            } else {
+                // Fallback
+                alert('Kopieer deze link om te delen: ' + window.location.href);
+            }
+        });
+    });
+
+    // Duplicate workout
+    document.querySelectorAll('.duplicate-workout').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const workoutId = this.dataset.workoutId;
+            // Implementeer duplicate logic
+            console.log('Duplicate workout:', workoutId);
+        });
+    });
+
     // Dropdown menu toggle
     document.querySelectorAll('.menu-toggle').forEach(button => {
         button.addEventListener('click', function(e) {
@@ -185,19 +454,11 @@
             const workoutId = this.dataset.workoutId;
             const menu = document.getElementById(`menu-${workoutId}`);
 
-            // Sluit alle andere menus
             document.querySelectorAll('.dropdown-menu').forEach(m => {
                 if (m !== menu) m.classList.remove('show');
             });
 
             menu.classList.toggle('show');
-        });
-    });
-
-    // Sluit menu wanneer je ergens anders klikt
-    document.addEventListener('click', function() {
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-            menu.classList.remove('show');
         });
     });
 
@@ -207,11 +468,531 @@
             e.preventDefault();
             const workoutId = this.dataset.workoutId;
             if (confirm('Weet je zeker dat je deze workout wilt archiveren?')) {
-                // Archive logic hier
                 document.getElementById(`workout-${workoutId}`).style.display = 'none';
             }
         });
     });
+
+    // Close menus when clicking outside
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    });
 </script>
+
+<style>
+/* Quick Start Section */
+.quick-start-section {
+    padding: 20px;
+    max-width: 1200px;
+    margin: -30px auto 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.quick-start-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    padding: 25px;
+    border: 2px solid #FF6B35;
+}
+
+.quick-start-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.quick-start-header h3 {
+    color: #FF6B35;
+    font-size: 1.3rem;
+    margin: 0;
+}
+
+.last-workout-date {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.quick-start-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.workout-info {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.btn-repeat-workout {
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-repeat-workout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255,107,53,0.4);
+}
+
+/* Progress Section */
+.progress-section {
+    padding: 40px 20px;
+    background: #f8f9fa;
+}
+
+.progress-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.progress-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 25px;
+}
+
+.progress-card {
+    background: white;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.progress-card h4 {
+    margin: 0 0 20px 0;
+    color: #333;
+}
+
+/* Circular Progress */
+.circular-progress {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 15px;
+}
+
+.circular-progress svg {
+    transform: rotate(-90deg);
+    width: 140px;
+    height: 140px;
+}
+
+.circular-progress circle {
+    fill: none;
+    stroke-width: 8;
+}
+
+.circular-progress circle:first-child {
+    stroke: #f0f0f0;
+}
+
+.progress-circle {
+    stroke: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    stroke: #FF6B35;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+}
+
+.progress-number {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #FF6B35;
+}
+
+/* Week Grid */
+.week-grid {
+    display: flex;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.day-box {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: #999;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.day-box.active {
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+}
+
+.day-box i {
+    position: absolute;
+    font-size: 0.7rem;
+    bottom: 2px;
+    right: 2px;
+}
+
+/* PR List */
+.pr-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pr-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.pr-item:hover {
+    background: #FF6B35;
+    color: white;
+}
+
+.pr-value {
+    font-weight: 700;
+}
+
+/* Suggestions Section */
+.suggestions-section {
+    padding: 40px 20px;
+}
+
+.suggestions-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.suggestion-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.suggestion-card {
+    background: linear-gradient(135deg, rgba(255,107,53,0.05) 0%, rgba(255,140,66,0.05) 100%);
+    border: 2px solid #FF6B35;
+    border-radius: 20px;
+    padding: 25px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.suggestion-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(255,107,53,0.2);
+}
+
+.suggestion-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.btn-try-suggestion {
+    display: inline-block;
+    margin-top: 15px;
+    color: #FF6B35;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-try-suggestion:hover {
+    text-decoration: underline;
+}
+
+/* Activity Section */
+.activity-section {
+    padding: 40px 20px;
+    background: #f8f9fa;
+}
+
+.activity-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.activity-feed {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.activity-item {
+    display: flex;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.activity-icon.workout {
+    background: #e3f2fd;
+    color: #2196f3;
+}
+
+.activity-icon.achievement {
+    background: #fff3e0;
+    color: #ff9800;
+}
+
+.activity-icon.weight {
+    background: #e8f5e9;
+    color: #4caf50;
+}
+
+.activity-time {
+    color: #999;
+    font-size: 0.85rem;
+}
+
+/* Filter Bar */
+.header-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.btn-filter {
+    background: white;
+    border: 2px solid #e0e0e0;
+    padding: 10px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-filter:hover {
+    border-color: #FF6B35;
+    color: #FF6B35;
+}
+
+.filter-bar {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    background: white;
+    border: 2px solid #e0e0e0;
+    padding: 8px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-chip:hover {
+    border-color: #FF6B35;
+}
+
+.filter-chip.active {
+    background: #FF6B35;
+    color: white;
+    border-color: #FF6B35;
+}
+
+/* Favorite Button */
+.btn-favorite {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #ddd;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.btn-favorite:hover {
+    color: #FFD700;
+    transform: scale(1.1);
+}
+
+.btn-favorite.active {
+    color: #FFD700;
+}
+
+/* Workout Meta */
+.workout-meta {
+    display: flex;
+    gap: 15px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.meta-item {
+    color: #999;
+    font-size: 0.9rem;
+}
+
+.last-performed-badge {
+    display: inline-block;
+    background: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* Tutorial Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #999;
+}
+
+.tutorial-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+
+.tutorial-step {
+    text-align: center;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-weight: 700;
+}
+
+.btn-got-it {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-got-it:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255,107,53,0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .progress-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .suggestion-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-start-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .week-grid {
+        justify-content: center;
+    }
+
+    .tutorial-steps {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 
 {% endblock %}

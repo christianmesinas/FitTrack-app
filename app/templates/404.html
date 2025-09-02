@@ -1,18 +1,123 @@
 {% extends "base.html" %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landings.css') }}">
+<style>
+    /* Override base styles voor error pagina */
+    body {
+        overflow: hidden;
+        height: 100vh;
+    }
+
+    .error-container {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5%;
+    }
+
+    .error-content {
+        max-width: 600px;
+        z-index: 2;
+        animation: fadeInCenter 1s ease-out;
+        text-align: center;
+    }
+
+    .error-code {
+        font-size: 8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        line-height: 1;
+    }
+
+    .error-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .error-message {
+        font-size: 1.1rem;
+        color: #666;
+        margin-bottom: 3rem;
+        line-height: 1.6;
+    }
+
+    .error-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .error-code {
+            font-size: 5rem;
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+        }
+
+        .error-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .error-buttons .orange-btn {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-    <div class="top-bar">
-            <a href="/index">
-                <img src="/static/img/back.svg" alt="Terug knop" class="back-icon">
+<div class="error-container">
+    <!-- Achtergrond met vloeiende vormen - EXACT als landings -->
+    <div class="background-shapes">
+        <div class="shape shape1"></div>
+        <div class="shape shape2"></div>
+        <div class="shape shape3"></div>
+    </div>
+
+    <!-- Error Content -->
+    <div class="error-content">
+        <div class="error-code">404</div>
+        <h1 class="error-title">Pagina Niet Gevonden</h1>
+        <p class="error-message">
+            Oeps! De pagina die je zoekt lijkt niet te bestaan.
+            Misschien is de link verouderd of heb je een typefout gemaakt.
+        </p>
+
+        <div class="error-buttons">
+            <a href="{{ url_for('main.index') }}" class="orange-btn">
+                <i class="fas fa-home"></i> Naar Home
             </a>
-        </div>
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <h1 class="display-4">404 - Page Not Found</h1>
-            <p class="lead">Sorry, the page you are looking for does not exist.</p>
-            <p><a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Home</a></p>
+            <a href="javascript:history.back()" class="orange-btn secondary">
+                <i class="fas fa-arrow-left"></i> Ga Terug
+            </a>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Verberg de navbar voor error pagina's
+    document.addEventListener('DOMContentLoaded', function() {
+        const navbar = document.querySelector('.navbar');
+        if (navbar) {
+            navbar.style.display = 'none';
+        }
+    });
+</script>
 {% endblock %}
