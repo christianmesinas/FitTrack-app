@@ -668,64 +668,70 @@ class WorkoutSession(db.Model):
             'is_completed': self.is_completed
         }
 
-    class CalendarEvent(db.Model):
 
-        __tablename__ = 'calendar_events'
 
-        id: so.Mapped[int] = so.mapped_column(primary_key=True)
-        user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
-        title: so.Mapped[str] = so.mapped_column(sa.String(200), nullable=False)
-        description: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True)
 
-        # Date et heure de l'événement
-        start_datetime: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), nullable=False)
-        end_datetime: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), nullable=False)
 
-        # Lien optionnel avec un workout plan
-        workout_plan_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey('workout_plan.id'), nullable=True)
 
-        # Type d'événement
-        event_type: so.Mapped[str] = so.mapped_column(sa.String(50), default='workout')  # workout, cardio, rest, other
+class CalendarEvent(db.Model):
+    """
+    Model voor kalender gebeurtenissen in de FitTrack-applicatie.
+    """
+    __tablename__ = 'calendar_events'
 
-        # Statut
-        status: so.Mapped[str] = so.mapped_column(sa.String(20), default='planned')  # planned, completed, cancelled
+    id: so.Mapped[int] = so.mapped_column(primary_key=True)
+    user_id: so.Mapped[int] = so.mapped_column(sa.ForeignKey('user.id'), nullable=False)
+    title: so.Mapped[str] = so.mapped_column(sa.String(200), nullable=False)
+    description: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True)
 
-        # Récurrence
-        is_recurring: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False)
-        recurrence_pattern: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50),
-                                                                        nullable=True)  # daily, weekly, monthly
-        recurrence_end_date: so.Mapped[Optional[datetime]] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
+    # Date et heure de l'événement
+    start_datetime: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), nullable=False)
+    end_datetime: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True), nullable=False)
 
-        # Couleur pour l'affichage
-        color: so.Mapped[str] = so.mapped_column(sa.String(7), default='#FF6B35')
+    # Lien optionnel avec un workout plan
+    workout_plan_id: so.Mapped[Optional[int]] = so.mapped_column(sa.ForeignKey('workout_plan.id'), nullable=True)
 
-        # Rappel
-        reminder_minutes: so.Mapped[Optional[int]] = so.mapped_column(nullable=True)  # Minutes avant l'événement
+    # Type d'événement
+    event_type: so.Mapped[str] = so.mapped_column(sa.String(50), default='workout')  # workout, cardio, rest, other
 
-        # Timestamps
-        created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True),
-                                                           default=lambda: datetime.now(timezone.utc))
-        updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True),
-                                                           default=lambda: datetime.now(timezone.utc),
-                                                           onupdate=lambda: datetime.now(timezone.utc))
+    # Statut
+    status: so.Mapped[str] = so.mapped_column(sa.String(20), default='planned')  # planned, completed, cancelled
 
-        # Relations
-        user: so.Mapped['User'] = so.relationship(backref='calendar_events')
-        workout_plan: so.Mapped[Optional['WorkoutPlan']] = so.relationship(backref='calendar_events')
+    # Récurrence
+    is_recurring: so.Mapped[bool] = so.mapped_column(sa.Boolean, default=False)
+    recurrence_pattern: so.Mapped[Optional[str]] = so.mapped_column(sa.String(50), nullable=True)  # daily, weekly, monthly
+    recurrence_end_date: so.Mapped[Optional[datetime]] = so.mapped_column(sa.DateTime(timezone=True), nullable=True)
 
-        def to_dict(self):
-            """Converteer naar dictionary voor JSON responses"""
-            return {
-                'id': self.id,
-                'title': self.title,
-                'description': self.description,
-                'start': self.start_datetime.isoformat() if self.start_datetime else None,
-                'end': self.end_datetime.isoformat() if self.end_datetime else None,
-                'workout_plan_id': self.workout_plan_id,
-                'workout_plan_name': self.workout_plan.name if self.workout_plan else None,
-                'event_type': self.event_type,
-                'status': self.status,
-                'color': self.color,
-                'is_recurring': self.is_recurring,
-                'recurrence_pattern': self.recurrence_pattern
-            }
+    # Couleur pour l'affichage
+    color: so.Mapped[str] = so.mapped_column(sa.String(7), default='#FF6B35')
+
+    # Rappel
+    reminder_minutes: so.Mapped[Optional[int]] = so.mapped_column(nullable=True)  # Minutes avant l'événement
+
+    # Timestamps
+    created_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True),
+                                                       default=lambda: datetime.now(timezone.utc))
+    updated_at: so.Mapped[datetime] = so.mapped_column(sa.DateTime(timezone=True),
+                                                       default=lambda: datetime.now(timezone.utc),
+                                                       onupdate=lambda: datetime.now(timezone.utc))
+
+    # Relations
+    user: so.Mapped['User'] = so.relationship(backref='calendar_events')
+    workout_plan: so.Mapped[Optional['WorkoutPlan']] = so.relationship(backref='calendar_events')
+
+    def to_dict(self):
+        """Converteer naar dictionary voor JSON responses"""
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'start': self.start_datetime.isoformat() if self.start_datetime else None,
+            'end': self.end_datetime.isoformat() if self.end_datetime else None,
+            'workout_plan_id': self.workout_plan_id,
+            'workout_plan_name': self.workout_plan.name if self.workout_plan else None,
+            'event_type': self.event_type,
+            'status': self.status,
+            'color': self.color,
+            'is_recurring': self.is_recurring,
+            'recurrence_pattern': self.recurrence_pattern
+        }
