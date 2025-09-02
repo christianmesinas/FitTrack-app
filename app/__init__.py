@@ -15,6 +15,8 @@ from flask_moment import Moment
 from flask_wtf import CSRFProtect
 
 
+
+
 # Initialiseer extensies globaal
 db = SQLAlchemy()
 migrate = Migrate()
@@ -89,6 +91,9 @@ def create_app(config_class=Config):
     )
 
     # Registreer blueprints
+    from app.calendar import bp as calendar_bp
+    app.register_blueprint(calendar_bp, url_prefix='/calendar')
+
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)  # Geen prefix, voor algemene routes
 

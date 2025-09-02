@@ -79,10 +79,11 @@
             <span>Profiel</span>
         </a>
 
-        <!-- 3. Calendar (nieuwe knop - route moet nog gemaakt worden) -->
-        <a href="#" class="nav-item" onclick="alert('Calendar functie komt binnenkort!'); return false;">
+
+        <!-- 3. Calendar -->
+        <a href="{{ url_for('calendar.agenda') }}" class="nav-item">
             <i class="fas fa-calendar-alt"></i>
-            <span>Calendar</span>
+            <span>Agenda</span>
         </a>
 
         <!-- 4. Workout Toevoegen -->
