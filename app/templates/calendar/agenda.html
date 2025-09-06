@@ -4,137 +4,362 @@
 <!-- FullCalendar CSS -->
 <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css' rel='stylesheet' />
 <style>
-    /* Styles personnalisés pour l'agenda */
-    .calendar-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
-        padding-bottom: 100px;
+    /* Root Variabelen voor consistentie */
+    :root {
+        --primary-color: #FF6B35;
+        --primary-hover: #e55a2b;
+        --primary-dark: #d04a1b;
+        --secondary-color: #FF8C42;
+        --success-color: #4CAF50;
+        --danger-color: #f44336;
+        --info-color: #2196F3;
+        --warning-color: #FFC107;
+        --dark-color: #333;
+        --gray-color: #666;
+        --light-gray: #e0e0e0;
+        --lighter-gray: #f5f5f5;
+        --border-radius: 15px;
+        --border-radius-lg: 20px;
+        --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+        --shadow-md: 0 5px 20px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 40px rgba(0,0,0,0.15);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Hoofd Container */
+    .calendar-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 30px;
+        padding-bottom: 120px;
+    }
+
+    /* Header Sectie */
     .calendar-header {
-        background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         color: white;
-        padding: 30px 20px;
-        border-radius: 20px 20px 0 0;
-        margin-bottom: -10px;
+        padding: 40px 30px;
+        border-radius: var(--border-radius-lg);
+        margin-bottom: 30px;
+        box-shadow: var(--shadow-md);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .calendar-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 40%;
+        height: 200%;
+        background: rgba(255,255,255,0.05);
+        transform: rotate(45deg);
     }
 
     .calendar-header h1 {
         margin: 0;
-        font-size: 2rem;
+        font-size: 2.2rem;
         font-weight: 700;
+        letter-spacing: -0.5px;
+        position: relative;
+        z-index: 1;
     }
 
     .calendar-header p {
-        margin: 10px 0 0 0;
-        opacity: 0.9;
+        margin: 12px 0 0 0;
+        opacity: 0.95;
+        font-size: 1.1rem;
+        position: relative;
+        z-index: 1;
     }
 
+    /* Statistieken Kaarten */
+    .stats-container {
+        margin-bottom: 35px;
+        position: relative;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 25px;
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+        border: 1px solid rgba(0,0,0,0.05);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    /* Hover alleen voor desktop */
+    @media (hover: hover) {
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+    }
+
+    .stat-icon {
+        width: 55px;
+        height: 55px;
+        background: linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(255,140,66,0.1) 100%);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 18px;
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 8px;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: var(--gray-color);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    /* Snelle Acties */
+    .quick-actions {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 35px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .quick-action-btn {
+        padding: 14px 28px;
+        background: white;
+        border: 2px solid var(--light-gray);
+        border-radius: 50px;
+        color: var(--dark-color);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        white-space: nowrap;
+        position: relative;
+        overflow: hidden;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .quick-action-btn span {
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .quick-action-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255,107,53,0.1);
+        transform: translate(-50%, -50%);
+        transition: width 0.5s ease, height 0.5s ease;
+    }
+
+    /* Hover alleen voor desktop */
+    @media (hover: hover) {
+        .quick-action-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,107,53,0.2);
+        }
+
+        .quick-action-btn:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    /* Actieve staat voor touch apparaten */
+    .quick-action-btn:active {
+        transform: scale(0.98);
+    }
+
+    .quick-action-btn.primary {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+        padding: 14px 32px;
+    }
+
+    /* Hover alleen voor desktop */
+    @media (hover: hover) {
+        .quick-action-btn.primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,107,53,0.35);
+        }
+    }
+
+    /* Kalender Wrapper */
     #calendar {
         background: white;
-        padding: 20px;
-        border-radius: 0 0 20px 20px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-        min-height: 600px;
+        padding: 30px;
+        border-radius: var(--border-radius-lg);
+        box-shadow: var(--shadow-md);
+        min-height: 650px;
+        border: 1px solid rgba(0,0,0,0.05);
     }
 
-    /* Personnalisation FullCalendar */
+    /* FullCalendar Aanpassingen */
     .fc {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    .fc-toolbar {
+        margin-bottom: 30px !important;
+        padding: 0 10px;
     }
 
     .fc-toolbar-title {
-        font-size: 1.5rem !important;
-        font-weight: 600;
-        color: #333;
+        font-size: 1.6rem !important;
+        font-weight: 700 !important;
+        color: var(--dark-color);
+        letter-spacing: -0.5px;
     }
 
     .fc-button-primary {
-        background: #FF6B35 !important;
+        background: var(--primary-color) !important;
         border: none !important;
-        border-radius: 8px !important;
-        padding: 8px 16px !important;
-        font-weight: 500 !important;
-        transition: all 0.3s ease !important;
+        border-radius: 10px !important;
+        padding: 10px 20px !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        transition: var(--transition) !important;
+        text-transform: capitalize !important;
     }
 
-    .fc-button-primary:hover {
-        background: #e55a2b !important;
+    .fc-button-primary:hover:not(:disabled) {
+        background: var(--primary-hover) !important;
         transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255,107,53,0.3);
     }
 
-    .fc-button-primary:not(:disabled):active {
-        background: #d04a1b !important;
+    .fc-button-primary:active:not(:disabled) {
+        background: var(--primary-dark) !important;
+        transform: translateY(0);
+    }
+
+    .fc-button-group {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .fc-button-group .fc-button {
+        border-radius: 0 !important;
+    }
+
+    .fc-button-group .fc-button:first-child {
+        border-radius: 10px 0 0 10px !important;
+    }
+
+    .fc-button-group .fc-button:last-child {
+        border-radius: 0 10px 10px 0 !important;
     }
 
     .fc-today-button:disabled {
-        opacity: 0.5;
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    /* Kalender Dagen */
+    .fc-day {
+        transition: background-color 0.2s ease;
+    }
+
+    .fc-day:hover {
+        background: rgba(255,107,53,0.03) !important;
     }
 
     .fc-day-today {
-        background: rgba(255, 107, 53, 0.1) !important;
+        background: linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(255,140,66,0.08) 100%) !important;
+        position: relative;
     }
 
+    .fc-day-today .fc-daygrid-day-number {
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    /* Gebeurtenissen */
     .fc-event {
         border: none !important;
-        border-radius: 6px !important;
-        padding: 4px 8px !important;
-        font-weight: 500 !important;
+        border-radius: 8px !important;
+        padding: 6px 10px !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: var(--transition);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     .fc-event:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+        z-index: 10;
+    }
+
+    .fc-event.event-completed {
+        opacity: 0.8;
+        text-decoration: line-through;
+        background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%) !important;
     }
 
     .fc-daygrid-event {
         white-space: normal !important;
+        align-items: center !important;
     }
 
-    /* Quick Actions */
-    .quick-actions {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
+    .fc-event-title {
+        font-weight: 600;
     }
 
-    .quick-action-btn {
-        padding: 12px 24px;
-        background: white;
-        border: 2px solid #e0e0e0;
-        border-radius: 50px;
-        color: #333;
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+    .fc-list-event:hover td {
+        background: rgba(255,107,53,0.05);
     }
 
-    .quick-action-btn:hover {
-        border-color: #FF6B35;
-        color: #FF6B35;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(255,107,53,0.2);
-    }
-
-    .quick-action-btn.primary {
-        background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
-        color: white;
-        border: none;
-    }
-
-    .quick-action-btn.primary:hover {
-        box-shadow: 0 8px 20px rgba(255,107,53,0.3);
-    }
-
-    /* Modal Styles */
+    /* Modal Stijlen */
     .modal-overlay {
         display: none;
         position: fixed;
@@ -142,7 +367,8 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(5px);
         z-index: 9999;
         animation: fadeIn 0.3s ease;
     }
@@ -153,13 +379,14 @@
         left: 50%;
         transform: translate(-50%, -50%);
         background: white;
-        border-radius: 20px;
-        padding: 30px;
-        max-width: 500px;
+        border-radius: var(--border-radius-lg);
+        padding: 35px;
+        max-width: 550px;
         width: 90%;
         max-height: 90vh;
         overflow-y: auto;
         animation: slideUp 0.3s ease;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
 
     @keyframes fadeIn {
@@ -168,11 +395,11 @@
     }
 
     @keyframes slideUp {
-        from { 
+        from {
             opacity: 0;
             transform: translate(-50%, -40%);
         }
-        to { 
+        to {
             opacity: 1;
             transform: translate(-50%, -50%);
         }
@@ -182,223 +409,910 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 25px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid var(--lighter-gray);
     }
 
     .modal-header h2 {
         margin: 0;
-        color: #333;
-        font-size: 1.5rem;
+        color: var(--dark-color);
+        font-size: 1.7rem;
+        font-weight: 700;
     }
 
     .modal-close {
         background: none;
         border: none;
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         cursor: pointer;
         color: #999;
-        transition: color 0.3s ease;
+        transition: var(--transition);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
     }
 
     .modal-close:hover {
-        color: #333;
+        background: var(--lighter-gray);
+        color: var(--dark-color);
     }
 
-    /* Form Styles */
+    /* Formulier Stijlen */
     .form-group {
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
 
     .form-group label {
         display: block;
-        margin-bottom: 8px;
-        color: #333;
-        font-weight: 500;
-        font-size: 0.9rem;
+        margin-bottom: 10px;
+        color: var(--dark-color);
+        font-weight: 600;
+        font-size: 0.95rem;
     }
 
     .form-control {
         width: 100%;
-        padding: 12px;
-        border: 2px solid #e0e0e0;
-        border-radius: 10px;
+        padding: 14px 16px;
+        border: 2px solid var(--light-gray);
+        border-radius: 12px;
         font-size: 1rem;
-        transition: all 0.3s ease;
+        transition: var(--transition);
+        background: white;
     }
 
     .form-control:focus {
         outline: none;
-        border-color: #FF6B35;
-        box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(255,107,53,0.1);
+    }
+
+    select.form-control {
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+        padding-right: 40px;
+        appearance: none;
     }
 
     textarea.form-control {
         resize: vertical;
-        min-height: 100px;
+        min-height: 120px;
+        line-height: 1.5;
     }
 
     .form-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 15px;
+        gap: 20px;
     }
 
-    /* Event Type Selector */
+    /* Type Training Selector */
     .event-type-selector {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        margin-top: 10px;
+        gap: 12px;
+        margin-top: 12px;
     }
 
     .event-type-option {
-        padding: 12px;
-        border: 2px solid #e0e0e0;
-        border-radius: 10px;
+        padding: 14px;
+        border: 2px solid var(--light-gray);
+        border-radius: 12px;
         text-align: center;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: var(--transition);
+        font-weight: 600;
+        font-size: 0.95rem;
+        background: white;
     }
 
     .event-type-option:hover {
-        border-color: #FF6B35;
+        border-color: var(--primary-color);
+        background: rgba(255,107,53,0.05);
+        transform: translateY(-2px);
     }
 
     .event-type-option.selected {
-        background: #FF6B35;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         color: white;
-        border-color: #FF6B35;
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(255,107,53,0.3);
     }
 
-    /* Color Picker */
+    /* Kleur Kiezer */
     .color-picker {
         display: flex;
-        gap: 10px;
-        margin-top: 10px;
+        gap: 12px;
+        margin-top: 12px;
+        flex-wrap: wrap;
     }
 
     .color-option {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
         cursor: pointer;
         border: 3px solid transparent;
-        transition: all 0.3s ease;
+        transition: var(--transition);
+        box-shadow: var(--shadow-sm);
     }
 
     .color-option:hover {
-        transform: scale(1.1);
+        transform: scale(1.1) rotate(5deg);
     }
 
     .color-option.selected {
-        border-color: #333;
+        border-color: var(--dark-color);
+        box-shadow: 0 0 0 4px rgba(0,0,0,0.1);
     }
 
-    /* Stats Cards */
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: 15px;
-        padding: 20px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-    }
-
-    .stat-icon {
-        width: 50px;
-        height: 50px;
-        background: linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(255,140,66,0.1) 100%);
-        border-radius: 12px;
+    /* Checkbox */
+    .checkbox-wrapper {
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 15px;
+        gap: 12px;
+        padding: 12px;
+        background: var(--lighter-gray);
+        border-radius: 10px;
     }
 
-    .stat-value {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 5px;
+    .checkbox-wrapper input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+        cursor: pointer;
+        accent-color: var(--primary-color);
     }
 
-    .stat-label {
-        color: #666;
-        font-size: 0.9rem;
+    .checkbox-wrapper label {
+        margin: 0;
+        cursor: pointer;
+        user-select: none;
     }
 
-    /* Mobile Responsive */
-    @media (max-width: 768px) {
+    /* Herhaling Opties */
+    #recurrenceOptions {
+        margin-top: 20px;
+        padding: 20px;
+        background: var(--lighter-gray);
+        border-radius: 12px;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            max-height: 0;
+        }
+        to {
+            opacity: 1;
+            max-height: 200px;
+        }
+    }
+
+    /* Formulier Acties */
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 35px;
+        padding-top: 25px;
+        border-top: 2px solid var(--lighter-gray);
+    }
+
+    .form-actions button {
+        flex: 1;
+        padding: 14px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: var(--transition);
+        cursor: pointer;
+        border: none;
+    }
+
+    .form-actions .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+    }
+
+    .form-actions .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255,107,53,0.3);
+    }
+
+    .form-actions .btn-secondary {
+        background: white;
+        color: var(--dark-color);
+        border: 2px solid var(--light-gray);
+    }
+
+    .form-actions .btn-secondary:hover {
+        background: var(--lighter-gray);
+        border-color: var(--gray-color);
+    }
+
+    .form-actions .btn-danger {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .form-actions .btn-danger:hover {
+        background: #d32f2f;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(244,67,54,0.3);
+    }
+
+    /* Toast Meldingen */
+    .toast-notification {
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 16px 32px;
+        color: white;
+        border-radius: 50px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        z-index: 10000;
+        font-weight: 600;
+        animation: slideUp 0.3s ease;
+    }
+
+    .toast-notification.success {
+        background: linear-gradient(135deg, var(--success-color), #66BB6A);
+    }
+
+    .toast-notification.error {
+        background: linear-gradient(135deg, var(--danger-color), #ef5350);
+    }
+
+    .toast-notification.info {
+        background: linear-gradient(135deg, var(--info-color), #42A5F5);
+    }
+
+    /* Tablet Responsive (768px - 1024px) */
+    @media (max-width: 1024px) {
         .calendar-container {
-            padding: 10px;
+            padding: 25px;
+            max-width: 100%;
         }
 
-        .fc-toolbar {
-            flex-direction: column;
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .quick-actions {
+            overflow-x: auto;
+            padding-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .quick-actions::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .quick-actions::-webkit-scrollbar-track {
+            background: var(--lighter-gray);
+            border-radius: 2px;
+        }
+
+        .quick-actions::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 2px;
+        }
+    }
+
+    /* Mobile Responsive (max 768px) */
+    @media (max-width: 768px) {
+        /* Container aanpassingen */
+        .calendar-container {
+            padding: 15px;
+            padding-bottom: 50px;
+        }
+
+        .calendar-header {
+            padding: 25px 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header h1 {
+            font-size: 1.6rem;
+        }
+
+        .calendar-header p {
+            font-size: 0.95rem;
+        }
+
+        /* Stats Carousel voor Mobile */
+        .stats-container {
+            margin: 0 -15px 25px -15px; /* Volledige breedte */
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stats-row {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+            gap: 12px;
+            padding: 0 15px 15px 15px;
+        }
+
+        .stats-row::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .stat-card {
+            flex: 0 0 auto;
+            width: 160px;
+            scroll-snap-align: start;
+            padding: 18px;
+        }
+
+        /* Scroll indicator dots */
+        .stats-scroll-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 0;
+        }
+
+        .scroll-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--light-gray);
+            transition: var(--transition);
+        }
+
+        .scroll-dot.active {
+            background: var(--primary-color);
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+        }
+
+        /* Desktop knoppen verbergen op mobile */
+        .desktop-only {
+            display: none !important;
+        }
+
+        /* Snelle acties voor mobile */
+        .quick-actions {
+            background: white;
+            padding: 15px;
+            margin: 0 -15px 20px -15px;
+            display: flex;
             gap: 10px;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-bottom: 1px solid var(--light-gray);
+            border-top: 1px solid var(--light-gray);
+        }
+
+        .quick-action-btn {
+            padding: 12px 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Verberg knop tekst op mobile, toon alleen iconen */
+        .quick-action-btn .btn-text {
+            display: none;
+        }
+
+        .quick-action-btn {
+            min-width: auto;
+            padding: 12px;
+        }
+
+        .quick-action-btn.primary {
+            padding: 12px 20px;
+        }
+
+        .quick-action-btn.primary .btn-text {
+            display: inline;
+        }
+
+        /* Actieve staat voor weergave knoppen */
+        .quick-action-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        #calendar {
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 0;
+            background: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Kalender inhoud scrollbaar indien nodig */
+        .fc-scroller {
+            overflow-y: auto !important;
+            max-height: 500px !important;
+        }
+
+        /* Zorg dat kalender niet te hoog wordt */
+        .fc-daygrid-body {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        /* Mobile kalender aanpassingen - GEEN OVERLAP */
+        .fc-toolbar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px !important;
+            padding: 0 5px;
         }
 
         .fc-toolbar-title {
-            font-size: 1.2rem !important;
+            font-size: 1.3rem !important;
+            text-align: center;
+            order: 1;
+            padding: 10px 0;
+            font-weight: 700;
+        }
+
+        .fc-toolbar-chunk {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .fc-toolbar-chunk:first-child {
+            order: 2;
+        }
+
+        /* Verberg weergave knoppen in header op mobile */
+        .fc-toolbar-chunk:last-child {
+            display: none !important;
+        }
+
+        .fc-button-group {
+            display: flex;
+            width: 100%;
+            box-shadow: none !important;
         }
 
         .fc-button {
-            padding: 6px 12px !important;
+            padding: 10px !important;
+            font-size: 0.85rem !important;
+            flex: 1;
+            font-weight: 600 !important;
+        }
+
+        /* Footer toolbar voor weergave selectie ONDER de kalender */
+        .fc-footer-toolbar {
+            margin-top: 20px !important;
+            margin-bottom: 30px !important;
+            padding: 15px !important;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .fc-footer-toolbar .fc-toolbar-chunk {
+            width: 100%;
+        }
+
+        .fc-footer-toolbar .fc-button-group {
+            width: 100%;
+            display: flex;
+            background: var(--lighter-gray);
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            padding: 4px;
+        }
+
+        .fc-footer-toolbar .fc-button {
+            flex: 1;
+            background: transparent !important;
+            color: var(--dark-color) !important;
+            border: none !important;
+            padding: 12px 8px !important;
             font-size: 0.9rem !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            margin: 0 2px !important;
+        }
+
+        .fc-footer-toolbar .fc-button-active {
+            background: white !important;
+            color: var(--primary-color) !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+        }
+
+        /* Navigatie knoppen styling */
+        .fc-prev-button,
+        .fc-next-button,
+        .fc-today-button {
+            background: white !important;
+            border: 2px solid var(--light-gray) !important;
+            color: var(--dark-color) !important;
+            margin: 0 5px !important;
+            padding: 10px 15px !important;
+            border-radius: 10px !important;
+            font-weight: 600 !important;
+        }
+
+        .fc-prev-button:active,
+        .fc-next-button:active,
+        .fc-today-button:active {
+            background: var(--lighter-gray) !important;
+            transform: scale(0.95);
+        }
+
+        .fc-today-button {
+            padding: 10px 20px !important;
+        }
+
+        /* Kleinere kalender cellen op mobile */
+        .fc-daygrid-day {
+            min-height: 60px !important;
+        }
+
+        .fc-daygrid-day-number {
+            font-size: 0.9rem !important;
+            padding: 4px !important;
+        }
+
+        .fc-event {
+            font-size: 0.7rem !important;
+            padding: 2px 4px !important;
+        }
+
+        /* Volledig scherm modal op mobile */
+        .modal-overlay {
+            background: white;
+        }
+
+        .modal-content {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 0;
+            padding: 0;
+            animation: slideUpMobile 0.3s ease;
+        }
+
+        @keyframes slideUpMobile {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            padding: 20px;
+            margin-bottom: 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .modal-header h2 {
+            font-size: 1.3rem;
+        }
+
+        .modal-close {
+            width: 35px;
+            height: 35px;
+            font-size: 1.5rem;
+        }
+
+        .modal-content form {
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            padding: 12px;
+            font-size: 16px; /* Voorkomt zoom op iOS */
         }
 
         .form-row {
             grid-template-columns: 1fr;
+            gap: 15px;
         }
 
         .event-type-selector {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
         }
 
-        .quick-actions {
-            flex-direction: column;
+        .event-type-option {
+            padding: 12px 8px;
+            font-size: 0.85rem;
         }
 
-        .quick-action-btn {
+        .color-picker {
+            justify-content: space-between;
+        }
+
+        .color-option {
+            width: 38px;
+            height: 38px;
+        }
+
+        /* Onderste vaste actie knoppen in modal */
+        .form-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px;
+            border-top: 1px solid var(--light-gray);
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .form-actions button {
+            flex: 1;
+            padding: 14px;
+            font-size: 0.95rem;
+        }
+    }
+
+    /* Smartphone klein scherm (max 480px) */
+    @media (max-width: 480px) {
+        .calendar-container {
+            padding: 10px;
+            padding-bottom: 30px;
+        }
+
+        .calendar-header {
+            padding: 20px 15px;
+            border-radius: 12px;
+        }
+
+        .calendar-header h1 {
+            font-size: 1.3rem;
+        }
+
+        .calendar-header p {
+            font-size: 0.85rem;
+            margin-top: 8px;
+        }
+
+        .stat-card {
+            width: 140px;
+            padding: 15px;
+        }
+
+        .stat-icon {
+            width: 35px;
+            height: 35px;
+            font-size: 1.1rem;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+        }
+
+        /* Ultra compact kalender */
+        .fc-daygrid-day {
+            min-height: 50px !important;
+        }
+
+        .fc-daygrid-day-number {
+            font-size: 0.8rem !important;
+        }
+
+        .fc-event {
+            font-size: 0.65rem !important;
+            padding: 1px 3px !important;
+            border-radius: 4px !important;
+        }
+
+        .fc-event-title {
+            font-weight: 500 !important;
+        }
+
+        /* Verberg gebeurtenis tijd op kleine schermen */
+        .fc-event-time {
+            display: none !important;
+        }
+
+        /* Vereenvoudig toolbar */
+        .fc-button-group .fc-button:not(.fc-button-active) {
+            background: transparent !important;
+            color: var(--gray-color) !important;
+        }
+
+        .fc-today-button {
             width: 100%;
-            justify-content: center;
+            margin-bottom: 10px;
         }
     }
 
-    /* Checkbox custom */
-    .checkbox-wrapper {
+    /* iPhone X en nieuwer veilige gebieden */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+        @media (max-width: 768px) {
+            .calendar-container {
+                padding-bottom: calc(30px + env(safe-area-inset-bottom));
+            }
+
+            .form-actions {
+                padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            }
+        }
+    }
+
+    /* Touch apparaat verbeteringen */
+    @media (hover: none) and (pointer: coarse) {
+        .quick-action-btn,
+        .fc-button,
+        .stat-card,
+        .event-type-option,
+        .color-option {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        /* Grotere touch doelen */
+        .form-control,
+        .quick-action-btn,
+        .fc-button {
+            min-height: 44px; /* iOS aanbevolen touch doel */
+        }
+    }
+
+    /* Landschap modus voor mobile */
+    @media (max-width: 768px) and (orientation: landscape) {
+        .calendar-header {
+            padding: 15px 20px;
+        }
+
+        .calendar-header h1 {
+            font-size: 1.3rem;
+        }
+
+        .stats-row {
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            width: 130px;
+            padding: 12px;
+        }
+
+        #calendar {
+            margin-bottom: 20px;
+        }
+
+        .fc-daygrid-day {
+            min-height: 45px !important;
+        }
+    }
+
+    /* Laad staat */
+    .calendar-loading {
         display: flex;
+        justify-content: center;
         align-items: center;
-        gap: 10px;
+        min-height: 400px;
+        color: var(--gray-color);
     }
 
-    .checkbox-wrapper input[type="checkbox"] {
-        width: 20px;
-        height: 20px;
-        cursor: pointer;
+    .calendar-loading::after {
+        content: '';
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--light-gray);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
     }
 
-    /* Success animation */
-    @keyframes successPulse {
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Lege staat */
+    .calendar-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--gray-color);
+    }
+
+    .calendar-empty h3 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+        color: var(--dark-color);
+    }
+
+    .calendar-empty p {
+        margin-bottom: 25px;
+    }
+
+    /* Toegankelijkheid */
+    .fc-button:focus,
+    .form-control:focus,
+    button:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+
+    /* Print Stijlen */
+    @media print {
+        .quick-actions,
+        .modal-overlay,
+        .fc-button-group {
+            display: none !important;
+        }
+
+        .calendar-header {
+            background: none;
+            color: black;
+        }
+
+        #calendar {
+            box-shadow: none;
+            border: 1px solid #ddd;
+        }
+    }
+
+    @keyframes fadeOut {
+        to {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+    }
+
+    @keyframes pulse {
         0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
+        50% { transform: scale(1.1); }
         100% { transform: scale(1); }
     }
 
-    .event-success {
-        animation: successPulse 0.5s ease;
+    .pulse-animation {
+        animation: pulse 1s ease-in-out infinite;
     }
 </style>
 {% endblock %}
@@ -407,97 +1321,105 @@
 <div class="calendar-container">
     <!-- Header -->
     <div class="calendar-header">
-        <h1>📅 Mon Agenda Fitness</h1>
-        <p>Planifiez vos séances et suivez votre progression</p>
+        <h1>📅 Mijn Fitness Agenda</h1>
+        <p>Plan je trainingen en volg je voortgang</p>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-icon">📅</div>
-            <div class="stat-value" id="weekCount">0</div>
-            <div class="stat-label">Cette semaine</div>
+    <!-- Statistieken -->
+    <div class="stats-container">
+        <div class="stats-row" id="statsRow">
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-value" id="weekCount">0</div>
+                <div class="stat-label">Trainingen deze week</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-value" id="monthCount">0</div>
+                <div class="stat-label">Trainingen deze maand</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value" id="completedCount">0</div>
+                <div class="stat-label">Voltooid deze maand</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏰</div>
+                <div class="stat-value" id="nextWorkout">--</div>
+                <div class="stat-label">Volgende training</div>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon">🔥</div>
-            <div class="stat-value" id="monthCount">0</div>
-            <div class="stat-label">Ce mois</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">✅</div>
-            <div class="stat-value" id="completedCount">0</div>
-            <div class="stat-label">Complétées</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">⏰</div>
-            <div class="stat-value" id="nextWorkout">--</div>
-            <div class="stat-label">Prochaine séance</div>
+        <div class="stats-scroll-indicator" id="scrollIndicator" style="display: none;">
+            <span class="scroll-dot active"></span>
+            <span class="scroll-dot"></span>
+            <span class="scroll-dot"></span>
+            <span class="scroll-dot"></span>
         </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="quick-actions">
+    <!-- Snelle Acties -->
+    <div class="quick-actions" id="quickActions">
         <button class="quick-action-btn primary" onclick="openAddEventModal()">
-            <span>➕</span> Ajouter une séance
+            <span>➕</span> <span class="btn-text">Training toevoegen</span>
         </button>
         <button class="quick-action-btn" onclick="addQuickWorkout()">
-            <span>⚡</span> Séance rapide
+            <span>⚡</span> <span class="btn-text">Snelle training</span>
         </button>
-        <button class="quick-action-btn" onclick="calendar.changeView('dayGridMonth')">
-            <span>📅</span> Vue mois
+        <button class="quick-action-btn desktop-only" onclick="changeView('dayGridMonth')">
+            <span>📅</span> <span class="btn-text">Maand</span>
         </button>
-        <button class="quick-action-btn" onclick="calendar.changeView('timeGridWeek')">
-            <span>📊</span> Vue semaine
+        <button class="quick-action-btn desktop-only" onclick="changeView('timeGridWeek')">
+            <span>📊</span> <span class="btn-text">Week</span>
         </button>
-        <button class="quick-action-btn" onclick="calendar.changeView('listWeek')">
-            <span>📋</span> Liste
+        <button class="quick-action-btn desktop-only" onclick="changeView('listWeek')">
+            <span>📋</span> <span class="btn-text">Lijst</span>
         </button>
     </div>
 
-    <!-- Calendar -->
+    <!-- Kalender -->
     <div id="calendar"></div>
 </div>
 
-<!-- Add/Edit Event Modal -->
+<!-- Training Toevoegen/Bewerken Modal -->
 <div id="eventModal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 id="modalTitle">Ajouter une séance</h2>
+            <h2 id="modalTitle">Training toevoegen</h2>
             <button class="modal-close" onclick="closeModal()">&times;</button>
         </div>
 
         <form id="eventForm">
             <input type="hidden" id="eventId">
-            
+
             <div class="form-group">
-                <label for="eventTitle">Titre *</label>
-                <input type="text" class="form-control" id="eventTitle" required 
-                       placeholder="Ex: Séance jambes, Cardio matin...">
+                <label for="eventTitle">Titel *</label>
+                <input type="text" class="form-control" id="eventTitle" required
+                       placeholder="Bijv: Benen training, Ochtend cardio...">
             </div>
 
             <div class="form-group">
-                <label for="eventType">Type de séance</label>
+                <label for="eventType">Type training</label>
                 <div class="event-type-selector">
-                    <div class="event-type-option" data-type="workout" onclick="selectEventType(this)">
-                        💪 Musculation
+                    <div class="event-type-option selected" data-type="workout" onclick="selectEventType(this)">
+                        💪 Krachttraining
                     </div>
                     <div class="event-type-option" data-type="cardio" onclick="selectEventType(this)">
                         🏃 Cardio
                     </div>
                     <div class="event-type-option" data-type="rest" onclick="selectEventType(this)">
-                        😴 Repos
+                        😴 Rust
                     </div>
                     <div class="event-type-option" data-type="other" onclick="selectEventType(this)">
-                        📝 Autre
+                        📝 Anders
                     </div>
                 </div>
                 <input type="hidden" id="eventType" value="workout">
             </div>
 
             <div class="form-group">
-                <label for="workoutPlan">Workout plan (optionnel)</label>
+                <label for="workoutPlan">Workout plan (optioneel)</label>
                 <select class="form-control" id="workoutPlan">
-                    <option value="">-- Aucun --</option>
+                    <option value="">-- Geen --</option>
                     {% for plan in workout_plans %}
                     <option value="{{ plan.id }}">{{ plan.name }}</option>
                     {% endfor %}
@@ -506,41 +1428,41 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="eventDate">Date *</label>
+                    <label for="eventDate">Datum *</label>
                     <input type="date" class="form-control" id="eventDate" required>
                 </div>
                 <div class="form-group">
-                    <label for="eventTime">Heure *</label>
+                    <label for="eventTime">Tijd *</label>
                     <input type="time" class="form-control" id="eventTime" required value="18:00">
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="eventDuration">Durée (minutes)</label>
-                <input type="number" class="form-control" id="eventDuration" 
+                <label for="eventDuration">Duur (minuten)</label>
+                <input type="number" class="form-control" id="eventDuration"
                        value="60" min="15" max="300" step="15">
             </div>
 
             <div class="form-group">
-                <label for="eventDescription">Description</label>
-                <textarea class="form-control" id="eventDescription" 
-                          placeholder="Notes, objectifs, exercices prévus..."></textarea>
+                <label for="eventDescription">Beschrijving</label>
+                <textarea class="form-control" id="eventDescription"
+                          placeholder="Notities, doelen, geplande oefeningen..."></textarea>
             </div>
 
             <div class="form-group">
-                <label>Couleur</label>
+                <label>Kleur</label>
                 <div class="color-picker">
-                    <div class="color-option selected" style="background: #FF6B35" 
+                    <div class="color-option selected" style="background: #FF6B35"
                          data-color="#FF6B35" onclick="selectColor(this)"></div>
-                    <div class="color-option" style="background: #4CAF50" 
+                    <div class="color-option" style="background: #4CAF50"
                          data-color="#4CAF50" onclick="selectColor(this)"></div>
-                    <div class="color-option" style="background: #2196F3" 
+                    <div class="color-option" style="background: #2196F3"
                          data-color="#2196F3" onclick="selectColor(this)"></div>
-                    <div class="color-option" style="background: #9C27B0" 
+                    <div class="color-option" style="background: #9C27B0"
                          data-color="#9C27B0" onclick="selectColor(this)"></div>
-                    <div class="color-option" style="background: #FFC107" 
+                    <div class="color-option" style="background: #FFC107"
                          data-color="#FFC107" onclick="selectColor(this)"></div>
-                    <div class="color-option" style="background: #607D8B" 
+                    <div class="color-option" style="background: #607D8B"
                          data-color="#607D8B" onclick="selectColor(this)"></div>
                 </div>
                 <input type="hidden" id="eventColor" value="#FF6B35">
@@ -549,49 +1471,48 @@
             <div class="form-group">
                 <div class="checkbox-wrapper">
                     <input type="checkbox" id="isRecurring" onchange="toggleRecurrence()">
-                    <label for="isRecurring">Séance récurrente</label>
+                    <label for="isRecurring">Terugkerende training</label>
                 </div>
             </div>
 
             <div id="recurrenceOptions" style="display: none;">
                 <div class="form-group">
-                    <label for="recurrencePattern">Répéter</label>
+                    <label for="recurrencePattern">Herhalen</label>
                     <select class="form-control" id="recurrencePattern">
-                        <option value="daily">Chaque jour</option>
-                        <option value="weekly" selected>Chaque semaine</option>
-                        <option value="monthly">Chaque mois</option>
+                        <option value="daily">Elke dag</option>
+                        <option value="weekly" selected>Elke week</option>
+                        <option value="monthly">Elke maand</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="recurrenceCount">Nombre de répétitions</label>
-                    <input type="number" class="form-control" id="recurrenceCount" 
+                    <label for="recurrenceCount">Aantal herhalingen</label>
+                    <input type="number" class="form-control" id="recurrenceCount"
                            value="4" min="1" max="52">
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="reminderMinutes">Rappel</label>
+                <label for="reminderMinutes">Herinnering</label>
                 <select class="form-control" id="reminderMinutes">
-                    <option value="">Pas de rappel</option>
-                    <option value="15">15 minutes avant</option>
-                    <option value="30">30 minutes avant</option>
-                    <option value="60">1 heure avant</option>
-                    <option value="120">2 heures avant</option>
-                    <option value="1440">1 jour avant</option>
+                    <option value="">Geen herinnering</option>
+                    <option value="15">15 minuten van tevoren</option>
+                    <option value="30">30 minuten van tevoren</option>
+                    <option value="60">1 uur van tevoren</option>
+                    <option value="120">2 uur van tevoren</option>
+                    <option value="1440">1 dag van tevoren</option>
                 </select>
             </div>
 
-            <div class="form-actions" style="display: flex; gap: 10px; margin-top: 30px;">
-                <button type="submit" class="quick-action-btn primary" style="flex: 1;">
-                    Enregistrer
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    Opslaan
                 </button>
-                <button type="button" class="quick-action-btn" onclick="closeModal()" style="flex: 1;">
-                    Annuler
+                <button type="button" class="btn-secondary" onclick="closeModal()">
+                    Annuleren
                 </button>
-                <button type="button" id="deleteBtn" class="quick-action-btn" 
-                        style="background: #f44336; color: white; border: none; display: none;"
-                        onclick="deleteEvent()">
-                    🗑️ Supprimer
+                <button type="button" id="deleteBtn" class="btn-danger"
+                        style="display: none;" onclick="deleteEvent()">
+                    🗑️ Verwijderen
                 </button>
             </div>
         </form>
@@ -603,53 +1524,192 @@
 <script>
     let calendar;
     let currentEvent = null;
+    let isMobile = false;
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    // Detecteer mobile apparaat
+    function detectMobile() {
+        isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                   window.innerWidth <= 768;
+
+        // Setup carousel voor mobile
+        if (isMobile) {
+            setupMobileCarousel();
+        }
+
+        return isMobile;
+    }
+
+    // Setup mobile carousel voor stats
+    function setupMobileCarousel() {
+        const statsRow = document.getElementById('statsRow');
+        const scrollIndicator = document.getElementById('scrollIndicator');
+
+        if (scrollIndicator) {
+            scrollIndicator.style.display = 'flex';
+        }
+
+        // Scroll listener voor indicator dots
+        if (statsRow) {
+            statsRow.addEventListener('scroll', function() {
+                const scrollPercentage = (this.scrollLeft / (this.scrollWidth - this.clientWidth)) * 100;
+                updateScrollIndicator(scrollPercentage);
+            });
+        }
+    }
+
+    // Update scroll indicator dots
+    function updateScrollIndicator(percentage) {
+        const dots = document.querySelectorAll('.scroll-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.remove('active');
+        });
+
+        let activeIndex = 0;
+        if (percentage > 75) activeIndex = 3;
+        else if (percentage > 50) activeIndex = 2;
+        else if (percentage > 25) activeIndex = 1;
+
+        if (dots[activeIndex]) {
+            dots[activeIndex].classList.add('active');
+        }
+    }
+
+    // Verwerk swipe bewegingen voor kalender navigatie
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartX - touchEndX;
+
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                // Swipe naar links - volgende
+                calendar.next();
+                showToast('→', 'info', 500);
+            } else {
+                // Swipe naar rechts - vorige
+                calendar.prev();
+                showToast('←', 'info', 500);
+            }
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         const calendarEl = document.getElementById('calendar');
-        
+        detectMobile();
+
+        // Mobile swipe detectie
+        if (isMobile) {
+            calendarEl.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, {passive: true});
+
+            calendarEl.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, {passive: true});
+        }
+
         calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'fr',
+            initialView: isMobile ? 'listWeek' : 'dayGridMonth',
+            locale: 'nl',
             firstDay: 1,
-            height: 'auto',
-            headerToolbar: {
+            height: isMobile ? 'auto' : 'auto',
+            contentHeight: isMobile ? 350 : undefined,
+            aspectRatio: isMobile ? 1.35 : 1.8,
+            headerToolbar: isMobile ? {
+                left: 'prev,next',
+                center: 'title',
+                right: 'today'
+            } : {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,listWeek'
             },
+            footerToolbar: isMobile ? {
+                center: 'dayGridMonth,timeGridWeek,listWeek'
+            } : false,
             buttonText: {
-                today: "Aujourd'hui",
-                month: 'Mois',
-                week: 'Semaine',
-                list: 'Liste'
+                today: "Vandaag",
+                month: 'Maand',
+                week: 'Week',
+                list: 'Lijst'
             },
+            views: {
+                listWeek: {
+                    buttonText: 'Lijst',
+                    titleFormat: { day: 'numeric', month: 'short' }
+                },
+                dayGridMonth: {
+                    dayMaxEvents: isMobile ? 2 : 3,
+                    dayMaxEventRows: isMobile ? 2 : 3
+                },
+                timeGridWeek: {
+                    buttonText: 'Week'
+                }
+            },
+            dayMaxEvents: isMobile ? 2 : 3,
+            moreLinkClick: isMobile ? 'listWeek' : 'popover',
+            navLinks: !isMobile,
+            nowIndicator: true,
             events: '{{ url_for("calendar.get_events") }}',
-            editable: true,
-            eventStartEditable: true,
-            eventDurationEditable: true,
-            eventResizableFromStart: true,
-            
+            editable: !isMobile,
+            eventStartEditable: !isMobile,
+            eventDurationEditable: false,
+            eventResizableFromStart: false,
+
+            // Gebeurtenis callbacks voor real-time updates
+            eventAdd: function(info) {
+                updateStats();
+            },
+
+            eventChange: function(info) {
+                updateStats();
+            },
+
+            eventRemove: function(info) {
+                updateStats();
+            },
+
             dateClick: function(info) {
                 openAddEventModal(info.date);
             },
-            
+
             eventClick: function(info) {
-                openEditEventModal(info.event);
+                // Voorkom standaard browser gedrag op mobile
+                if (isMobile) {
+                    info.jsEvent.preventDefault();
+                    info.jsEvent.stopPropagation();
+                }
+
+                // Bij rechtsklik op desktop: snel voltooien
+                if (!isMobile && info.jsEvent.button === 2) {
+                    info.jsEvent.preventDefault();
+                    if (confirm('Training markeren als voltooid?')) {
+                        markAsCompleted(info.event);
+                    }
+                } else {
+                    openEditEventModal(info.event);
+                }
             },
-            
+
             eventDrop: function(info) {
-                updateEventDateTime(info.event);
+                if (!isMobile) {
+                    updateEventDateTime(info.event);
+                }
             },
-            
+
             eventResize: function(info) {
-                updateEventDateTime(info.event);
+                if (!isMobile) {
+                    updateEventDateTime(info.event);
+                }
             },
-            
+
             eventDidMount: function(info) {
-                // Ajouter des tooltips
+                // Voeg tooltips toe
                 info.el.title = info.event.extendedProps.description || info.event.title;
-                
-                // Ajouter une icône selon le type
+
+                // Voeg icoon toe op basis van type
                 const eventType = info.event.extendedProps.event_type;
                 let icon = '';
                 switch(eventType) {
@@ -659,86 +1719,160 @@
                     case 'completed_workout': icon = '✅ '; break;
                     default: icon = '📝 ';
                 }
-                
-                if (icon && !info.event.title.startsWith(icon)) {
-                    info.el.querySelector('.fc-event-title').textContent = icon + info.event.title;
+
+                const titleEl = info.el.querySelector('.fc-event-title');
+                if (titleEl && icon && !info.event.title.startsWith(icon)) {
+                    titleEl.textContent = icon + info.event.title;
                 }
+
+                // Voeg voltooid class toe voor styling
+                if (info.event.extendedProps.status === 'completed' ||
+                    eventType === 'completed_workout') {
+                    info.el.classList.add('event-completed');
+                }
+            },
+
+            // Weergave wijziging callback
+            viewDidMount: function() {
+                updateStats();
             }
         });
-        
+
         calendar.render();
         updateStats();
+
+        // Schakel context menu uit op kalender gebeurtenissen
+        document.getElementById('calendar').addEventListener('contextmenu', function(e) {
+            if (e.target.closest('.fc-event')) {
+                e.preventDefault();
+            }
+        });
+
+        // Auto-refresh statistieken elke minuut
+        setInterval(updateStats, 60000);
+
+        // Refresh bij focus
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                calendar.refetchEvents();
+                updateStats();
+            }
+        });
     });
 
+    // Wijzig kalender weergave
+    function changeView(viewName) {
+        calendar.changeView(viewName);
+
+        // Scroll naar kalender op mobile
+        if (isMobile) {
+            setTimeout(() => {
+                document.getElementById('calendar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    }
+
     function openAddEventModal(date = null) {
-        document.getElementById('modalTitle').textContent = 'Ajouter une séance';
+        document.getElementById('modalTitle').textContent = 'Training toevoegen';
         document.getElementById('eventForm').reset();
         document.getElementById('eventId').value = '';
         document.getElementById('deleteBtn').style.display = 'none';
-        
-        // Pré-remplir la date si fournie
+
+        // Datum vooraf invullen indien beschikbaar
         if (date) {
             const dateStr = date.toISOString().split('T')[0];
             document.getElementById('eventDate').value = dateStr;
         } else {
-            // Date par défaut: demain
+            // Standaard datum: morgen
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('eventDate').value = tomorrow.toISOString().split('T')[0];
         }
-        
-        // Reset les sélections
+
+        // Reset selecties
         document.querySelectorAll('.event-type-option').forEach(opt => opt.classList.remove('selected'));
         document.querySelector('[data-type="workout"]').classList.add('selected');
-        
+
         document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
         document.querySelector('[data-color="#FF6B35"]').classList.add('selected');
-        
+
+        // Open modal
         document.getElementById('eventModal').style.display = 'block';
+
+        // Op mobile, voorkom body scroll
+        if (isMobile) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        }
     }
 
+    // Vibratie feedback voor mobile
+    function vibrate(pattern = 10) {
+        if (isMobile && 'vibrate' in navigator) {
+            navigator.vibrate(pattern);
+        }
+    }
+
+    // Bewerk training modal
     function openEditEventModal(event) {
         currentEvent = event;
-        document.getElementById('modalTitle').textContent = 'Modifier la séance';
+        vibrate(); // Haptische feedback
+
+        document.getElementById('modalTitle').textContent = 'Training bewerken';
         document.getElementById('eventId').value = event.id;
         document.getElementById('deleteBtn').style.display = 'inline-block';
-        
-        // Remplir le formulaire
-        document.getElementById('eventTitle').value = event.title.replace(/^[^\s]+ /, ''); // Enlever l'icône
+
+        // Vul formulier
+        document.getElementById('eventTitle').value = event.title.replace(/^[^\s]+ /, '');
         document.getElementById('eventDescription').value = event.extendedProps.description || '';
-        
+
         const start = new Date(event.start);
         document.getElementById('eventDate').value = start.toISOString().split('T')[0];
         document.getElementById('eventTime').value = start.toTimeString().slice(0, 5);
-        
+
         if (event.end) {
             const duration = (event.end - event.start) / 60000;
             document.getElementById('eventDuration').value = duration;
         }
-        
-        // Type d'événement
+
+        // Type gebeurtenis
         const eventType = event.extendedProps.event_type || 'workout';
         document.getElementById('eventType').value = eventType;
         document.querySelectorAll('.event-type-option').forEach(opt => {
             opt.classList.toggle('selected', opt.dataset.type === eventType);
         });
-        
+
         // Workout plan
         document.getElementById('workoutPlan').value = event.extendedProps.workout_plan_id || '';
-        
-        // Couleur
+
+        // Kleur
         const color = event.backgroundColor || '#FF6B35';
         document.getElementById('eventColor').value = color;
         document.querySelectorAll('.color-option').forEach(opt => {
             opt.classList.toggle('selected', opt.dataset.color === color);
         });
-        
+
         document.getElementById('eventModal').style.display = 'block';
+
+        // Op mobile, voorkom body scroll
+        if (isMobile) {
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+        }
     }
 
     function closeModal() {
         document.getElementById('eventModal').style.display = 'none';
         currentEvent = null;
+
+        // Reset body scroll op mobile
+        if (isMobile) {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        }
     }
 
     function selectEventType(element) {
@@ -764,7 +1898,7 @@
 
     document.getElementById('eventForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const eventId = document.getElementById('eventId').value;
         const title = document.getElementById('eventTitle').value;
         const description = document.getElementById('eventDescription').value;
@@ -778,10 +1912,10 @@
         const recurrencePattern = document.getElementById('recurrencePattern').value;
         const recurrenceCount = parseInt(document.getElementById('recurrenceCount').value);
         const reminderMinutes = document.getElementById('reminderMinutes').value;
-        
+
         const start = new Date(date + 'T' + time);
         const end = new Date(start.getTime() + duration * 60000);
-        
+
         const eventData = {
             title,
             description,
@@ -795,7 +1929,7 @@
             recurrence_count: isRecurring ? recurrenceCount : null,
             reminder_minutes: reminderMinutes || null
         };
-        
+
         try {
             let url, method;
             if (eventId) {
@@ -805,7 +1939,7 @@
                 url = '{{ url_for("calendar.create_event") }}';
                 method = 'POST';
             }
-            
+
             const response = await fetch(url, {
                 method: method,
                 headers: {
@@ -814,28 +1948,70 @@
                 },
                 body: JSON.stringify(eventData)
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 calendar.refetchEvents();
                 closeModal();
-                showToast(result.message, 'success');
+                showToast(result.message || 'Training opgeslagen!', 'success');
                 updateStats();
+
+                // Als het een workout plan is, vraag om direct te starten
+                if (result.workout_plan_id) {
+                    setTimeout(() => {
+                        if (confirm('Wil je deze training nu starten?')) {
+                            window.location.href = `/workout/session/${result.workout_plan_id}`;
+                        }
+                    }, 500);
+                }
             } else {
-                showToast(result.message, 'error');
+                showToast(result.message || 'Fout bij het opslaan', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            showToast('Erreur lors de l\'enregistrement', 'error');
+            showToast('Fout bij het opslaan', 'error');
         }
     });
 
+    async function markAsCompleted(event) {
+        try {
+            const eventId = event.id.replace('session_', '');
+            const response = await fetch(`{{ url_for("calendar.complete_event", event_id=0) }}`.replace('/0', '/' + eventId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                calendar.refetchEvents();
+                showToast('Training voltooid! 🎉', 'success');
+                updateStats();
+
+                if (result.redirect_to_workout && result.workout_plan_id) {
+                    setTimeout(() => {
+                        if (confirm('Wil je de details van deze workout bekijken?')) {
+                            window.location.href = `/workout/history`;
+                        }
+                    }, 500);
+                }
+            } else {
+                showToast(result.message || 'Fout bij het voltooien', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Fout bij het voltooien', 'error');
+        }
+    }
+
     async function deleteEvent() {
-        if (!currentEvent || !confirm('Êtes-vous sûr de vouloir supprimer cette séance ?')) {
+        if (!currentEvent || !confirm('Weet je zeker dat je deze training wilt verwijderen?')) {
             return;
         }
-        
+
         try {
             const eventId = currentEvent.id.replace('session_', '');
             const response = await fetch(`{{ url_for("calendar.delete_event", event_id=0) }}`.replace('/0', '/' + eventId), {
@@ -844,20 +2020,20 @@
                     'X-CSRFToken': '{{ csrf_token() }}'
                 }
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
                 currentEvent.remove();
                 closeModal();
-                showToast('Séance supprimée', 'success');
+                showToast('Training verwijderd', 'success');
                 updateStats();
             } else {
                 showToast(result.message, 'error');
             }
         } catch (error) {
             console.error('Error:', error);
-            showToast('Erreur lors de la suppression', 'error');
+            showToast('Fout bij het verwijderen', 'error');
         }
     }
 
@@ -867,7 +2043,7 @@
                 start: event.start.toISOString(),
                 end: event.end ? event.end.toISOString() : new Date(event.start.getTime() + 3600000).toISOString()
             };
-            
+
             const eventId = event.id.replace('session_', '');
             const response = await fetch(`{{ url_for("calendar.update_event", event_id=0) }}`.replace('/0', '/' + eventId), {
                 method: 'PUT',
@@ -877,140 +2053,342 @@
                 },
                 body: JSON.stringify(eventData)
             });
-            
+
             const result = await response.json();
-            
+
             if (!result.success) {
                 event.revert();
                 showToast(result.message, 'error');
             } else {
-                showToast('Séance déplacée', 'success');
+                showToast('Training verplaatst', 'success');
                 updateStats();
             }
         } catch (error) {
             console.error('Error:', error);
             event.revert();
-            showToast('Erreur lors de la mise à jour', 'error');
+            showToast('Fout bij het bijwerken', 'error');
         }
     }
 
     function addQuickWorkout() {
-        // Ajouter une séance rapide pour aujourd'hui
+        // Voeg een snelle training toe voor vandaag
         const now = new Date();
-        const startTime = new Date();
-        startTime.setHours(18, 0, 0, 0);
-        
+        const currentHour = now.getHours();
+
+        // Bepaal slimme standaard tijd
+        let defaultTime = '18:00';
+        if (currentHour < 12) {
+            defaultTime = '12:00'; // Middag training
+        } else if (currentHour < 17) {
+            defaultTime = '18:00'; // Avond training
+        } else {
+            defaultTime = '20:00'; // Late avond training
+        }
+
         openAddEventModal(now);
-        document.getElementById('eventTitle').value = 'Séance rapide';
-        document.getElementById('eventTime').value = '18:00';
+        document.getElementById('eventTitle').value = 'Snelle training';
+        document.getElementById('eventTime').value = defaultTime;
         document.getElementById('eventDuration').value = '45';
+
+        // Focus op titel voor snelle aanpassing
+        setTimeout(() => {
+            document.getElementById('eventTitle').select();
+        }, 100);
     }
 
     async function updateStats() {
         const events = calendar.getEvents();
         const now = new Date();
+
+        // Week berekening (Maandag als eerste dag)
         const weekStart = new Date(now);
-        weekStart.setDate(now.getDate() - now.getDay() + 1);
+        const day = weekStart.getDay();
+        const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1);
+        weekStart.setDate(diff);
+        weekStart.setHours(0, 0, 0, 0);
+
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
-        
+        weekEnd.setHours(23, 59, 59, 999);
+
+        // Maand berekening
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        monthStart.setHours(0, 0, 0, 0);
         const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        
+        monthEnd.setHours(23, 59, 59, 999);
+
         let weekCount = 0;
         let monthCount = 0;
         let completedCount = 0;
+        let completedThisMonth = 0;
         let nextWorkout = null;
-        
+        let todayWorkouts = 0;
+
+        // Vandaag start en eind
+        const todayStart = new Date(now);
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date(now);
+        todayEnd.setHours(23, 59, 59, 999);
+
         events.forEach(event => {
             const eventDate = new Date(event.start);
-            
-            // Cette semaine
+            const eventType = event.extendedProps.event_type;
+            const status = event.extendedProps.status;
+
+            // Sla rust dagen over voor tellingen
+            if (eventType === 'rest') {
+                return;
+            }
+
+            // Vandaag
+            if (eventDate >= todayStart && eventDate <= todayEnd) {
+                todayWorkouts++;
+            }
+
+            // Deze week
             if (eventDate >= weekStart && eventDate <= weekEnd) {
                 weekCount++;
             }
-            
-            // Ce mois
+
+            // Deze maand
             if (eventDate >= monthStart && eventDate <= monthEnd) {
                 monthCount++;
+
+                // Voltooid deze maand
+                if (status === 'completed' || eventType === 'completed_workout') {
+                    completedThisMonth++;
+                }
             }
-            
-            // Complétées
-            if (event.extendedProps.status === 'completed' || 
-                event.extendedProps.event_type === 'completed_workout') {
+
+            // Totaal voltooid
+            if (status === 'completed' || eventType === 'completed_workout') {
                 completedCount++;
             }
-            
-            // Prochaine séance
-            if (eventDate > now && (!nextWorkout || eventDate < nextWorkout)) {
+
+            // Volgende training
+            if (eventDate > now && status !== 'completed' && status !== 'cancelled' &&
+                (!nextWorkout || eventDate < nextWorkout)) {
                 nextWorkout = eventDate;
             }
         });
-        
-        document.getElementById('weekCount').textContent = weekCount;
-        document.getElementById('monthCount').textContent = monthCount;
-        document.getElementById('completedCount').textContent = completedCount;
-        
+
+        // Update weergave met animatie
+        animateValue('weekCount', weekCount);
+        animateValue('monthCount', monthCount);
+        animateValue('completedCount', completedThisMonth);
+
+        // Volgende training weergave
+        const nextElement = document.getElementById('nextWorkout');
         if (nextWorkout) {
-            const days = Math.floor((nextWorkout - now) / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((nextWorkout - now) / (1000 * 60 * 60)) % 24;
-            
+            const timeDiff = nextWorkout - now;
+            const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+            // Verwijder pulse class
+            nextElement.classList.remove('pulse-animation');
+
             if (days > 0) {
-                document.getElementById('nextWorkout').textContent = `${days}j ${hours}h`;
+                nextElement.textContent = `${days}d ${hours}u`;
+                nextElement.style.color = 'var(--dark-color)';
+                nextElement.style.fontWeight = '700';
             } else if (hours > 0) {
-                document.getElementById('nextWorkout').textContent = `${hours}h`;
+                nextElement.textContent = `${hours}u ${minutes}m`;
+                nextElement.style.color = 'var(--warning-color)';
+                nextElement.style.fontWeight = '700';
+            } else if (minutes > 0) {
+                nextElement.textContent = `${minutes} min`;
+                nextElement.style.color = 'var(--primary-color)';
+                nextElement.style.fontWeight = '700';
             } else {
-                document.getElementById('nextWorkout').textContent = 'Bientôt';
+                nextElement.textContent = 'Nu!';
+                nextElement.style.color = 'var(--success-color)';
+                nextElement.style.fontWeight = '700';
+                nextElement.classList.add('pulse-animation');
             }
         } else {
-            document.getElementById('nextWorkout').textContent = '--';
+            nextElement.textContent = '--';
+            nextElement.style.color = 'var(--gray-color)';
+            nextElement.style.fontWeight = '700';
+            nextElement.classList.remove('pulse-animation');
+        }
+
+        // Voeg kleur toe aan stats
+        const weekElement = document.getElementById('weekCount');
+        weekElement.style.color = weekCount > 0 ? 'var(--success-color)' : 'var(--dark-color)';
+
+        const monthElement = document.getElementById('monthCount');
+        monthElement.style.color = monthCount > 0 ? 'var(--primary-color)' : 'var(--dark-color)';
+
+        const completedElement = document.getElementById('completedCount');
+        completedElement.style.color = completedThisMonth > 0 ? 'var(--success-color)' : 'var(--dark-color)';
+
+        // Toon vandaag indicator
+        if (todayWorkouts > 0 && !window.todayNotificationShown) {
+            window.todayNotificationShown = true;
+            setTimeout(() => {
+                showToast(`Je hebt ${todayWorkouts} training${todayWorkouts > 1 ? 'en' : ''} vandaag! 💪`, 'info');
+            }, 1000);
         }
     }
 
-    function showToast(message, type = 'success') {
-        // Créer un toast notification
+    // Animeer getallen
+    function animateValue(id, end) {
+        const element = document.getElementById(id);
+        const start = parseInt(element.textContent) || 0;
+        const duration = 500;
+        const startTime = performance.now();
+
+        function update(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            const current = Math.floor(start + (end - start) * progress);
+            element.textContent = current;
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            }
+        }
+
+        requestAnimationFrame(update);
+    }
+
+    function showToast(message, type = 'success', duration = 3000) {
+        // Maak een toast melding
         const toast = document.createElement('div');
         toast.className = `toast-notification ${type}`;
         toast.textContent = message;
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 30px;
-            background: ${type === 'success' ? '#4CAF50' : '#f44336'};
-            color: white;
-            border-radius: 50px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            z-index: 10000;
-            animation: slideUp 0.3s ease;
-        `;
-        
+
+        // Positioneer hoger op mobile
+        if (isMobile) {
+            toast.style.bottom = '80px';
+        }
+
         document.body.appendChild(toast);
-        
+
         setTimeout(() => {
             toast.style.animation = 'fadeOut 0.3s ease';
             setTimeout(() => toast.remove(), 300);
-        }, 3000);
+        }, duration);
     }
 
-    // Raccourcis clavier
+    // Window resize handler
+    let resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            const wasMobile = isMobile;
+            detectMobile();
+
+            // Als apparaat type verandert
+            if (wasMobile !== isMobile) {
+                calendar.changeView(isMobile ? 'listWeek' : 'dayGridMonth');
+                calendar.setOption('editable', !isMobile);
+                calendar.setOption('eventStartEditable', !isMobile);
+                calendar.setOption('dayMaxEvents', isMobile ? 2 : 3);
+            }
+        }, 250);
+    });
+
+    // Sneltoetsen - alleen op desktop
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeModal();
-        }
-        if (e.ctrlKey && e.key === 'n') {
-            e.preventDefault();
-            openAddEventModal();
+        if (!isMobile) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                openAddEventModal();
+            }
+            if (e.altKey && e.key === 'ArrowLeft') {
+                e.preventDefault();
+                calendar.prev();
+            }
+            if (e.altKey && e.key === 'ArrowRight') {
+                e.preventDefault();
+                calendar.next();
+            }
+            if (e.altKey && e.key === 't') {
+                e.preventDefault();
+                calendar.today();
+            }
         }
     });
 
-    // Click outside to close modal
+    // Mobiel-vriendelijke modal achtergrond klik
     document.getElementById('eventModal').addEventListener('click', function(e) {
-        if (e.target === this) {
+        if (!isMobile && e.target === this) {
             closeModal();
         }
     });
+
+    // Voorkom per ongeluk swipe sluiten op mobile
+    if (isMobile) {
+        const modalContent = document.querySelector('.modal-content');
+        let startY = 0;
+
+        modalContent.addEventListener('touchstart', e => {
+            startY = e.touches[0].clientY;
+        }, {passive: true});
+
+        modalContent.addEventListener('touchmove', e => {
+            const currentY = e.touches[0].clientY;
+            const diff = startY - currentY;
+
+            // Sluit modal als gebruiker naar beneden swipet
+            if (diff < -100 && modalContent.scrollTop === 0) {
+                closeModal();
+            }
+        }, {passive: true});
+    }
+
+    // Scroll naar boven functie
+    function scrollToTop() {
+        if (isMobile) {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    // Voeg scroll naar boven knop toe op mobile
+    if (isMobile) {
+        const scrollBtn = document.createElement('button');
+        scrollBtn.innerHTML = '↑';
+        scrollBtn.className = 'scroll-to-top';
+        scrollBtn.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            font-size: 1.3rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            z-index: 99;
+            display: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        `;
+        document.body.appendChild(scrollBtn);
+
+        scrollBtn.addEventListener('click', scrollToTop);
+
+        // Toon/verberg scroll knop
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 200) {
+                scrollBtn.style.display = 'block';
+                scrollBtn.style.animation = 'fadeIn 0.3s ease';
+            } else {
+                scrollBtn.style.display = 'none';
+            }
+        });
+    }
 </script>
 
 <style>

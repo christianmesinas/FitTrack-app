@@ -1,404 +1,107 @@
 {% extends "base.html" %}
 
 {% block head %}
-<!-- Dans le <head> -->
+<!-- Workout creation CSS en JS -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/workout-creation.css') }}">
 <script src="{{ url_for('static', filename='js/workout-creation.js') }}"></script>
 {% endblock %}
 
-
-
 {% block content %}
+<!-- Top bar (exact zoals in edit_workout.html) -->
 <div class="top-bar">
     <a href="{{ url_for('main.index') }}">
-        <img src="{{ url_for('static', filename='img/back.svg') }}" alt="back button" class="back-icon" aria-label="Go back"/>
+        <img src="{{ url_for('static', filename='img/back.svg') }}" alt="Back" class="back-icon">
     </a>
 </div>
 
-<!-- Guide de progression -->
-<div class="workout-creation-progress">
-    <div class="progress-steps">
-        <div class="step active" data-step="1">
-            <span class="step-number">1</span>
-            <span class="step-label">Naam workout</span>
+<!-- Main wrapper voor centrering -->
+<div class="main-wrapper">
+    <!-- Workout naam container -->
+    <div class="workout-name-container">
+        <div class="workout-header">
+            <h1>💪 Nieuwe Workout Maken</h1>
+            <p>Geef je workout een motiverende naam. Dit is de eerste stap naar je fitnessdoelen!</p>
         </div>
-        <div class="step" data-step="2">
-            <span class="step-number">2</span>
-            <span class="step-label">Voeg oefeningen toe</span>
-        </div>
-        <div class="step" data-step="3">
-            <span class="step-number">3</span>
-            <span class="step-label">Configureer sets</span>
-        </div>
+
+        <form method="POST" id="workout-form">
+            {{ form.hidden_tag() }}
+
+            <!-- Workout naam input -->
+            <div class="name-input-group">
+                <label for="workout-name">Workout Naam</label>
+                {{ form.name(
+                    id="workout-name",
+                    class="workout-name-input",
+                    placeholder="Bijvoorbeeld: Chest Day, HIIT Training, Full Body...",
+                    required=True,
+                    autofocus=True
+                ) }}
+                {% if form.name.errors %}
+                    <div class="error-message">
+                        ⚠️ {{ form.name.errors[0] }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Populaire suggesties -->
+            <div class="suggestions-section">
+                <div class="suggestions-title">✨ Populaire workout namen</div>
+                <div class="suggestion-chips">
+                    <span class="chip" onclick="setWorkoutName('Push Day')">Push Day</span>
+                    <span class="chip" onclick="setWorkoutName('Pull Day')">Pull Day</span>
+                    <span class="chip" onclick="setWorkoutName('Leg Day')">Leg Day</span>
+                    <span class="chip" onclick="setWorkoutName('Upper Body')">Upper Body</span>
+                    <span class="chip" onclick="setWorkoutName('Full Body')">Full Body</span>
+                    <span class="chip" onclick="setWorkoutName('HIIT Cardio')">HIIT Cardio</span>
+                    <span class="chip" onclick="setWorkoutName('Core & Abs')">Core & Abs</span>
+                </div>
+            </div>
+
+            <!-- Submit button -->
+            <div class="submit-section">
+                <button type="submit" class="create-workout-btn" id="submit-btn" disabled>
+                    <span class="btn-text">
+                        Workout Aanmaken
+                        <span class="btn-arrow">→</span>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Inspiration quote -->
+            <div class="inspiration">
+                <p class="inspiration-quote">
+                    "The only bad workout is the one that didn't happen"
+                </p>
+            </div>
+        </form>
     </div>
 </div>
 
-<section class="header-section add-workout-blok">
-    <form method="POST" id="workout-form">
-        {{ form.hidden_tag() }}
-
-        <!-- Stap 1: Naam van workout -->
-        <div class="workout-step step-1-content">
-            <div class="step-instruction">
-                <h2>💪 Laten we beginnen met je nieuwe workout!</h2>
-                <p class="help-text">Geef je workout een naam die je motiveert. Bijvoorbeeld: "Maandag Upper Body" of "HIIT Cardio Blast"</p>
-            </div>
-
-            <div class="workout-name">
-                {{ form.name.label }}
-                {{ form.name(placeholder="bijv. Full Body Strength", required=True, class="workout-name-input") }}
-                {% if form.name.errors %}
-                    <ul class="errors">
-                        {% for error in form.name.errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-
-                <!-- Suggesties voor workout namen -->
-                <div class="name-suggestions">
-                    <p class="suggestion-label">Populaire workout namen:</p>
-                    <div class="suggestion-chips">
-                        <span class="chip" onclick="setWorkoutName('Push Day')">Push Day</span>
-                        <span class="chip" onclick="setWorkoutName('Pull Day')">Pull Day</span>
-                        <span class="chip" onclick="setWorkoutName('Leg Day')">Leg Day</span>
-                        <span class="chip" onclick="setWorkoutName('Full Body')">Full Body</span>
-                        <span class="chip" onclick="setWorkoutName('Cardio & Core')">Cardio & Core</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stap 2: Oefeningen -->
-        <section class="exercise-blok-section">
-            <div class="step-instruction" id="exercise-instruction" style="display: none;">
-                <h3>🎯 Tijd om oefeningen toe te voegen!</h3>
-                <p class="help-text">Klik op de knop hieronder om oefeningen te zoeken en aan je workout toe te voegen</p>
-            </div>
-
-            <!-- Empty state met begeleiding -->
-            <div class="empty-workout-state" id="empty-state">
-                <div class="empty-icon">🏋️</div>
-                <h3>Je workout is nog leeg</h3>
-                <p>Voeg eerst een naam toe hierboven, dan kun je oefeningen toevoegen!</p>
-
-                <!-- Tips sectie -->
-                <div class="workout-tips">
-                    <h4>💡 Tips voor een goede workout:</h4>
-                    <ul>
-                        <li>Begin met 3-5 oefeningen voor een balanced workout</li>
-                        <li>Mix compound oefeningen (zoals squats) met isolation oefeningen</li>
-                        <li>Zorg voor rust tussen muscle groups</li>
-                        <li>Start met minder sets en bouw langzaam op</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Bestaande oefeningen (als die er zijn) -->
-            {% if exercises %}
-                <div class="exercises-list" id="exercises-list">
-                    <h3>Je oefeningen:</h3>
-                    {% for exercise in exercises %}
-                        <section class="active-workout-block" data-exercise-id="{{ exercise.exercise_id }}">
-                            <img class="drag-drop-icon" src="{{ url_for('static', filename='img/drag-drop.svg') }}" alt="drag-and-drop">
-                            <a href="#" class="setting-dots-workout" data-action="edit" data-exercise-id="{{ exercise.exercise_id }}">...</a>
-                            <h2>{{ exercise.exercise.name }}</h2>
-                            <section class="set-section">
-                                {% for i in range(exercise.sets) %}
-                                    <div class="active-workout-set">
-                                        <input type="number" name="reps-{{ exercise.id }}-{{ i }}" min="0" step="1" placeholder="{{ exercise.reps }} reps" value="{{ exercise.reps }}">
-                                        <input type="number" name="weight-{{ exercise.id }}-{{ i }}" min="0" step="0.1" placeholder="{{ exercise.weight }} kg" value="{{ exercise.weight }}">
-                                        <label class="custom-checkbox">
-                                            <input type="checkbox" name="completed-{{ exercise.id }}-{{ i }}">
-                                            <span class="checkmark"></span>
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            </section>
-                        </section>
-                    {% endfor %}
-                </div>
-            {% endif %}
-
-            <!-- Formulier voor nieuwe oefeningen (verborgen) -->
-            <div id="exercise-forms" style="display: none;">
-                {% for exercise_form in form.exercises %}
-                    <section class="active-workout-block">
-                        {{ exercise_form.hidden_tag() }}
-                        <!-- Exercise form fields... -->
-                    </section>
-                {% endfor %}
-            </div>
-
-            <!-- Action buttons -->
-            <div class="workout-actions">
-                <a href="{{ url_for('workouts.search_exercise', plan_id=0) }}"
-                   class="second-grey-cta-btn add-exercise-btn"
-                   id="add-exercise-btn"
-                   style="display: none;">
-                    <span class="btn-icon">➕</span> Voeg oefening toe
-                </a>
-
-                {{ form.submit(class="orange-btn-outline add-new-workout-btn",
-                              value="Maak workout aan",
-                              id="submit-btn",
-                              disabled=True) }}
-            </div>
-
-            <!-- Motiverende boodschap -->
-            <div class="motivation-message" id="motivation" style="display: none;">
-                <p class="motivation-text">🔥 Geweldig! Je bent goed bezig met het maken van je workout!</p>
-            </div>
-        </section>
-    </form>
-</section>
-
 <style>
-/* Progress indicator */
-.workout-creation-progress {
-    max-width: 700px;
-    margin: 30px auto;
-    padding: 0 20px;
-}
-
-.progress-steps {
+/* Main wrapper voor centrering */
+.main-wrapper {
+    min-height: calc(100vh - 60px); /* 60px is ongeveer de hoogte van de top-bar */
     display: flex;
-    justify-content: space-between;
-    position: relative;
-    margin-bottom: 40px;
-}
-
-.progress-steps::before {
-    content: '';
-    position: absolute;
-    top: 20px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #e0e0e0;
-    z-index: 0;
-}
-
-.step {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    z-index: 1;
-    opacity: 0.5;
-    transition: opacity 0.3s ease;
-}
-
-.step.active {
-    opacity: 1;
-}
-
-.step-number {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: white;
-    border: 2px solid #e0e0e0;
-    display: flex;
-    align-items: center;
     justify-content: center;
-    font-weight: bold;
-    margin-bottom: 8px;
-    transition: all 0.3s ease;
-}
-
-.step.active .step-number {
-    background: #FF914B;
-    color: white;
-    border-color: #FF914B;
-    transform: scale(1.1);
-}
-
-.step-label {
-    font-size: 12px;
-    text-align: center;
-    max-width: 100px;
-}
-
-/* Instructies en hulp */
-.step-instruction {
-    background: linear-gradient(135deg, rgba(255,145,75,0.05) 0%, rgba(255,145,75,0.1) 100%);
-    border-left: 4px solid #FF914B;
+    align-items: center;
     padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 30px;
-    animation: slideIn 0.5s ease;
 }
 
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.step-instruction h2, .step-instruction h3 {
-    margin: 0 0 10px 0;
-    color: #333;
-}
-
-.help-text {
-    color: #666;
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.5;
-}
-
-/* Naam suggesties */
-.name-suggestions {
-    margin-top: 20px;
-    padding: 15px;
-    background: #f8f8f8;
-    border-radius: 8px;
-    animation: fadeIn 0.5s ease;
-}
-
-.suggestion-label {
-    font-size: 12px;
-    color: #888;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.suggestion-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.chip {
-    padding: 6px 12px;
+/* Container styling */
+.workout-name-container {
+    width: 100%;
+    max-width: 600px;
+    padding: 40px;
     background: white;
-    border: 1px solid #ddd;
     border-radius: 20px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.chip:hover {
-    background: #FF914B;
-    color: white;
-    border-color: #FF914B;
-    transform: translateY(-2px);
-}
-
-/* Empty state */
-.empty-workout-state {
-    text-align: center;
-    padding: 60px 20px;
-    background: #f9f9f9;
-    border-radius: 15px;
-    margin: 30px auto;
-    max-width: 500px;
-    animation: fadeIn 0.8s ease;
-}
-
-.empty-icon {
-    font-size: 60px;
-    margin-bottom: 20px;
-    animation: bounce 2s infinite;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-.empty-workout-state h3 {
-    color: #333;
-    margin-bottom: 10px;
-}
-
-.empty-workout-state p {
-    color: #666;
-    margin-bottom: 30px;
-}
-
-/* Tips sectie */
-.workout-tips {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    margin-top: 30px;
-    text-align: left;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.workout-tips h4 {
-    color: #FF914B;
-    margin-bottom: 15px;
-    font-size: 16px;
-}
-
-.workout-tips ul {
-    list-style: none;
-    padding: 0;
-}
-
-.workout-tips li {
-    padding: 8px 0;
-    padding-left: 25px;
-    position: relative;
-    color: #555;
-    font-size: 14px;
-}
-
-.workout-tips li:before {
-    content: '✓';
-    position: absolute;
-    left: 0;
-    color: #4CAF50;
-    font-weight: bold;
-}
-
-/* Action buttons verbetering */
-.workout-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-top: 40px;
-    align-items: center;
-}
-
-.add-exercise-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.3s ease;
-}
-
-.add-exercise-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-.btn-icon {
-    font-size: 20px;
-}
-
-/* Motivatie boodschap */
-.motivation-message {
-    text-align: center;
-    padding: 20px;
-    margin-top: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
     animation: fadeInUp 0.5s ease;
 }
 
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(30px);
     }
     to {
         opacity: 1;
@@ -406,151 +109,302 @@
     }
 }
 
-.motivation-text {
-    color: #FF914B;
-    font-weight: 500;
-    font-size: 16px;
+.workout-header {
+    text-align: center;
+    margin-bottom: 40px;
 }
 
-/* Input verbetering */
+.workout-header h1 {
+    font-size: 32px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.workout-header p {
+    color: #666;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.name-input-group {
+    margin-bottom: 30px;
+}
+
+.name-input-group label {
+    display: block;
+    margin-bottom: 12px;
+    color: #444;
+    font-weight: 500;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .workout-name-input {
-    font-size: 18px;
-    padding: 15px;
+    width: 100%;
+    padding: 18px;
+    font-size: 20px;
     border: 2px solid #e0e0e0;
+    border-radius: 12px;
     transition: all 0.3s ease;
+    background: #f9f9f9;
+    font-weight: 500;
 }
 
 .workout-name-input:focus {
     border-color: #FF914B;
-    transform: scale(1.02);
+    background: white;
+    outline: none;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 145, 75, 0.15);
+}
+
+.workout-name-input::placeholder {
+    color: #aaa;
+    font-weight: 400;
+}
+
+/* Populaire suggesties */
+.suggestions-section {
+    margin-bottom: 40px;
+}
+
+.suggestions-title {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.suggestion-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.chip {
+    padding: 10px 18px;
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 25px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.chip:hover {
+    background: #FF914B;
+    color: white;
+    border-color: #FF914B;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(255, 145, 75, 0.3);
+}
+
+/* Submit button */
+.submit-section {
+    margin-top: 40px;
+}
+
+.create-workout-btn {
+    width: 100%;
+    padding: 18px;
+    background: linear-gradient(135deg, #FF914B 0%, #FF7A3D 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: none;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.create-workout-btn:disabled {
+    background: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.create-workout-btn:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 145, 75, 0.3);
+    background: linear-gradient(135deg, #FF7A3D 0%, #FF6B35 100%);
+}
+
+.create-workout-btn:not(:disabled):active {
+    transform: translateY(0);
+}
+
+.btn-arrow {
+    display: inline-block;
+    transition: transform 0.3s ease;
+    margin-left: 8px;
+}
+
+.create-workout-btn:not(:disabled):hover .btn-arrow {
+    transform: translateX(5px);
+}
+
+/* Error styling */
+.error-message {
+    color: #e74c3c;
+    font-size: 14px;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* Inspiration quotes */
+.inspiration {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.inspiration-quote {
+    font-style: italic;
+    color: #888;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Loading state vanuit workout-creation.css */
+.create-workout-btn.loading .btn-text {
+    opacity: 0.5;
+}
+
+.create-workout-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid white;
+    border-radius: 50%;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .progress-steps {
-        gap: 10px;
+    .main-wrapper {
+        min-height: calc(100vh - 50px);
     }
 
-    .step-label {
-        font-size: 10px;
-        max-width: 80px;
+    .workout-name-container {
+        padding: 30px;
+    }
+
+    .workout-header h1 {
+        font-size: 26px;
     }
 
     .suggestion-chips {
         justify-content: center;
     }
 }
+
+/* Extra kleine schermen */
+@media (max-width: 480px) {
+    .main-wrapper {
+        align-items: flex-start; /* Begin bovenaan op kleine schermen */
+        padding-top: 40px;
+        padding-bottom: 120px; /* Extra ruimte voor navigatie */
+    }
+
+    .workout-name-container {
+        padding: 25px;
+    }
+
+    .workout-header h1 {
+        font-size: 24px;
+    }
+}size: 24px;
+    }
+}
 </style>
 
 <script>
+// Simpele functies voor de nieuwe workout naam pagina
+
 // Workout naam suggesties
 function setWorkoutName(name) {
-    const input = document.querySelector('input[name="name"]');
-    input.value = name;
-    input.focus();
-    checkWorkoutName();
+    const input = document.getElementById('workout-name');
+    if (input) {
+        input.value = name;
+        input.focus();
+        checkWorkoutName();
 
-    // Animatie feedback
-    input.style.backgroundColor = '#fffbf0';
-    setTimeout(() => {
-        input.style.backgroundColor = '';
-    }, 500);
+        // Visual feedback
+        input.style.backgroundColor = '#fff8f0';
+        setTimeout(() => {
+            input.style.backgroundColor = '';
+        }, 300);
+    }
 }
 
 // Check of workout naam is ingevuld
 function checkWorkoutName() {
-    const nameInput = document.querySelector('input[name="name"]');
+    const nameInput = document.getElementById('workout-name');
     const submitBtn = document.getElementById('submit-btn');
-    const addExerciseBtn = document.getElementById('add-exercise-btn');
-    const emptyState = document.getElementById('empty-state');
-    const exerciseInstruction = document.getElementById('exercise-instruction');
-    const motivationMsg = document.getElementById('motivation');
 
-    if (nameInput.value.trim().length > 0) {
-        // Activeer stap 2
-        document.querySelector('.step[data-step="2"]').classList.add('active');
+    if (nameInput && submitBtn) {
+        const hasValue = nameInput.value.trim().length > 0;
+        submitBtn.disabled = !hasValue;
 
-        // Toon oefening instructies en knop
-        addExerciseBtn.style.display = 'inline-flex';
-        exerciseInstruction.style.display = 'block';
-        submitBtn.disabled = false;
-
-        // Update empty state
-        emptyState.querySelector('h3').textContent = 'Klaar om oefeningen toe te voegen!';
-        emptyState.querySelector('p').textContent = 'Klik op "Voeg oefening toe" om te beginnen';
-
-        // Toon motivatie
-        motivationMsg.style.display = 'block';
-    } else {
-        // Reset naar stap 1
-        document.querySelector('.step[data-step="2"]').classList.remove('active');
-        addExerciseBtn.style.display = 'none';
-        exerciseInstruction.style.display = 'none';
-        submitBtn.disabled = true;
-        motivationMsg.style.display = 'none';
+        if (hasValue) {
+            submitBtn.classList.add('ready');
+        } else {
+            submitBtn.classList.remove('ready');
+        }
     }
 }
 
-// Event listeners
+// Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    const nameInput = document.querySelector('input[name="name"]');
-
-    // Check naam bij laden
-    checkWorkoutName();
+    const nameInput = document.getElementById('workout-name');
+    const form = document.getElementById('workout-form');
+    const submitBtn = document.getElementById('submit-btn');
 
     // Check naam bij typen
-    nameInput.addEventListener('input', checkWorkoutName);
+    if (nameInput) {
+        nameInput.addEventListener('input', checkWorkoutName);
 
-    // Focus op naam input bij laden
-    nameInput.focus();
-
-    // Animatie voor empty state
-    const emptyState = document.querySelector('.empty-workout-state');
-    if (emptyState) {
+        // Auto-focus with animation
         setTimeout(() => {
-            emptyState.style.opacity = '0';
-            emptyState.style.transform = 'scale(0.95)';
-            setTimeout(() => {
-                emptyState.style.opacity = '1';
-                emptyState.style.transform = 'scale(1)';
-            }, 100);
-        }, 500);
+            nameInput.focus();
+        }, 300);
     }
-});
 
-// Drag-and-drop functionality (behouden van origineel)
-document.querySelectorAll('.active-workout-block').forEach(block => {
-    block.setAttribute('draggable', true);
-    block.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', e.target.dataset.exerciseId);
-    });
-});
-
-document.querySelector('.exercise-blok-section').addEventListener('dragover', (e) => {
-    e.preventDefault();
-});
-
-document.querySelector('.exercise-blok-section').addEventListener('drop', (e) => {
-    e.preventDefault();
-    const exerciseId = e.dataTransfer.getData('text/plain');
-    const droppedBlock = document.querySelector(`[data-exercise-id="${exerciseId}"]`);
-    const targetBlock = e.target.closest('.active-workout-block');
-    if (targetBlock && droppedBlock !== targetBlock) {
-        e.target.closest('.exercise-blok-section').insertBefore(droppedBlock, targetBlock);
-        updateExerciseOrder();
+    // Form submit handling
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (submitBtn && !submitBtn.disabled) {
+                submitBtn.classList.add('loading');
+            }
+        });
     }
+
+    // Initial check
+    checkWorkoutName();
 });
-
-// Update exercise order
-function updateExerciseOrder() {
-    const blocks = document.querySelectorAll('.active-workout-block');
-    const order = Array.from(blocks).map(block => block.dataset.exerciseId).filter(id => id);
-
-    // Activeer stap 3 als er oefeningen zijn
-    if (order.length > 0) {
-        document.querySelector('.step[data-step="3"]').classList.add('active');
-    }
-}
 </script>
-
 {% endblock %}
