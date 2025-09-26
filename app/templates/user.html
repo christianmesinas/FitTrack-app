@@ -9,327 +9,344 @@
 </div>
 
 <section class="header-section">
-    <h1>Profiel: {{ user.name or user.email }}</h1>
+    <h1>Mijn Profiel</h1>
 </section>
 
 <section class="profile-section mg-btm-exercise">
     {% if user == current_user %}
-        <!-- Profiel bewerken -->
-        <div class="card mb-3">
+
+        <!-- Profielfoto sectie -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="profile-photo-container mb-3">
+                    {% if user.profile_photo %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' ~ user.profile_photo) }}"
+                             alt="Profielfoto"
+                             class="profile-photo rounded-circle"
+                             style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #FF6B35;">
+                    {% else %}
+                        <div class="profile-photo-placeholder rounded-circle"
+                             style="width: 150px; height: 150px; background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+                                    display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                            <i class="fas fa-user" style="font-size: 60px; color: white;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Upload foto knop -->
+                <form method="POST" enctype="multipart/form-data" class="mb-3">
+                    {{ form.hidden_tag() }}
+                    <label for="photo-upload" class="orange-btn-outline" style="cursor: pointer; display: inline-block; padding: 10px 20px;">
+                        <i class="fas fa-camera"></i> Wijzig Foto
+                    </label>
+                    <input type="file" id="photo-upload" name="profile_photo" accept="image/*" style="display: none;" onchange="this.form.submit()">
+                </form>
+
+                <!-- Bio/Motiverende quote -->
+                <div class="bio-section">
+                    {% if user.bio %}
+                        <p class="text-muted fst-italic">"{{ user.bio }}"</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Persoonlijke Informatie -->
+        <div class="card mb-4">
             <div class="card-body">
-                <h5 class="card-title">Profiel informatie</h5>
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-user-circle" style="color: #FF6B35;"></i> Persoonlijke Informatie
+                </h5>
                 <form method="POST">
                     {{ form.hidden_tag() }}
 
-                    <div class="mb-3">
-                        {{ form.name.label(class="form-label") }}
-                        {{ form.name(class="form-control") }}
-                        {% if form.name.errors %}
-                            <div class="text-danger">
-                                {% for error in form.name.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.current_weight.label(class="form-label") }}
-                        <div class="input-group">
-                            {{ form.current_weight(class="form-control", type="number", step="0.1", min="0") }}
-                            <span class="input-group-text">value</span>
-                        </div>
-                        {% if form.current_weight.errors %}
-                            <div class="text-danger">
-                                {% for error in form.current_weight.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.fitness_goal.label(class="form-label") }}
-                        <div class="input-group">
-                            {{ form.fitness_goal(class="form-control", type="number", step="0.1", min="0") }}
-                            <span class="input-group-text">kg</span>
-                        </div>
-                        {% if form.fitness_goal.errors %}
-                            <div class="text-danger">
-                                {% for error in form.fitness_goal.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.weekly_workouts.label(class="form-label") }}
-                        {{ form.weekly_workouts(class="form-control", type="number", min="0") }}
-                        {% if form.weekly_workouts.errors %}
-                            <div class="text-danger">
-                                {% for error in form.weekly_workouts.errors %}
-                                    <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.submit(class="orange-btn") }}
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Gewicht toevoegen -->
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5 class="card-title">Gewicht bijhouden</h5>
-                <form method="POST" id="add-weight-form">
-                    {{ weight_form.hidden_tag() }}
-
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ weight_form.weight.label(class="form-label") }}
-                                <div class="input-group">
-                                    <!-- Beperk tot numerieke invoer met type="number" -->
-                                    {{ weight_form.weight(class="form-control", type="number", step="0.1", min="20", max="300", required=true, placeholder="Bijv. 70.5") }}
-                                    <span class="input-group-text">kg</span>
+                        <div class="col-md-6 mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.name.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
                                 </div>
-                                <div id="weight-error" class="text-danger" style="display: none;"></div>
-                                {% if weight_form.weight.errors %}
-                                    <div class="text-danger">
-                                        {% for error in weight_form.weight.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                {{ weight_form.notes.label(class="form-label") }}
-                                {{ weight_form.notes(class="form-control", rows="2") }}
-                                {% if weight_form.notes.errors %}
-                                    <div class="text-danger">
-                                        {% for error in weight_form.notes.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        {{ weight_form.submit(class="orange-btn-outline") }}
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Gewichtsgrafiek en Statistieken -->
-        {% if recent_weights %}
-        <div class="row mb-3">
-            <!-- Grafiek -->
-            <div class="col-lg-8">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">
-                            Gewichtsontwikkeling
-                            <button class="btn btn-sm btn-outline-primary float-end" onclick="refreshChart()">
-                                <i class="fas fa-sync-alt"></i> Ververs
-                            </button>
-                        </h5>
-                        <div class="text-center">
-                            <img id="weight-chart" src="data:image/png;base64,{{ chart_data }}"
-                                 class="img-fluid" alt="Gewichtsgrafiek" style="max-height: 400px;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Statistieken -->
-            <div class="col-lg-4">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">Statistieken</h5>
-                        {% if weight_stats %}
-                        <div class="mb-3">
-                            <h6 class="text-muted">Huidige Status</h6>
-                            <p class="mb-1"><strong>Huidig gewicht:</strong> {{ "%.1f"|format(weight_stats.current_weight) }} kg</p>
-                            <p class="mb-1"><strong>Startgewicht:</strong> {{ "%.1f"|format(weight_stats.start_weight) }} kg</p>
-                            <p class="mb-2">
-                                <strong>Totale verandering:</strong>
-                                <span class="{% if weight_stats.total_change < 0 %}text-success{% elif weight_stats.total_change > 0 %}text-warning{% else %}text-muted{% endif %}">
-                                    {{ "%.1f"|format(weight_stats.total_change) }} kg
-                                </span>
-                            </p>
-                        </div>
-
-                        <div class="mb-3">
-                            <h6 class="text-muted">Gemiddelden</h6>
-                            <p class="mb-1"><strong>Gemiddeld gewicht:</strong> {{ "%.1f"|format(weight_stats.average_weight) }} kg</p>
-                            {% if weight_stats.recent_average %}
-                            <p class="mb-1"><strong>Afgelopen 30 dagen:</strong> {{ "%.1f"|format(weight_stats.recent_average) }} kg</p>
                             {% endif %}
                         </div>
 
-                        <div class="mb-3">
-                            <h6 class="text-muted">Bereik</h6>
-                            <p class="mb-1"><strong>Laagste:</strong> {{ "%.1f"|format(weight_stats.min_weight) }} kg</p>
-                            <p class="mb-1"><strong>Hoogste:</strong> {{ "%.1f"|format(weight_stats.max_weight) }} kg</p>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Geboortedatum</label>
+                            <input type="date" name="birth_date" class="form-control"
+                                   value="{{ user.birth_date.strftime('%Y-%m-%d') if user.birth_date else '' }}">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Geslacht</label>
+                            <select name="gender" class="form-control">
+                                <option value="">Selecteer...</option>
+                                <option value="male" {% if user.gender == 'male' %}selected{% endif %}>Man</option>
+                                <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Vrouw</option>
+                                <option value="other" {% if user.gender == 'other' %}selected{% endif %}>Anders</option>
+                            </select>
                         </div>
 
-                        <div>
-                            <h6 class="text-muted">Periode</h6>
-                            <p class="mb-1"><strong>Metingen:</strong> {{ weight_stats.total_measurements }}</p>
-                            <p class="mb-0"><strong>Periode:</strong> {{ weight_stats.measurement_period }} dagen</p>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" value="{{ user.email }}" disabled>
                         </div>
-                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Bio / Motiverende quote</label>
+                        <textarea name="bio" class="form-control" rows="2" maxlength="200"
+                                  placeholder="Deel je fitness motivatie...">{{ user.bio or '' }}</textarea>
+                        <small class="text-muted">Max 200 karakters</small>
+                    </div>
+
+                    <button type="submit" name="update_personal" class="orange-btn">
+                        <i class="fas fa-save"></i> Opslaan
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Fitness Profiel -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-dumbbell" style="color: #FF6B35;"></i> Fitness Profiel
+                </h5>
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            {{ form.current_weight.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.current_weight(class="form-control", type="number", step="0.1", min="0") }}
+                                <span class="input-group-text">kg</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            {{ form.fitness_goal.label(class="form-label") }}
+                            <div class="input-group">
+                                {{ form.fitness_goal(class="form-control", type="number", step="0.1", min="0") }}
+                                <span class="input-group-text">kg</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Lengte</label>
+                            <div class="input-group">
+                                <input type="number" name="height" class="form-control"
+                                       value="{{ user.height or '' }}" min="100" max="250">
+                                <span class="input-group-text">cm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Fitness Niveau</label>
+                            <select name="fitness_level" class="form-control">
+                                <option value="beginner" {% if user.fitness_level == 'beginner' %}selected{% endif %}>
+                                    🌱 Beginner
+                                </option>
+                                <option value="intermediate" {% if user.fitness_level == 'intermediate' %}selected{% endif %}>
+                                    💪 Gemiddeld
+                                </option>
+                                <option value="advanced" {% if user.fitness_level == 'advanced' %}selected{% endif %}>
+                                    🔥 Gevorderd
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            {{ form.weekly_workouts.label(class="form-label") }}
+                            {{ form.weekly_workouts(class="form-control", type="number", min="0", max="7") }}
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">BMI</label>
+                            <div class="bmi-display">
+                                {% if user.height and user.current_weight %}
+                                    {% set bmi = (user.current_weight / ((user.height/100) ** 2))|round(1) %}
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ bmi }}" disabled>
+                                        <span class="input-group-text">
+                                            {% if bmi < 18.5 %}
+                                                <span class="text-warning">Ondergewicht</span>
+                                            {% elif bmi < 25 %}
+                                                <span class="text-success">Normaal</span>
+                                            {% elif bmi < 30 %}
+                                                <span class="text-warning">Overgewicht</span>
+                                            {% else %}
+                                                <span class="text-danger">Obesitas</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                {% else %}
+                                    <input type="text" class="form-control" value="Vul lengte en gewicht in" disabled>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Hoofddoelen</label>
+                        <div class="goal-checkboxes">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="goals" value="weight_loss"
+                                       {% if 'weight_loss' in (user.goals or '') %}checked{% endif %}>
+                                <label class="form-check-label">🎯 Afvallen</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="goals" value="muscle_gain"
+                                       {% if 'muscle_gain' in (user.goals or '') %}checked{% endif %}>
+                                <label class="form-check-label">💪 Spieropbouw</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="goals" value="endurance"
+                                       {% if 'endurance' in (user.goals or '') %}checked{% endif %}>
+                                <label class="form-check-label">🏃 Uithoudingsvermogen</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="goals" value="strength"
+                                       {% if 'strength' in (user.goals or '') %}checked{% endif %}>
+                                <label class="form-check-label">⚡ Kracht</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="goals" value="flexibility"
+                                       {% if 'flexibility' in (user.goals or '') %}checked{% endif %}>
+                                <label class="form-check-label">🧘 Flexibiliteit</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" name="update_fitness" class="orange-btn">
+                        <i class="fas fa-save"></i> Fitness Profiel Opslaan
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Statistieken Overzicht -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-chart-line" style="color: #FF6B35;"></i> Jouw Voortgang
+                </h5>
+
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card p-3" style="background: linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(255,140,66,0.1) 100%); border-radius: 15px;">
+                            <i class="fas fa-fire" style="font-size: 2rem; color: #FF6B35;"></i>
+                            <h4 class="mt-2 mb-0">{{ user.total_workouts or 0 }}</h4>
+                            <small class="text-muted">Totaal Workouts</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card p-3" style="background: linear-gradient(135deg, rgba(76,175,80,0.1) 0%, rgba(102,187,106,0.1) 100%); border-radius: 15px;">
+                            <i class="fas fa-calendar-check" style="font-size: 2rem; color: #4CAF50;"></i>
+                            <h4 class="mt-2 mb-0">{{ user.workout_streak or 0 }}</h4>
+                            <small class="text-muted">Dagen Streak</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card p-3" style="background: linear-gradient(135deg, rgba(33,150,243,0.1) 0%, rgba(66,165,245,0.1) 100%); border-radius: 15px;">
+                            <i class="fas fa-weight" style="font-size: 2rem; color: #2196F3;"></i>
+                            {% if user.start_weight and user.current_weight %}
+                                <h4 class="mt-2 mb-0">{{ "%.1f"|format(user.start_weight - user.current_weight) }} kg</h4>
+                            {% else %}
+                                <h4 class="mt-2 mb-0">-</h4>
+                            {% endif %}
+                            <small class="text-muted">Gewichtsverschil</small>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <div class="stat-card p-3" style="background: linear-gradient(135deg, rgba(156,39,176,0.1) 0%, rgba(171,71,188,0.1) 100%); border-radius: 15px;">
+                            <i class="fas fa-trophy" style="font-size: 2rem; color: #9C27B0;"></i>
+                            <h4 class="mt-2 mb-0">{{ user.achievements_count or 0 }}</h4>
+                            <small class="text-muted">Prestaties</small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        {% endif %}
-
-        <!-- Gewichtsgeschiedenis -->
-        {% if recent_weights %}
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    Gewichtsgeschiedenis
-                    <small class="text-muted">(Laatste 10 metingen)</small>
-                </h5>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Datum</th>
-                                <th>Gewicht</th>
-                                <th>Verschil</th>
-                                <th>Notities</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for weight in recent_weights %}
-                            <tr>
-                                <td>{{ weight.logged_at.strftime('%d-%m-%Y %H:%M') }}</td>
-                                <td><strong>{{ weight.weight }} kg</strong></td>
-                                <td>
-                                    {% if loop.index < recent_weights|length %}
-                                        {% set prev_weight = recent_weights[loop.index].weight %}
-                                        {% set diff = weight.weight - prev_weight %}
-                                        {% if diff != 0 %}
-                                            <span class="badge {% if diff < 0 %}bg-success{% else %}bg-warning{% endif %}">
-                                                {{ "%.1f"|format(diff) }} kg
-                                            </span>
-                                        {% else %}
-                                            <span class="text-muted">-</span>
-                                        {% endif %}
-                                    {% else %}
-                                        <span class="text-muted">-</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ weight.notes or '-' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Alle metingen bekijken link -->
-                <div class="text-center mt-3">
-                    <a href="{{ url_for('profile.weight_history') }}" class="btn btn-outline-primary">
-                        Alle metingen bekijken
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endif %}
 
     {% else %}
         <!-- Publiek profiel -->
         <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Profiel informatie</h5>
-                <p><strong>Naam:</strong> {{ user.name or 'Niet ingesteld' }}</p>
-                <p><strong>Email:</strong> {{ user.email }}</p>
-                {% if user.current_weight %}
-                    <p><strong>Huidige gewicht:</strong> {{ user.current_weight }} kg</p>
+            <div class="card-body text-center">
+                <!-- Profielfoto -->
+                <div class="mb-3">
+                    {% if user.profile_photo %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' ~ user.profile_photo) }}"
+                             alt="Profielfoto"
+                             class="rounded-circle"
+                             style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle"
+                             style="width: 120px; height: 120px; background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+                                    display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                            <i class="fas fa-user" style="font-size: 50px; color: white;"></i>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <h3>{{ user.name or 'FitTrack Gebruiker' }}</h3>
+                {% if user.bio %}
+                    <p class="text-muted fst-italic mb-3">"{{ user.bio }}"</p>
                 {% endif %}
-                {% if user.fitness_goal %}
-                    <p><strong>Doel gewicht:</strong> {{ user.fitness_goal }} kg</p>
-                {% endif %}
-                {% if user.weekly_workouts %}
-                    <p><strong>Weekelijkse workouts:</strong> {{ user.weekly_workouts }}</p>
-                {% endif %}
+
+                <div class="row mt-4">
+                    <div class="col-6">
+                        <strong>Fitness Niveau</strong>
+                        <p>{{ user.fitness_level|capitalize or 'Niet ingesteld' }}</p>
+                    </div>
+                    <div class="col-6">
+                        <strong>Wekelijkse Workouts</strong>
+                        <p>{{ user.weekly_workouts or '-' }}</p>
+                    </div>
+                </div>
             </div>
         </div>
     {% endif %}
 </section>
 
-<script>
-/**
- * Vernieuw de gewichtsgrafiek via een API-call.
- */
-function refreshChart() {
-    fetch('/api/weight_chart')
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => {
-                    throw new Error(err.message || 'Network error');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.is_success()) {
-                // Gebruik data.data voor de chart
-                console.log('Chart data:', data.data);
-                document.getElementById('weight-chart').src = 'data:image/png;base64,' + data.data;
-            } else {
-                console.error('API error:', data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error.message);
-        });
-}
-
-/**
- * Valideer het gewicht-veld client-side om niet-numerieke invoer te voorkomen.
- */
-document.getElementById('add-weight-form').addEventListener('submit', function(event) {
-    const weightInput = document.querySelector('input[name="weight"]');
-    const weightError = document.getElementById('weight-error');
-    const value = weightInput.value.trim();
-
-    // Controleer of de waarde een geldig getal is
-    if (!/^\d*\.?\d*$/.test(value) || isNaN(parseFloat(value))) {
-        event.preventDefault();
-        weightError.style.display = 'block';
-        weightError.textContent = 'Voer een geldig getal in (bijv. 70.5)';
-        return false;
+<style>
+    .stat-card {
+        transition: transform 0.3s ease;
+        cursor: pointer;
     }
 
-    // Controleer bereik (client-side duplicatie van server-side NumberRange)
-    const numValue = parseFloat(value);
-    if (numValue < 20 || numValue > 300) {
-        event.preventDefault();
-        weightError.style.display = 'block';
-        weightError.textContent = 'Gewicht moet tussen 20 en 300 kg zijn';
-        return false;
+    .stat-card:hover {
+        transform: translateY(-5px);
     }
 
-    weightError.style.display = 'none';
-    return true;
-});
-</script>
+    .goal-checkboxes .form-check {
+        margin-bottom: 10px;
+    }
 
+    .profile-photo-container {
+        position: relative;
+        display: inline-block;
+    }
 
+    .form-check-input:checked {
+        background-color: #FF6B35;
+        border-color: #FF6B35;
+    }
 
+    .bio-section {
+        max-width: 500px;
+        margin: 0 auto;
+    }
+</style>
 
 {% endblock %}
