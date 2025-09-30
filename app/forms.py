@@ -1,7 +1,8 @@
 from flask import flash
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
-from wtforms import BooleanField,MultipleFileField, SelectField, FormField, StringField, FloatField, SelectField, IntegerField, SubmitField, ValidationError
+from wtforms import BooleanField, MultipleFileField, SelectField, FormField, StringField, FloatField, IntegerField, \
+    SubmitField, ValidationError
 from wtforms.fields.list import FieldList
 from wtforms.fields.simple import TextAreaField
 from wtforms.validators import DataRequired, Length, NumberRange, Optional
@@ -64,17 +65,44 @@ class EditProfileForm(FlaskForm):
     Notities:
         - Valideert unieke naam in de database.
         - Gebruikt NumberRange voor realistische gewicht- en workout-waarden.
+        - Ondersteunt profielfoto upload.
     """
+    # Persoonlijke info
     name = StringField('Naam', validators=[DataRequired(), Length(min=1, max=64)])
+    bio = TextAreaField('Bio', validators=[Optional(), Length(max=200)])
+    birth_date = StringField('Geboortedatum', validators=[Optional()])
+    gender = SelectField('Geslacht', choices=[
+        ('', 'Selecteer...'),
+        ('male', 'Man'),
+        ('female', 'Vrouw'),
+        ('other', 'Anders')
+    ], validators=[Optional()])
+
+    # Fitness info
     current_weight = FloatField('Huidige gewicht (kg)',
                                 validators=[Optional(), NumberRange(min=20, max=300,
                                                                     message="Gewicht moet tussen 20 en 300 kg zijn")])
-    weekly_workouts = IntegerField('Weekelijkse workouts',
-                                   validators=[Optional(), NumberRange(min=0, max=20,
-                                                                       message="Aantal workouts moet tussen 0 en 20 zijn")])
     fitness_goal = FloatField('Doel gewicht (kg)',
                               validators=[Optional(), NumberRange(min=20, max=300,
                                                                   message="Doel gewicht moet tussen 20 en 300 kg zijn")])
+    height = IntegerField('Lengte (cm)',
+                          validators=[Optional(), NumberRange(min=100, max=250,
+                                                              message="Lengte moet tussen 100 en 250 cm zijn")])
+    fitness_level = SelectField('Fitness Niveau', choices=[
+        ('', 'Selecteer...'),
+        ('beginner', 'Beginner'),
+        ('intermediate', 'Gemiddeld'),
+        ('advanced', 'Gevorderd')
+    ], validators=[Optional()])
+    weekly_workouts = IntegerField('Weekelijkse workouts',
+                                   validators=[Optional(), NumberRange(min=0, max=20,
+                                                                       message="Aantal workouts moet tussen 0 en 20 zijn")])
+
+    # Profile photo
+    profile_photo = FileField('Profielfoto', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Alleen afbeeldingen toegestaan!')
+    ])
+
     submit = SubmitField('Profiel bijwerken')
 
     def __init__(self, original_name, *args, **kwargs):
@@ -106,10 +134,10 @@ class AddWeightForm(FlaskForm):
         - Aangepaste validatie voorkomt niet-numerieke invoer.
     """
     weight = FloatField('Gewicht (kg)',
-                       validators=[DataRequired(), NumberRange(min=20, max=300,
-                       message="Gewicht moet tussen 20 en 300 kg zijn")])
+                        validators=[DataRequired(), NumberRange(min=20, max=300,
+                                                                message="Gewicht moet tussen 20 en 300 kg zijn")])
     notes = TextAreaField('Notities (optioneel)',
-                         validators=[Optional(), Length(max=200)])
+                          validators=[Optional(), Length(max=200)])
     submit = SubmitField('Gewicht toevoegen')
 
     def validate_weight(self, weight):
@@ -157,7 +185,14 @@ class GoalWeightForm(FlaskForm):
     fitness_goal = FloatField('Streefgewicht (kg)', validators=[DataRequired(), NumberRange(min=30, max=500)])
     submit = SubmitField('Volgende')
 
+
 class AddExerciseForm(FlaskForm):
+    """
+    Formulier voor het toevoegen van een custom oefening.
+    Notities:
+        - Ondersteunt meerdere afbeeldingen en video upload.
+        - Enum-waarden voor difficulty, mechanic, category, equipment, en force.
+    """
     name = StringField('Naam', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Beschrijving', validators=[Optional()])
 
@@ -225,6 +260,7 @@ class AddExerciseForm(FlaskForm):
     is_public = BooleanField('Publiek zichtbaar', default=True)
 
     submit = SubmitField('Oefening toevoegen')
+
 
 class SearchExerciseForm(FlaskForm):
     """

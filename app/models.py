@@ -167,6 +167,22 @@ class User(db.Model):
     experience_years: so.Mapped[Optional[str]] = so.mapped_column(sa.String(20), nullable=True)
     certification: so.Mapped[Optional[str]] = so.mapped_column(sa.Text, nullable=True)
 
+    # NIEUWE VELDEN - Profiel informatie
+    profile_photo: so.Mapped[Optional[str]] = so.mapped_column(sa.String(200), nullable=True)
+    bio: so.Mapped[Optional[str]] = so.mapped_column(sa.String(200), nullable=True)
+    birth_date: so.Mapped[Optional[datetime]] = so.mapped_column(sa.Date, nullable=True)
+    gender: so.Mapped[Optional[str]] = so.mapped_column(sa.String(10), nullable=True)
+    height: so.Mapped[Optional[int]] = so.mapped_column(nullable=True)  # in cm
+    fitness_level: so.Mapped[Optional[str]] = so.mapped_column(sa.String(20), nullable=True)
+    goals: so.Mapped[Optional[str]] = so.mapped_column(sa.String(200), nullable=True)  # comma separated
+
+    # NIEUWE VELDEN - Statistieken
+    start_weight: so.Mapped[Optional[float]] = so.mapped_column(nullable=True)
+    total_workouts: so.Mapped[int] = so.mapped_column(default=0, server_default='0', nullable=False)
+    workout_streak: so.Mapped[int] = so.mapped_column(default=0, server_default='0', nullable=False)
+    achievements_count: so.Mapped[int] = so.mapped_column(default=0, server_default='0', nullable=False)
+    last_workout_date: so.Mapped[Optional[datetime]] = so.mapped_column(sa.Date, nullable=True)
+
     # Relaties
     weight_logs: so.WriteOnlyMapped['WeightLog'] = so.relationship(back_populates='user', cascade="all, delete-orphan")
     exercise_logs: so.WriteOnlyMapped['ExerciseLog'] = so.relationship(back_populates='user',
@@ -236,7 +252,13 @@ class User(db.Model):
             'current_weight': self.current_weight,
             'weekly_workouts': self.weekly_workouts,
             'last_seen': self.last_seen.isoformat() if self.last_seen else None,
-            'account_type': self.account_type
+            'account_type': self.account_type,
+            'profile_photo': self.profile_photo,
+            'bio': self.bio,
+            'height': self.height,
+            'fitness_level': self.fitness_level,
+            'total_workouts': self.total_workouts,
+            'workout_streak': self.workout_streak
         }
 
         # Voeg trainer-specifieke velden toe indien trainer
@@ -667,10 +689,6 @@ class WorkoutSession(db.Model):
             'total_weight': self.total_weight,
             'is_completed': self.is_completed
         }
-
-
-
-
 
 
 class CalendarEvent(db.Model):

@@ -14,9 +14,6 @@ from config import Config
 from flask_moment import Moment
 from flask_wtf import CSRFProtect
 
-
-
-
 # Initialiseer extensies globaal
 db = SQLAlchemy()
 migrate = Migrate()
@@ -27,6 +24,7 @@ moment = Moment()
 
 # Stel logging in
 logger = logging.getLogger(__name__)
+
 
 # Definieer de user_loader voor Flask-Login
 @login.user_loader
@@ -45,8 +43,8 @@ def load_user(user_id):
         return None
 
 
-# MAAR ÉÉN create_app functie!
 def create_app(config_class=Config):
+    """Applicatie factory voor het maken van de Flask app"""
     app = Flask(__name__)
     app.config.from_object(config_class)
 
@@ -63,15 +61,23 @@ def create_app(config_class=Config):
 
     app.jinja_env.filters['from_json'] = from_json_filter
 
-    # Maak upload-mappen
-    os.makedirs(os.path.abspath(os.path.join('app', 'static', 'img', 'exercises')), exist_ok=True)
-    os.makedirs(os.path.abspath(os.path.join('app', 'static', 'videos', 'exercises')), exist_ok=True)
+    # Maak upload-mappen aan voor exercises, videos en profiles
+    upload_directories = [
+        os.path.abspath(os.path.join('app', 'static', 'img', 'exercises')),
+        os.path.abspath(os.path.join('app', 'static', 'videos', 'exercises')),
+        os.path.abspath(os.path.join('app', 'static', 'uploads', 'profiles')),  # NIEUW - voor profielfoto's
+        os.path.abspath(os.path.join('app', 'static', 'uploads', 'exercises'))  # NIEUW - voor custom exercises
+    ]
+
+    for directory in upload_directories:
+        os.makedirs(directory, exist_ok=True)
+        logger.debug(f"Upload directory aangemaakt/gecontroleerd: {directory}")
 
     # Initialiseer extensies met de app
-    db.init_app(app)        # Database-ORM
+    db.init_app(app)  # Database-ORM
     migrate.init_app(app, db)  # Database-migraties
     moment.init_app(app)  # Tijdformattering
-    login.init_app(app)     # Gebruikersauthenticatie
+    login.init_app(app)  # Gebruikersauthenticatie
     oauth.init_app(app)  # OAuth voor Auth0
     csrf.init_app(app)  # Activeer CSRF-bescherming
 
@@ -123,5 +129,7 @@ def create_app(config_class=Config):
 
     # Importeer modellen om database-tabellen te registreren
     from app import models
+
+    logger.info("FitTrack applicatie succesvol geïnitialiseerd")
 
     return app
