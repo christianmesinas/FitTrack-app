@@ -5,8 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>FitTrack+ - Jouw Fitness Journey Begint Hier</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landings.css') }}">
+    <style>
+        /* Override voor scrollbaar maken op mobiel */
+        body {
+            overflow-y: auto !important;
+            overflow-x: hidden;
+            min-height: 100vh;
+            height: auto !important;
+        }
 
+        .container {
+            min-height: 100vh;
+            height: auto !important;
+            padding: 2rem 5% !important;
+        }
 
+        .background-shapes {
+            position: fixed !important;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -31,7 +53,6 @@
             <div class="button-row">
                 <a href="{{ url_for('auth.login') }}" class="orange-btn">Inloggen</a>
                 <a href="{{ url_for('auth.signup') }}" class="orange-btn secondary">Aanmelden</a>
-
             </div>
         </div>
     </div>

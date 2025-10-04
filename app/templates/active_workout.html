@@ -1,180 +1,600 @@
 {% extends "base.html" %}
-{% block title %}FitTrack - Actieve Workout{% endblock %}
+
+{% block head %}
+<style>
+/* Active Workout Styling */
+.workout-header {
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    padding: 30px 20px;
+    color: white;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.workout-header h1 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.workout-timer {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.exercise-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.exercise-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+}
+
+.exercise-thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: 10px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.exercise-thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.exercise-info {
+    flex: 1;
+}
+
+.exercise-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.exercise-meta {
+    display: flex;
+    gap: 15px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.exercise-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-view-details, .btn-view-video {
+    padding: 8px 15px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-view-details {
+    background: #4CAF50;
+    color: white;
+}
+
+.btn-view-details:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+.btn-view-video {
+    background: #2196F3;
+    color: white;
+}
+
+.btn-view-video:hover {
+    background: #0b7dda;
+    transform: translateY(-2px);
+}
+
+.sets-container {
+    margin-top: 15px;
+}
+
+.set-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.set-number {
+    font-weight: 600;
+    color: #FF6B35;
+    min-width: 60px;
+}
+
+.set-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.set-checkbox {
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+}
+
+.add-set-btn {
+    width: 100%;
+    padding: 12px;
+    background: #FF6B35;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.add-set-btn:hover {
+    background: #e55a2b;
+}
+
+/* Modal Styling */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 15px;
+}
+
+.modal-close {
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #999;
+}
+
+.modal-close:hover {
+    color: #333;
+}
+
+.exercise-images-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.exercise-images-gallery img {
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.exercise-instructions {
+    margin: 20px 0;
+}
+
+.exercise-instructions h3 {
+    color: #FF6B35;
+    margin-bottom: 15px;
+}
+
+.exercise-instructions ol {
+    padding-left: 20px;
+}
+
+.exercise-instructions li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+    margin: 20px 0;
+    border-radius: 10px;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+}
+
+.complete-workout-btn {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 40px;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+    z-index: 100;
+}
+
+.complete-workout-btn:hover {
+    transform: translateX(-50%) translateY(-3px);
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+}
+
+@media (max-width: 768px) {
+    .exercise-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .exercise-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .btn-view-details, .btn-view-video {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-    <form method="POST" action="{{ url_for('sessions.save_workout', plan_id=workout_plan.id) }}" id="save-workout-form">
-        {{ form.csrf_token }}
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <div class="top-bar">
-            <a href="{{ url_for('main.index') }}">
-                <img src="{{ url_for('static', filename='img/back.svg') }}" alt="Terug knop" class="back-icon"/>
-            </a>
-        </div>
-        <section class="header-section">
-            <div class="workout-name">
-                <h1>{{ workout_plan.name }}</h1>
-            </div>
-        </section>
-        <section class="exercise-blok-section mg-btm-exercise">
-            {% for wpe in exercises %}
-                <section class="active-workout-block active-workout-in-plan" data-wpe-id="{{ wpe.id }}" data-session-id="{{ session_id }}" data-is-cardio="{{ wpe.exercise.is_cardio|lower }}">
-                    <h2>{{ wpe.exercise.name }}</h2>
-                    <section class="set-section">
-                        {% if wpe.exercise.is_cardio %}
-                            <!-- Cardio style block -->
-                            <div class="active-workout-set">
-                                <input type="number" name="duration_{{ wpe.id }}_0" min="0.1" step="0.1" placeholder="{{ wpe.duration_minutes or 'Duur (min)' }}" class="set-input duration-input" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
-                                <input type="number" name="distance_{{ wpe.id }}_0" min="0" step="0.1" placeholder="{{ wpe.distance_km or 'Afstand (km)' }}" class="set-input distance-input" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
-                                <label class="custom-checkbox">
-                                    <input type="checkbox" name="completed_{{ wpe.id }}_0">
-                                    <span class="checkmark"></span>
-                                </label>
-                            </div>
+<div class="workout-header">
+    <h1>🏋️ {{ workout_plan.name }}</h1>
+    <div class="workout-timer" id="workout-timer">00:00:00</div>
+</div>
+
+<div class="workout-container" style="max-width: 900px; margin: 0 auto; padding: 0 20px 150px;">
+    {% for wpe in exercises %}
+        {% set exercise = wpe.exercise %}
+        <div class="exercise-card" data-exercise-id="{{ exercise.id }}" data-wpe-id="{{ wpe.id }}">
+            <div class="exercise-header">
+                <!-- Exercise Thumbnail -->
+                {% if exercise.images_list and exercise.images_list|length > 0 %}
+                    <img src="{{ url_for('static', filename=exercise.images_list[0]) }}"
+                         alt="{{ exercise.name }}"
+                         class="exercise-thumbnail"
+                         onclick="openExerciseModal('{{ exercise.id }}')"
+                         onerror="this.src='{{ url_for('static', filename='img/placeholder.png') }}'">
+                {% else %}
+                    <img src="{{ url_for('static', filename='img/placeholder.png') }}"
+                         alt="{{ exercise.name }}"
+                         class="exercise-thumbnail">
+                {% endif %}
+
+                <div class="exercise-info">
+                    <div class="exercise-name">{{ exercise.name }}</div>
+                    <div class="exercise-meta">
+                        {% if wpe.is_cardio %}
+                            <span>⏱️ {{ wpe.duration_minutes or 30 }} min</span>
+                            <span>📏 {{ wpe.distance_km or 5 }} km</span>
                         {% else %}
-                            {% for set_num in range(wpe.sets) %}
-                                <div class="active-workout-set">
-                                    <input type="number" name="reps_{{ wpe.id }}_{{ set_num }}" min="0" step="1" placeholder="{{ wpe.reps or 'reps' }}" class="set-input reps-input" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                                    <input type="number" name="weight_{{ wpe.id }}_{{ set_num }}" min="0" step="0.1" placeholder="{{ wpe.weight or 'KG' }}" class="set-input weight-input" oninput="this.value = this.value.replace(/[^0-9.]/g, '')">
-                                    <label class="custom-checkbox">
-                                        <input type="checkbox" name="completed_{{ wpe.id }}_{{ set_num }}">
-                                        <span class="checkmark"></span>
-                                    </label>
-                                </div>
-                            {% endfor %}
+                            <span>🔄 {{ wpe.sets or 3 }} sets</span>
+                            <span>💪 {{ wpe.reps or 10 }} reps</span>
+                            {% if wpe.weight %}
+                                <span>⚖️ {{ wpe.weight }} kg</span>
+                            {% endif %}
                         {% endif %}
-                    </section>
-                    <div class="active-workout-button-section">
-                        <a href="#" class="orange-btn-outline active-workout-btn" data-action="add">Add set</a>
-                        <a href="#" class="orange-btn-outline active-workout-btn" data-action="complete">Complete all</a>
-                        <a href="{{ url_for('workouts.exercise_detail', exercise_id=wpe.exercise.id) }}" class="orange-btn active-workout-btn">Details</a>
                     </div>
-                </section>
-            {% endfor %}
-            <button type="button" id="save-complete-workout-btn" class="orange-btn-outline add-new-workout-btn" data-plan-id="{{ workout_plan.id }}">Workout opslaan en voltooien</button>
-        </section>
-    </form>
+                </div>
 
-    <script src="{{ url_for('static', filename='js/add-set.js') }}" defer></script>
-    <script>
-        const saveCompleteBtn = document.getElementById('save-complete-workout-btn');
-        if (saveCompleteBtn) {
-            saveCompleteBtn.addEventListener('click', function () {
-                const planId = this.getAttribute('data-plan-id');
-                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-                const form = document.getElementById('save-workout-form');
-                const formData = new FormData(form);
+                <div class="exercise-actions">
+                    <button class="btn-view-details" onclick="openExerciseModal('{{ exercise.id }}')">
+                        📋 Details
+                    </button>
+                    <button class="btn-view-video" onclick="searchYouTube('{{ exercise.name }}')">
+                        ▶️ Video
+                    </button>
+                </div>
+            </div>
 
-                console.log(`Saving and completing workout for plan_id: ${planId}, CSRF: ${csrfToken}`);
-                console.log('Form data entries:', [...formData.entries()]);
+            <!-- Sets Container -->
+            <div class="sets-container" id="sets-{{ wpe.id }}">
+                {% if wpe.is_cardio %}
+                    <!-- Cardio Set -->
+                    <div class="set-row">
+                        <span class="set-number">Sessie 1</span>
+                        <input type="number"
+                               class="set-input"
+                               placeholder="Duur (min)"
+                               name="duration_{{ wpe.id }}_0"
+                               step="0.1"
+                               min="0">
+                        <input type="number"
+                               class="set-input"
+                               placeholder="Afstand (km)"
+                               name="distance_{{ wpe.id }}_0"
+                               step="0.1"
+                               min="0">
+                        <input type="checkbox"
+                               class="set-checkbox"
+                               name="completed_{{ wpe.id }}_0"
+                               onchange="saveSet({{ wpe.id }}, 0, true)">
+                    </div>
+                {% else %}
+                    <!-- Strength Sets -->
+                    {% for i in range(wpe.sets or 3) %}
+                    <div class="set-row">
+                        <span class="set-number">Set {{ i + 1 }}</span>
+                        <input type="number"
+                               class="set-input"
+                               placeholder="Reps"
+                               name="reps_{{ wpe.id }}_{{ i }}"
+                               value="{{ wpe.reps or '' }}"
+                               min="0">
+                        <input type="number"
+                               class="set-input"
+                               placeholder="Gewicht (kg)"
+                               name="weight_{{ wpe.id }}_{{ i }}"
+                               value="{{ wpe.weight or '' }}"
+                               step="0.5"
+                               min="0">
+                        <input type="checkbox"
+                               class="set-checkbox"
+                               name="completed_{{ wpe.id }}_{{ i }}"
+                               onchange="saveSet({{ wpe.id }}, {{ i }}, false)">
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
 
-                // Step 1: Save workout
-                fetch(`/sessions/save_workout/${planId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: formData
-                })
-                .then(response => {
-                    console.log(`Save workout response status: ${response.status}`);
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            console.error('Save workout response text:', text);
-                            throw new Error(`Save workout failed! Status: ${response.status}, Response: ${text}`);
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Save workout response:', data);
-                    if (!data.success) {
-                        throw new Error(`Save workout error: ${data.message}`);
-                    }
-                    // Step 2: Complete workout
-                    console.log(`Completing workout for plan_id: ${planId}`);
-                    return fetch(`/sessions/complete_workout/${planId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-Token': csrfToken,
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({})
-                    });
-                })
-                .then(response => {
-                    console.log(`Complete workout response status: ${response.status}`);
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            console.error('Complete workout response text:', text);
-                            throw new Error(`Complete workout failed! Status: ${response.status}, Response: ${text}`);
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Complete workout response:', data);
-                    if (data.success) {
-                        alert('Workout succesvol opgeslagen en voltooid!');
-                        window.location.href = '{{ url_for('profile.workout_history') }}';
-                    } else {
-                        alert(`Fout bij voltooien: ${data.message}`);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(`Er ging iets mis: ${error.message}`);
-                });
-            });
-        } else {
-            console.error('Save and complete workout button not found');
+            <button class="add-set-btn" onclick="addSet({{ wpe.id }}, {{ wpe.is_cardio|lower }})">
+                ➕ Voeg Set Toe
+            </button>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Complete Workout Button -->
+<button class="complete-workout-btn" onclick="completeWorkout()">
+    ✅ Voltooi Workout
+</button>
+
+<!-- Exercise Detail Modal -->
+<div id="exerciseModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalExerciseName"></h2>
+            <span class="modal-close" onclick="closeExerciseModal()">&times;</span>
+        </div>
+        <div id="modalExerciseContent"></div>
+    </div>
+</div>
+
+<script>
+// Timer functionality
+let startTime = Date.now();
+let timerInterval;
+
+function updateTimer() {
+    const elapsed = Date.now() - startTime;
+    const hours = Math.floor(elapsed / 3600000);
+    const minutes = Math.floor((elapsed % 3600000) / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
+
+    document.getElementById('workout-timer').textContent =
+        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+timerInterval = setInterval(updateTimer, 1000);
+
+// Exercise data storage
+const exerciseData = {
+    {% for wpe in exercises %}
+    '{{ wpe.exercise.id }}': {
+        name: '{{ wpe.exercise.name }}',
+        images: {{ wpe.exercise.images|tojson }},
+        instructions: {{ wpe.exercise.instructions|tojson }},
+        level: '{{ wpe.exercise.level }}',
+        equipment: '{{ wpe.exercise.equipment }}',
+        category: '{{ wpe.exercise.category }}'
+    },
+    {% endfor %}
+};
+
+// Open exercise modal
+function openExerciseModal(exerciseId) {
+    const exercise = exerciseData[exerciseId];
+    if (!exercise) return;
+
+    document.getElementById('modalExerciseName').textContent = exercise.name;
+
+    let content = '';
+
+    // Images
+    if (exercise.images && exercise.images.length > 0) {
+        content += '<div class="exercise-images-gallery">';
+        exercise.images.forEach(img => {
+            const imgPath = img.startsWith('img/exercises/') ? img : `img/exercises/${img}`;
+            content += `<img src="/static/${imgPath}" alt="${exercise.name}" onerror="this.src='/static/img/placeholder.png'">`;
+        });
+        content += '</div>';
+    }
+
+    // Instructions
+    if (exercise.instructions && exercise.instructions.length > 0) {
+        content += '<div class="exercise-instructions">';
+        content += '<h3>📝 Instructies</h3>';
+        content += '<ol>';
+        exercise.instructions.forEach(instruction => {
+            content += `<li>${instruction}</li>`;
+        });
+        content += '</ol>';
+        content += '</div>';
+    }
+
+    // Meta info
+    content += '<div class="exercise-meta" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">';
+    content += `<p><strong>Niveau:</strong> ${exercise.level}</p>`;
+    if (exercise.equipment) content += `<p><strong>Apparatuur:</strong> ${exercise.equipment}</p>`;
+    content += `<p><strong>Categorie:</strong> ${exercise.category}</p>`;
+    content += '</div>';
+
+    document.getElementById('modalExerciseContent').innerHTML = content;
+    document.getElementById('exerciseModal').style.display = 'block';
+}
+
+// Close modal
+function closeExerciseModal() {
+    document.getElementById('exerciseModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('exerciseModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+
+// Search YouTube
+function searchYouTube(exerciseName) {
+    const query = encodeURIComponent(exerciseName + ' exercise tutorial');
+    window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
+}
+
+// Save set
+async function saveSet(wpeId, setNumber, isCardio) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    let data = {
+        wpe_id: wpeId,
+        set_number: setNumber,
+        completed: document.querySelector(`input[name="completed_${wpeId}_${setNumber}"]`).checked,
+        session_id: '{{ session_id }}'
+    };
+
+    if (isCardio) {
+        data.duration_minutes = parseFloat(document.querySelector(`input[name="duration_${wpeId}_${setNumber}"]`).value) || 0;
+        data.distance_km = parseFloat(document.querySelector(`input[name="distance_${wpeId}_${setNumber}"]`).value) || 0;
+    } else {
+        data.reps = parseFloat(document.querySelector(`input[name="reps_${wpeId}_${setNumber}"]`).value) || 0;
+        data.weight = parseFloat(document.querySelector(`input[name="weight_${wpeId}_${setNumber}"]`).value) || 0;
+    }
+
+    try {
+        const response = await fetch('/sessions/save_set', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            console.log('Set saved successfully');
         }
+    } catch (error) {
+        console.error('Error saving set:', error);
+    }
+}
 
-        const saveBtn = document.getElementById('save-workout-btn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', function () {
-                const planId = this.getAttribute('data-plan-id');
-                const csrfToken = document.querySelector('input[name="csrf_token"]').value;
-                const form = document.getElementById('save-workout-form');
-                const formData = new FormData(form);
+// Add new set
+function addSet(wpeId, isCardio) {
+    const container = document.getElementById(`sets-${wpeId}`);
+    const setCount = container.querySelectorAll('.set-row').length;
 
-                console.log(`Saving workout progress for plan_id: ${planId}, CSRF: ${csrfToken}`);
-                console.log('Form data entries:', [...formData.entries()]);
+    const setRow = document.createElement('div');
+    setRow.className = 'set-row';
 
-                fetch(`/sessions/save_workout/${planId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-Token': csrfToken
-                    },
-                    body: formData
-                })
-                .then(response => {
-                    console.log(`Save workout response status: ${response.status}`);
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            console.error('Save workout response text:', text);
-                            throw new Error(`Save workout failed! Status: ${response.status}, Response: ${text}`);
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Save workout response:', data);
-                    if (data.success) {
-                        alert('Vooruitgang succesvol opgeslagen!');
-                    } else {
-                        alert(`Fout bij opslaan: ${data.message}`);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert(`Er ging iets mis: ${error.message}`);
-                });
-            });
-        } else {
-            console.error('Save workout button not found');
+    if (isCardio) {
+        setRow.innerHTML = `
+            <span class="set-number">Sessie ${setCount + 1}</span>
+            <input type="number" class="set-input" placeholder="Duur (min)" name="duration_${wpeId}_${setCount}" step="0.1" min="0">
+            <input type="number" class="set-input" placeholder="Afstand (km)" name="distance_${wpeId}_${setCount}" step="0.1" min="0">
+            <input type="checkbox" class="set-checkbox" name="completed_${wpeId}_${setCount}" onchange="saveSet(${wpeId}, ${setCount}, true)">
+        `;
+    } else {
+        setRow.innerHTML = `
+            <span class="set-number">Set ${setCount + 1}</span>
+            <input type="number" class="set-input" placeholder="Reps" name="reps_${wpeId}_${setCount}" min="0">
+            <input type="number" class="set-input" placeholder="Gewicht (kg)" name="weight_${wpeId}_${setCount}" step="0.5" min="0">
+            <input type="checkbox" class="set-checkbox" name="completed_${wpeId}_${setCount}" onchange="saveSet(${wpeId}, ${setCount}, false)">
+        `;
+    }
+
+    container.appendChild(setRow);
+}
+
+// Complete workout
+async function completeWorkout() {
+    if (!confirm('Weet je zeker dat je deze workout wilt voltooien?')) {
+        return;
+    }
+
+    clearInterval(timerInterval);
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    try {
+        const response = await fetch('/sessions/complete_workout/{{ workout_plan.id }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            }
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            alert('🎉 Workout voltooid! Goed gedaan!');
+            window.location.href = '/index';
         }
-    </script>
-
-
-
+    } catch (error) {
+        console.error('Error completing workout:', error);
+        alert('Er is een fout opgetreden. Probeer opnieuw.');
+    }
+}
+</script>
 {% endblock %}

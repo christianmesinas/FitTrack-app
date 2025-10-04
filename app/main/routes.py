@@ -5,7 +5,7 @@ import random
 from . import bp as main, logger
 from ..decorators import get_user_workout_plans, check_onboarding_status, get_workout_data
 from ..forms import DeleteWorkoutForm
-from ..models import WorkoutSession, WeightLog, SetLog, Exercise, WorkoutPlanExercise
+from ..models import WorkoutSession, WeightLog, SetLog, Exercise, WorkoutPlanExercise, CalendarEvent
 from .. import db
 
 
@@ -25,29 +25,51 @@ def get_motivational_quote():
 
 
 def calculate_workout_stats(user_id):
-    """Bereken workout statistieken voor de gebruiker"""
+    """Bereken workout statistieken voor de gebruiker - inclusief kalender events"""
     now = datetime.now()
 
     # Deze maand
     start_of_month = datetime(now.year, now.month, 1)
-    workouts_this_month = WorkoutSession.query.filter(
+
+    # WorkoutSessions deze maand
+    sessions_this_month = WorkoutSession.query.filter(
         WorkoutSession.user_id == user_id,
         WorkoutSession.completed_at >= start_of_month,
         WorkoutSession.is_completed == True
     ).count()
 
+    # CalendarEvents deze maand (voltooide workouts)
+    calendar_events_this_month = CalendarEvent.query.filter(
+        CalendarEvent.user_id == user_id,
+        CalendarEvent.start_datetime >= start_of_month,
+        CalendarEvent.status == 'completed',
+        CalendarEvent.event_type.in_(['workout', 'cardio'])  # Alleen workout/cardio tellen
+    ).count()
+
+    workouts_this_month = sessions_this_month + calendar_events_this_month
+
     # Deze week
     start_of_week = now - timedelta(days=now.weekday())
-    workouts_this_week = WorkoutSession.query.filter(
+
+    sessions_this_week = WorkoutSession.query.filter(
         WorkoutSession.user_id == user_id,
         WorkoutSession.completed_at >= start_of_week,
         WorkoutSession.is_completed == True
     ).count()
 
-    # Streak berekenen
-    streak_days = calculate_streak(user_id)
+    calendar_events_this_week = CalendarEvent.query.filter(
+        CalendarEvent.user_id == user_id,
+        CalendarEvent.start_datetime >= start_of_week,
+        CalendarEvent.status == 'completed',
+        CalendarEvent.event_type.in_(['workout', 'cardio'])
+    ).count()
 
-    # Gewicht vooruitgang
+    workouts_this_week = sessions_this_week + calendar_events_this_week
+
+    # Streak berekenen - combineer beide bronnen
+    streak_days = calculate_combined_streak(user_id)
+
+    # Gewicht vooruitgang (blijft hetzelfde)
     latest_weight = WeightLog.query.filter_by(user_id=user_id).order_by(WeightLog.logged_at.desc()).first()
     first_weight = WeightLog.query.filter_by(user_id=user_id).order_by(WeightLog.logged_at).first()
 
@@ -63,38 +85,62 @@ def calculate_workout_stats(user_id):
     }
 
 
-def calculate_streak(user_id):
-    """Bereken de huidige workout streak"""
+def calculate_combined_streak(user_id):
+    """Bereken de workout streak gebaseerd op zowel WorkoutSessions als CalendarEvents"""
+    # Haal alle workout datums op van beide bronnen
+    workout_dates = set()
+
+    # WorkoutSession datums
     sessions = WorkoutSession.query.filter(
         WorkoutSession.user_id == user_id,
         WorkoutSession.is_completed == True
     ).order_by(WorkoutSession.completed_at.desc()).all()
 
-    if not sessions:
+    for session in sessions:
+        workout_dates.add(session.completed_at.date())
+
+    # CalendarEvent datums (voltooide workouts)
+    events = CalendarEvent.query.filter(
+        CalendarEvent.user_id == user_id,
+        CalendarEvent.status == 'completed',
+        CalendarEvent.event_type.in_(['workout', 'cardio'])
+    ).order_by(CalendarEvent.start_datetime.desc()).all()
+
+    for event in events:
+        workout_dates.add(event.start_datetime.date())
+
+    if not workout_dates:
         return 0
 
+    # Sorteer de datums (nieuwste eerst)
+    sorted_dates = sorted(workout_dates, reverse=True)
+
+    # Check streak
     streak = 0
-    last_date = None
+    today = datetime.now().date()
+    yesterday = today - timedelta(days=1)
 
-    for session in sessions:
-        session_date = session.completed_at.date()
+    # Start streak alleen als er vandaag of gisteren getraind is
+    if sorted_dates[0] != today and sorted_dates[0] != yesterday:
+        return 0
 
-        if last_date is None:
-            # Eerste sessie - check of het vandaag of gisteren was
-            if (datetime.now().date() - session_date).days <= 1:
-                streak = 1
-                last_date = session_date
-            else:
-                break
+    last_date = sorted_dates[0]
+    streak = 1
+
+    for i in range(1, len(sorted_dates)):
+        current_date = sorted_dates[i]
+        if (last_date - current_date).days == 1:
+            streak += 1
+            last_date = current_date
         else:
-            # Check of deze sessie aansluitend is
-            if (last_date - session_date).days == 1:
-                streak += 1
-                last_date = session_date
-            else:
-                break
+            break
 
     return streak
+
+
+def calculate_streak(user_id):
+    """Bereken de huidige workout streak - LEGACY functie, gebruik calculate_combined_streak"""
+    return calculate_combined_streak(user_id)
 
 
 def get_last_workout(user_id):
@@ -116,7 +162,7 @@ def get_last_workout(user_id):
 
 
 def get_week_activity(user_id):
-    """Krijg week activiteit voor visualisatie"""
+    """Krijg week activiteit voor visualisatie - inclusief kalender events"""
     days = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo']
     week_activity = []
     now = datetime.now()
@@ -124,16 +170,26 @@ def get_week_activity(user_id):
 
     for i, day in enumerate(days):
         day_date = start_of_week + timedelta(days=i)
-        has_workout = WorkoutSession.query.filter(
+
+        # Check WorkoutSessions
+        has_session = WorkoutSession.query.filter(
             WorkoutSession.user_id == user_id,
             db.func.date(WorkoutSession.completed_at) == day_date.date(),
             WorkoutSession.is_completed == True
         ).first() is not None
 
+        # Check CalendarEvents
+        has_event = CalendarEvent.query.filter(
+            CalendarEvent.user_id == user_id,
+            db.func.date(CalendarEvent.start_datetime) == day_date.date(),
+            CalendarEvent.status == 'completed',
+            CalendarEvent.event_type.in_(['workout', 'cardio'])
+        ).first() is not None
+
         week_activity.append({
             'name': day,
             'letter': day[0],
-            'completed': has_workout
+            'completed': has_session or has_event  # True als één van beide bestaat
         })
 
     return week_activity

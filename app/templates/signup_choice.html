@@ -35,11 +35,54 @@
       flex-direction: column;
       align-items: center;
       min-height: 250px;
+      position: relative;
     }
 
     .choice-card:hover {
       transform: translateY(-10px);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    /* DISABLED STATE VOOR TRAINER */
+    .choice-card.disabled {
+      opacity: 0.6;
+      filter: grayscale(50%);
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .choice-card.disabled:hover {
+      transform: none;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    /* COMING SOON BADGE */
+    .coming-soon-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
+      animation: pulse 2s infinite;
+      z-index: 10;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.5);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.7);
+      }
     }
 
     .choice-icon {
@@ -69,6 +112,24 @@
       color: #666;
       font-size: 0.95rem;
       line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+
+    /* INFO BOX ONDER TRAINER CARD */
+    .info-box {
+      margin-top: auto;
+      padding: 12px 15px;
+      background: rgba(102, 126, 234, 0.1);
+      border-radius: 10px;
+      border-left: 3px solid #667eea;
+      width: 100%;
+    }
+
+    .info-box p {
+      margin: 0;
+      color: #667eea;
+      font-size: 13px;
+      font-weight: 600;
     }
 
     .welcome-text {
@@ -98,6 +159,13 @@
       .choice-card {
         min-height: 200px;
       }
+
+      .coming-soon-badge {
+        font-size: 10px;
+        padding: 6px 15px;
+        top: 10px;
+        right: 10px;
+      }
     }
   </style>
 </head>
@@ -124,6 +192,7 @@
       <p class="welcome-text">Welkom! Hoe wil je FitTrack+ gebruiken?</p>
 
       <div class="choice-cards">
+        <!-- GEBRUIKER OPTIE - ACTIEF -->
         <a href="/signup/particular" class="choice-card">
           <div class="choice-icon">
             <span style="color: white;">💪</span>
@@ -134,7 +203,11 @@
           </p>
         </a>
 
-        <a href="/signup/coach" class="choice-card trainer">
+        <!-- TRAINER OPTIE - DISABLED -->
+        <div class="choice-card trainer disabled">
+          <!-- Coming Soon Badge -->
+          <span class="coming-soon-badge">🚀 Binnenkort</span>
+
           <div class="choice-icon">
             <span style="color: white;">🏆</span>
           </div>
@@ -142,9 +215,33 @@
           <p class="choice-description">
             Beheer je klanten, maak trainingsschema's en volg hun vooruitgang
           </p>
-        </a>
+
+          <!-- Info Box -->
+          <div class="info-box">
+            <p>⚙️ In ontwikkeling - Kom binnenkort terug!</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- JavaScript voor extra feedback bij klikken op disabled card -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const trainerCard = document.querySelector('.choice-card.disabled');
+
+      if (trainerCard) {
+        // Maak de card tijdelijk klikbaar voor feedback
+        trainerCard.style.pointerEvents = 'auto';
+
+        trainerCard.addEventListener('click', function(e) {
+          e.preventDefault();
+
+          // Toon vriendelijk bericht
+          alert('🚀 De trainer functionaliteit is binnenkort beschikbaar!\n\nWe werken er hard aan om deze functie voor je klaar te maken. Kom snel terug voor updates!');
+        });
+      }
+    });
+  </script>
 </body>
 </html>

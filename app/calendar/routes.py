@@ -5,6 +5,7 @@ from . import bp
 from app import db
 from app.models import CalendarEvent, WorkoutPlan, WorkoutSession
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -201,35 +202,70 @@ def delete_event(event_id):
 @bp.route('/event/<int:event_id>/complete', methods=['POST'])
 @login_required
 def complete_event(event_id):
-    """Marquer un événement comme complété"""
+    """Marquer un événement comme complété et créer optionnellement une WorkoutSession"""
     try:
         event = CalendarEvent.query.filter_by(
             id=event_id,
             user_id=current_user.id
         ).first_or_404()
 
+        # Marquer l'événement comme complété
         event.status = 'completed'
         event.color = '#4CAF50'  # Vert pour complété
 
+        # Si c'est lié à un workout plan, créer une WorkoutSession
+        if event.workout_plan_id and event.event_type in ['workout', 'cardio']:
+            # Calculer la durée
+            duration = None
+            if event.end_datetime and event.start_datetime:
+                delta = event.end_datetime - event.start_datetime
+                duration = int(delta.total_seconds() / 60)
+
+            # Créer la session
+            workout_session = WorkoutSession(
+                id=str(uuid.uuid4()),
+                user_id=current_user.id,
+                workout_plan_id=event.workout_plan_id,
+                started_at=event.start_datetime,
+                completed_at=datetime.now(timezone.utc),
+                duration_minutes=duration or 60,
+                is_completed=True,
+                total_sets=0,  # Ces valeurs peuvent être mises à jour plus tard
+                total_reps=0,
+                total_weight=0.0
+            )
+
+            db.session.add(workout_session)
+
+            # Message personnalisé pour workout avec plan
+            message = f'Training "{event.title}" voltooid! 🎉'
+            response_data = {
+                'success': True,
+                'message': message,
+                'workout_plan_id': event.workout_plan_id,
+                'workout_session_id': workout_session.id,
+                'redirect_to_workout': True
+            }
+        else:
+            # Pour les événements sans workout plan ou non-workout
+            message = f'Événement "{event.title}" marqué comme complété!'
+            response_data = {
+                'success': True,
+                'message': message
+            }
+
         db.session.commit()
 
-        # Si c'est lié à un workout, proposer de démarrer la session
+        # Log pour debug
+        logger.info(f"Event {event_id} marked as completed by user {current_user.id}")
         if event.workout_plan_id:
-            return jsonify({
-                'success': True,
-                'message': 'Événement marqué comme complété!',
-                'workout_plan_id': event.workout_plan_id,
-                'redirect_to_workout': True
-            })
+            logger.info(f"WorkoutSession created for workout_plan {event.workout_plan_id}")
 
-        return jsonify({
-            'success': True,
-            'message': 'Événement marqué comme complété!'
-        })
+        return jsonify(response_data)
 
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Erreur: {str(e)}")
+        logger.error(f"Erreur lors de la complétion de l'événement {event_id}: {str(e)}")
         return jsonify({
             'success': False,
             'message': f'Erreur: {str(e)}'
@@ -292,3 +328,65 @@ def week_view():
     return render_template('calendar/week_view.html',
                            events_by_day=events_by_day,
                            start_of_week=start_of_week)
+
+
+# Nieuwe functie voor synchronisatie
+@bp.route('/sync-stats', methods=['POST'])
+@login_required
+def sync_workout_stats():
+    """Synchroniser les statistiques entre CalendarEvents et WorkoutSessions"""
+    try:
+        # Compter les événements complétés qui n'ont pas de WorkoutSession correspondante
+        completed_events = CalendarEvent.query.filter_by(
+            user_id=current_user.id,
+            status='completed'
+        ).filter(
+            CalendarEvent.event_type.in_(['workout', 'cardio'])
+        ).all()
+
+        synced_count = 0
+        for event in completed_events:
+            # Vérifier s'il existe déjà une session pour cette date
+            existing_session = WorkoutSession.query.filter(
+                WorkoutSession.user_id == current_user.id,
+                WorkoutSession.workout_plan_id == event.workout_plan_id,
+                db.func.date(WorkoutSession.completed_at) == db.func.date(event.start_datetime)
+            ).first()
+
+            if not existing_session and event.workout_plan_id:
+                # Créer une session rétroactive
+                duration = 60  # Par défaut
+                if event.end_datetime and event.start_datetime:
+                    delta = event.end_datetime - event.start_datetime
+                    duration = int(delta.total_seconds() / 60)
+
+                workout_session = WorkoutSession(
+                    id=str(uuid.uuid4()),
+                    user_id=current_user.id,
+                    workout_plan_id=event.workout_plan_id,
+                    started_at=event.start_datetime,
+                    completed_at=event.start_datetime + timedelta(minutes=duration),
+                    duration_minutes=duration,
+                    is_completed=True,
+                    total_sets=0,
+                    total_reps=0,
+                    total_weight=0.0
+                )
+                db.session.add(workout_session)
+                synced_count += 1
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'{synced_count} événements synchronisés avec succès!',
+            'synced_count': synced_count
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Erreur lors de la synchronisation: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Erreur: {str(e)}'
+        }), 500

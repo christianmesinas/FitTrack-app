@@ -391,6 +391,7 @@
 {% endif %}
 
 <style>
+/* [Alle CSS blijft hetzelfde - behouden van originele styling] */
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -691,6 +692,12 @@
 .btn-use-template:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 20px rgba(255,145,75,0.3);
+}
+
+.btn-use-template:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Search Guide */
@@ -1175,92 +1182,6 @@
 </style>
 
 <script>
-// Template definitions with exercises
-const workoutTemplates = {
-    fullbody: {
-        name: "Full Body Workout",
-        exercises: [
-            { name: "Barbell Squat", sets: 3, reps: "8-10" },
-            { name: "Bench Press", sets: 3, reps: "8-10" },
-            { name: "Bent-Over Row", sets: 3, reps: "8-10" },
-            { name: "Overhead Press", sets: 3, reps: "8-10" },
-            { name: "Romanian Deadlift", sets: 3, reps: "10-12" },
-            { name: "Pull-ups", sets: 3, reps: "8-12" },
-            { name: "Dumbbell Curls", sets: 3, reps: "12-15" },
-            { name: "Tricep Dips", sets: 3, reps: "12-15" }
-        ]
-    },
-    push: {
-        name: "Push Day",
-        exercises: [
-            { name: "Barbell Bench Press", sets: 4, reps: "6-8" },
-            { name: "Incline Dumbbell Press", sets: 3, reps: "8-10" },
-            { name: "Cable Fly", sets: 3, reps: "12-15" },
-            { name: "Overhead Press", sets: 4, reps: "6-8" },
-            { name: "Lateral Raises", sets: 4, reps: "12-15" },
-            { name: "Rear Delt Fly", sets: 3, reps: "15-20" },
-            { name: "Close-Grip Bench Press", sets: 3, reps: "8-10" },
-            { name: "Cable Tricep Pushdown", sets: 3, reps: "12-15" },
-            { name: "Overhead Tricep Extension", sets: 3, reps: "12-15" }
-        ]
-    },
-    pull: {
-        name: "Pull Day",
-        exercises: [
-            { name: "Deadlift", sets: 4, reps: "5-6" },
-            { name: "Pull-ups", sets: 4, reps: "6-10" },
-            { name: "Barbell Row", sets: 4, reps: "8-10" },
-            { name: "Cable Row", sets: 3, reps: "10-12" },
-            { name: "T-Bar Row", sets: 3, reps: "10-12" },
-            { name: "Face Pulls", sets: 3, reps: "15-20" },
-            { name: "Barbell Curls", sets: 4, reps: "8-10" },
-            { name: "Hammer Curls", sets: 3, reps: "10-12" },
-            { name: "Cable Curls", sets: 3, reps: "12-15" }
-        ]
-    },
-    legs: {
-        name: "Leg Day",
-        exercises: [
-            { name: "Back Squat", sets: 4, reps: "6-8" },
-            { name: "Romanian Deadlift", sets: 4, reps: "8-10" },
-            { name: "Front Squat", sets: 3, reps: "8-10" },
-            { name: "Leg Press", sets: 3, reps: "12-15" },
-            { name: "Walking Lunges", sets: 3, reps: "10 per leg" },
-            { name: "Leg Curls", sets: 4, reps: "12-15" },
-            { name: "Leg Extensions", sets: 3, reps: "12-15" },
-            { name: "Calf Raises", sets: 4, reps: "15-20" },
-            { name: "Bulgarian Split Squats", sets: 3, reps: "10 per leg" },
-            { name: "Plank", sets: 3, reps: "60 sec" }
-        ]
-    },
-    upper: {
-        name: "Upper Body",
-        exercises: [
-            { name: "Bench Press", sets: 4, reps: "8-10" },
-            { name: "Bent-Over Row", sets: 4, reps: "8-10" },
-            { name: "Overhead Press", sets: 3, reps: "8-10" },
-            { name: "Pull-ups", sets: 3, reps: "8-12" },
-            { name: "Dumbbell Flyes", sets: 3, reps: "12-15" },
-            { name: "Lateral Raises", sets: 3, reps: "12-15" },
-            { name: "Barbell Curls", sets: 3, reps: "10-12" },
-            { name: "Skull Crushers", sets: 3, reps: "10-12" }
-        ]
-    },
-    arms: {
-        name: "Arm Day",
-        exercises: [
-            { name: "Barbell Curls", sets: 4, reps: "8-10" },
-            { name: "Close-Grip Bench Press", sets: 4, reps: "8-10" },
-            { name: "Hammer Curls", sets: 3, reps: "10-12" },
-            { name: "Overhead Tricep Extension", sets: 3, reps: "10-12" },
-            { name: "Preacher Curls", sets: 3, reps: "10-12" },
-            { name: "Cable Tricep Pushdown", sets: 3, reps: "12-15" },
-            { name: "Cable Curls", sets: 3, reps: "12-15" },
-            { name: "Diamond Push-ups", sets: 3, reps: "max" }
-        ]
-    }
-};
-
 // Toggle between templates and custom section
 document.getElementById('templates-choice').addEventListener('click', function() {
     document.getElementById('templates-section').style.display = 'block';
@@ -1276,38 +1197,67 @@ document.getElementById('custom-choice').addEventListener('click', function() {
     document.getElementById('templates-choice').classList.remove('active');
 });
 
-// Use workout template
+// Use workout template - FIXED VERSION
 function useTemplate(templateKey) {
-    const template = workoutTemplates[templateKey];
-    const planId = document.getElementById('exercise-list').getAttribute('data-plan-id');
+    const planId = document.getElementById('exercise-list') ?
+        document.getElementById('exercise-list').getAttribute('data-plan-id') : null;
 
     if (!planId || planId === '0') {
         alert('Maak eerst een workout aan voordat je een schema toevoegt.');
+        window.location.href = "{{ url_for('workouts.add_workout') }}";
         return;
     }
 
-    // Show loading state
-    showSuccessToast(`⏳ ${template.name} wordt toegevoegd...`);
+    // Disable button
+    const button = event.target.closest('.btn-use-template');
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span>⏳</span> Bezig met toevoegen...';
 
-    // Add all exercises from template
     const csrfToken = "{{ form.csrf_token._value() }}";
-    let addedCount = 0;
+    const url = `{{ url_for('workouts.use_template', plan_id=0) }}`.replace('/0/', `/${planId}/`);
 
-    template.exercises.forEach((exercise, index) => {
-        setTimeout(() => {
-            // Simulate adding exercise (in real implementation, this would be an API call)
-            console.log(`Adding ${exercise.name} - ${exercise.sets}x${exercise.reps}`);
-            addedCount++;
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            template_key: templateKey
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(err => {
+                throw new Error(err.message || 'Server error');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showSuccessToast(`✅ ${data.message}`);
 
-            if (addedCount === template.exercises.length) {
-                showSuccessToast(`✅ ${template.name} succesvol toegevoegd!`);
-
-                // Optionally redirect to workout edit page
-                setTimeout(() => {
-                    window.location.href = `{{ url_for('workouts.edit_workout', plan_id=0) }}`.replace('/0', `/${planId}`);
-                }, 2000);
+            // Show details if some exercises weren't found
+            if (data.not_found && data.not_found.length > 0) {
+                console.warn('Niet gevonden oefeningen:', data.not_found);
             }
-        }, index * 100); // Stagger the additions
+
+            // Redirect to workout edit page after 2 seconds
+            setTimeout(() => {
+                window.location.href = `{{ url_for('workouts.edit_workout', plan_id=0) }}`.replace('/0', `/${planId}`);
+            }, 2000);
+        } else {
+            throw new Error(data.message || 'Onbekende fout');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(`Er ging iets mis: ${error.message}`);
+        button.disabled = false;
+        button.innerHTML = originalText;
     });
 }
 
@@ -1356,16 +1306,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const loadMoreBtn = document.getElementById("load-more-btn");
     const exerciseList = document.getElementById("exercise-list");
     const filterForm = document.getElementById("filter-form");
-    const planId = exerciseList.getAttribute('data-plan-id');
+    const planId = exerciseList ? exerciseList.getAttribute('data-plan-id') : null;
     const csrfToken = "{{ form.csrf_token._value() }}";
 
     // Count exercises on load
-    const exerciseCount = document.querySelectorAll('.exercise-block').length;
-    if (exerciseCount > 0) {
-        const countElement = document.getElementById('results-count');
-        if (countElement) {
-            countElement.style.display = 'inline';
-            countElement.querySelector('.count-number').textContent = exerciseCount;
+    if (exerciseList) {
+        const exerciseCount = exerciseList.querySelectorAll('.exercise-block').length;
+        if (exerciseCount > 0) {
+            const countElement = document.getElementById('results-count');
+            if (countElement) {
+                countElement.style.display = 'inline';
+                countElement.querySelector('.count-number').textContent = exerciseCount;
+            }
         }
     }
 
@@ -1388,23 +1340,25 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .then(response => response.text())
             .then(data => {
-                exerciseList.innerHTML = data;
+                if (exerciseList) {
+                    exerciseList.innerHTML = data;
 
-                const newUrl = `${window.location.pathname}?${params.toString()}`;
-                window.history.pushState({}, '', newUrl);
+                    const newUrl = `${window.location.pathname}?${params.toString()}`;
+                    window.history.pushState({}, '', newUrl);
 
-                // Update count
-                const newCount = exerciseList.querySelectorAll('.exercise-block').length;
-                const countElement = document.getElementById('results-count');
-                if (countElement) {
-                    countElement.style.display = newCount > 0 ? 'inline' : 'none';
-                    countElement.querySelector('.count-number').textContent = newCount;
-                }
+                    // Update count
+                    const newCount = exerciseList.querySelectorAll('.exercise-block').length;
+                    const countElement = document.getElementById('results-count');
+                    if (countElement) {
+                        countElement.style.display = newCount > 0 ? 'inline' : 'none';
+                        countElement.querySelector('.count-number').textContent = newCount;
+                    }
 
-                const hasResults = exerciseList.children.length > 0;
-                if (loadMoreBtn) {
-                    loadMoreBtn.style.display = hasResults ? 'block' : 'none';
-                    loadMoreBtn.setAttribute("data-next-page", "2");
+                    const hasResults = exerciseList.children.length > 0;
+                    if (loadMoreBtn) {
+                        loadMoreBtn.style.display = hasResults ? 'block' : 'none';
+                        loadMoreBtn.setAttribute("data-next-page", "2");
+                    }
                 }
             })
             .catch(error => {
@@ -1456,70 +1410,72 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Add exercise to plan with improved feedback
-    exerciseList.addEventListener("click", function(e) {
-        if (e.target.classList.contains("add-exercise")) {
-            e.preventDefault();
+    if (exerciseList) {
+        exerciseList.addEventListener("click", function(e) {
+            if (e.target.classList.contains("add-exercise")) {
+                e.preventDefault();
 
-            const exerciseId = e.target.getAttribute("data-exercise-id");
-            const nextUrl = e.target.getAttribute("data-next");
-            if (!exerciseId || !planId || planId === '0') {
-                alert("Maak eerst een workout aan voordat je oefeningen toevoegt.");
-                return;
-            }
-
-            const baseUrl = "{{ url_for('workouts.add_exercise_to_workout', plan_id=0, exercise_id=0) }}";
-            const url = baseUrl.replace('/0/', `/${planId}/`).replace('/0', `/${exerciseId}`);
-
-            // Visual feedback - disable button
-            e.target.classList.add('loading');
-            e.target.textContent = '...';
-
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-Token": csrfToken,
-                    "X-Requested-With": "XMLHttpRequest"
-                },
-                body: JSON.stringify({ exercise_id: exerciseId, plan_id: planId, next: nextUrl })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.message || 'Onbekende fout');
-                    });
+                const exerciseId = e.target.getAttribute("data-exercise-id");
+                const nextUrl = e.target.getAttribute("data-next");
+                if (!exerciseId || !planId || planId === '0') {
+                    alert("Maak eerst een workout aan voordat je oefeningen toevoegt.");
+                    return;
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    showSuccessToast('✅ Oefening toegevoegd aan je workout!');
-                    e.target.textContent = "✓";
-                    e.target.classList.remove('loading');
-                    e.target.classList.add("completed");
 
-                    // Animate the exercise block
-                    const exerciseBlock = e.target.closest('.exercise-block');
-                    if (exerciseBlock) {
-                        exerciseBlock.style.backgroundColor = '#f0fff0';
-                        setTimeout(() => {
-                            exerciseBlock.style.backgroundColor = '';
-                        }, 1000);
+                const baseUrl = "{{ url_for('workouts.add_exercise_to_workout', plan_id=0, exercise_id=0) }}";
+                const url = baseUrl.replace('/0/', `/${planId}/`).replace('/0', `/${exerciseId}`);
+
+                // Visual feedback - disable button
+                e.target.classList.add('loading');
+                e.target.textContent = '...';
+
+                fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-Token": csrfToken,
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: JSON.stringify({ exercise_id: exerciseId, plan_id: planId, next: nextUrl })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || 'Onbekende fout');
+                        });
                     }
-                } else {
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showSuccessToast('✅ Oefening toegevoegd aan je workout!');
+                        e.target.textContent = "✓";
+                        e.target.classList.remove('loading');
+                        e.target.classList.add("completed");
+
+                        // Animate the exercise block
+                        const exerciseBlock = e.target.closest('.exercise-block');
+                        if (exerciseBlock) {
+                            exerciseBlock.style.backgroundColor = '#f0fff0';
+                            setTimeout(() => {
+                                exerciseBlock.style.backgroundColor = '';
+                            }, 1000);
+                        }
+                    } else {
+                        e.target.classList.remove('loading');
+                        e.target.textContent = '+';
+                        alert("Kon oefening niet toevoegen: " + (data.message || "Onbekende fout"));
+                    }
+                })
+                .catch(err => {
                     e.target.classList.remove('loading');
                     e.target.textContent = '+';
-                    alert("Kon oefening niet toevoegen: " + (data.message || "Onbekende fout"));
-                }
-            })
-            .catch(err => {
-                e.target.classList.remove('loading');
-                e.target.textContent = '+';
-                console.error("Fout bij toevoegen oefening:", err);
-                alert("Netwerkfout: " + err.message);
-            });
-        }
-    });
+                    console.error("Fout bij toevoegen oefening:", err);
+                    alert("Netwerkfout: " + err.message);
+                });
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

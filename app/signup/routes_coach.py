@@ -11,7 +11,19 @@ logger = logging.getLogger(__name__)
 @signup_bp.route('/coach', methods=['GET', 'POST'])
 @login_required
 def signup_coach():
-    """Registratie proces voor trainers/coaches"""
+    """Registratie proces voor trainers/coaches - TIJDELIJK UITGESCHAKELD"""
+
+    # ===================================================================
+    # TIJDELIJKE BLOKKADE - Trainer functionaliteit in ontwikkeling
+    # ===================================================================
+    flash('🚀 De trainer functionaliteit is binnenkort beschikbaar! We werken er hard aan.', 'info')
+    logger.info(f"Trainer registratie poging geblokkeerd voor gebruiker: {current_user.email}")
+    return redirect(url_for('signup.signup_choice'))
+
+    # ===================================================================
+    # ORIGINELE CODE HIERONDER - BLIJFT BEHOUDEN VOOR LATER GEBRUIK
+    # Uncomment de code hieronder wanneer de trainer functie klaar is
+    # ===================================================================
 
     # Check of gebruiker al een account type heeft
     if hasattr(current_user, 'account_type') and current_user.account_type:

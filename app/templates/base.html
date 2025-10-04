@@ -79,24 +79,27 @@
             <span>Profiel</span>
         </a>
 
-
         <!-- 3. Calendar -->
         <a href="{{ url_for('calendar.agenda') }}" class="nav-item">
             <i class="fas fa-calendar-alt"></i>
             <span>Agenda</span>
         </a>
 
-        <!-- 4. Workout Toevoegen -->
+        <!-- 4. Workout Toevoegen (VERBORGEN - verwijder comments om te activeren) -->
+        <!--
         <a href="#" class="nav-item" onclick="alert('Ga naar de workouts pagina om een nieuwe workout toe te voegen!'); window.location.href='{{ url_for("main.index") }}'; return false;">
             <i class="fas fa-plus-circle"></i>
             <span>Toevoegen</span>
         </a>
+        -->
 
-        <!-- 5. Settings (nieuwe knop - route moet nog gemaakt worden) -->
+        <!-- 5. Settings (VERBORGEN - verwijder comments om te activeren) -->
+        <!--
         <a href="#" class="nav-item" onclick="alert('Settings functie komt binnenkort!'); return false;">
             <i class="fas fa-cog"></i>
             <span>Settings</span>
         </a>
+        -->
 
         <!-- 6. Uitloggen -->
         <a href="{{ url_for('auth.logout') }}" class="nav-item">

@@ -602,3 +602,151 @@ def archived_plans():
     workout_plans = get_user_workout_plans(current_user.id, archived=True)
     workout_data = get_workout_data(workout_plans)
     return render_template('archived_workouts.html', workout_data=workout_data)
+
+
+@workouts.route('/<int:plan_id>/use_template', methods=['POST'])
+@login_required
+@owns_workout_plan
+def use_template(plan_id):
+    """Voeg een voorgemaakt workout template toe aan een plan."""
+    try:
+        data = request.get_json()
+        template_key = data.get('template_key')
+
+        if not template_key:
+            return jsonify({'success': False, 'message': 'Template key is required'}), 400
+
+        # Template definities met exercise namen en configuratie
+        templates = {
+            'fullbody': [
+                {'name': 'Barbell Squat', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Bench Press', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Bent Over Barbell Row', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Shoulder Press', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Romanian Deadlift', 'sets': 3, 'reps': 12, 'weight': 0},
+                {'name': 'Pullups', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Dumbbell Bicep Curl', 'sets': 3, 'reps': 15, 'weight': 0},
+                {'name': 'Dips - Triceps Version', 'sets': 3, 'reps': 15, 'weight': 0}
+            ],
+            'push': [
+                {'name': 'Barbell Bench Press - Medium Grip', 'sets': 4, 'reps': 8, 'weight': 0},
+                {'name': 'Incline Dumbbell Press', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Cable Crossover', 'sets': 3, 'reps': 15, 'weight': 0},
+                {'name': 'Shoulder Press', 'sets': 4, 'reps': 8, 'weight': 0},
+                {'name': 'Side Lateral Raise', 'sets': 4, 'reps': 15, 'weight': 0},
+                {'name': 'Reverse Flyes', 'sets': 3, 'reps': 20, 'weight': 0},
+                {'name': 'Close-Grip Barbell Bench Press', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Triceps Pushdown', 'sets': 3, 'reps': 15, 'weight': 0},
+                {'name': 'Overhead Cable Curl', 'sets': 3, 'reps': 15, 'weight': 0}
+            ],
+            'pull': [
+                {'name': 'Deadlift', 'sets': 4, 'reps': 6, 'weight': 0},
+                {'name': 'Pullups', 'sets': 4, 'reps': 10, 'weight': 0},
+                {'name': 'Bent Over Barbell Row', 'sets': 4, 'reps': 10, 'weight': 0},
+                {'name': 'Seated Cable Rows', 'sets': 3, 'reps': 12, 'weight': 0},
+                {'name': 'T-Bar Row', 'sets': 3, 'reps': 12, 'weight': 0},
+                {'name': 'Face Pull', 'sets': 3, 'reps': 20, 'weight': 0},
+                {'name': 'Barbell Curl', 'sets': 4, 'reps': 10, 'weight': 0},
+                {'name': 'Hammer Curls', 'sets': 3, 'reps': 12, 'weight': 0},
+                {'name': 'Cable Curl', 'sets': 3, 'reps': 15, 'weight': 0}
+            ],
+            'legs': [
+                {'name': 'Barbell Squat', 'sets': 4, 'reps': 8, 'weight': 0},
+                {'name': 'Romanian Deadlift', 'sets': 4, 'reps': 10, 'weight': 0},
+                {'name': 'Barbell Front Squat', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Leg Press', 'sets': 3, 'reps': 15, 'weight': 0},
+                {'name': 'Barbell Walking Lunge', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Lying Leg Curls', 'sets': 4, 'reps': 15, 'weight': 0},
+                {'name': 'Leg Extensions', 'sets': 3, 'reps': 15, 'weight': 0},
+                {'name': 'Standing Calf Raises', 'sets': 4, 'reps': 20, 'weight': 0},
+                {'name': 'Bulgarian Split Squat', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Plank', 'sets': 3, 'reps': 60, 'weight': 0}
+            ],
+            'upper': [
+                {'name': 'Bench Press', 'sets': 4, 'reps': 10, 'weight': 0},
+                {'name': 'Bent Over Barbell Row', 'sets': 4, 'reps': 10, 'weight': 0},
+                {'name': 'Shoulder Press', 'sets': 3, 'reps': 10, 'weight': 0},
+                {'name': 'Pullups', 'sets': 3, 'reps': 12, 'weight': 0},
+                {'name': 'Dumbbell Flyes', 'sets': 3, 'reps': 15, 'weight': 0},
+                {'name': 'Side Lateral Raise', 'sets': 3, 'reps': 15, 'weight': 0},
+                {'name': 'Barbell Curl', 'sets': 3, 'reps': 12, 'weight': 0},
+                {'name': 'Lying Triceps Press', 'sets': 3, 'reps': 12, 'weight': 0}
+            ],
+            'arms': [
+                {'name': 'Barbell Curl', 'sets': 4, 'reps': 10, 'weight': 0},
+                {'name': 'Close-Grip Barbell Bench Press', 'sets': 4, 'reps': 10, 'weight': 0},
+                {'name': 'Hammer Curls', 'sets': 3, 'reps': 12, 'weight': 0},
+                {'name': 'Overhead Cable Curl', 'sets': 3, 'reps': 12, 'weight': 0},
+                {'name': 'Preacher Curl', 'sets': 3, 'reps': 12, 'weight': 0},
+                {'name': 'Triceps Pushdown', 'sets': 3, 'reps': 15, 'weight': 0},
+                {'name': 'Cable Curl', 'sets': 3, 'reps': 15, 'weight': 0},
+                {'name': 'Pushups - Close Triceps Position', 'sets': 3, 'reps': 20, 'weight': 0}
+            ]
+        }
+
+        if template_key not in templates:
+            return jsonify({'success': False, 'message': 'Invalid template'}), 400
+
+        template_exercises = templates[template_key]
+        added_count = 0
+        not_found = []
+
+        # Bepaal huidige max order
+        max_order = db.session.query(db.func.max(WorkoutPlanExercise.order)).filter_by(
+            workout_plan_id=plan_id
+        ).scalar() or -1
+
+        for idx, exercise_config in enumerate(template_exercises):
+            # Zoek exercise op naam (case-insensitive, flexibele matching)
+            exercise_name = exercise_config['name']
+
+            # Probeer eerst exacte match
+            exercise = Exercise.query.filter(
+                Exercise.name.ilike(exercise_name)
+            ).first()
+
+            # Als niet gevonden, probeer gedeeltelijke match
+            if not exercise:
+                exercise = Exercise.query.filter(
+                    Exercise.name.ilike(f'%{exercise_name}%')
+                ).first()
+
+            if exercise:
+                try:
+                    # Check of exercise al bestaat in plan
+                    existing = WorkoutPlanExercise.query.filter_by(
+                        workout_plan_id=plan_id,
+                        exercise_id=exercise.id
+                    ).first()
+
+                    if not existing:
+                        WorkoutService.add_exercise_to_plan(
+                            plan_id=plan_id,
+                            exercise_id=exercise.id,
+                            sets=exercise_config['sets'],
+                            reps=exercise_config['reps'],
+                            weight=exercise_config['weight'],
+                            order=max_order + idx + 1
+                        )
+                        added_count += 1
+                except Exception as e:
+                    logger.error(f"Error adding exercise {exercise_name}: {str(e)}")
+                    continue
+            else:
+                not_found.append(exercise_name)
+                logger.warning(f"Exercise not found in database: {exercise_name}")
+
+        message = f'{added_count} oefeningen toegevoegd aan je workout!'
+        if not_found:
+            message += f' ({len(not_found)} oefeningen niet gevonden in database)'
+
+        return jsonify({
+            'success': True,
+            'message': message,
+            'added_count': added_count,
+            'not_found': not_found
+        })
+
+    except Exception as e:
+        logger.error(f"Error using template: {str(e)}")
+        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500

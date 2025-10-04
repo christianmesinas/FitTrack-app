@@ -312,6 +312,20 @@
         background: rgba(255,107,53,0.03) !important;
     }
 
+    /* ✅ FIX: Maak datum nummers klikbaar */
+    .fc-daygrid-day-number {
+        cursor: pointer !important;
+        transition: all 0.2s ease;
+        padding: 4px 8px !important;
+        border-radius: 6px;
+    }
+
+    .fc-daygrid-day-number:hover {
+        background: rgba(255,107,53,0.15) !important;
+        color: var(--primary-color) !important;
+        font-weight: 700 !important;
+    }
+
     .fc-day-today {
         background: linear-gradient(135deg, rgba(255,107,53,0.08) 0%, rgba(255,140,66,0.08) 100%) !important;
         position: relative;
@@ -729,7 +743,7 @@
 
         /* Stats Carousel voor Mobile */
         .stats-container {
-            margin: 0 -15px 25px -15px; /* Volledige breedte */
+            margin: 0 -15px 25px -15px;
             overflow: hidden;
             position: relative;
         }
@@ -738,14 +752,14 @@
             display: flex;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
             gap: 12px;
             padding: 0 15px 15px 15px;
         }
 
         .stats-row::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
+            display: none;
         }
 
         .stat-card {
@@ -980,6 +994,13 @@
         .fc-daygrid-day-number {
             font-size: 0.9rem !important;
             padding: 4px !important;
+            cursor: pointer !important;
+        }
+
+        /* ✅ FIX: Verbeter touch target op mobile */
+        .fc-daygrid-day-number:active {
+            background: rgba(255,107,53,0.2) !important;
+            transform: scale(0.95);
         }
 
         .fc-event {
@@ -1047,7 +1068,7 @@
 
         .form-control {
             padding: 12px;
-            font-size: 16px; /* Voorkomt zoom op iOS */
+            font-size: 16px;
         }
 
         .form-row {
@@ -1199,7 +1220,7 @@
         .form-control,
         .quick-action-btn,
         .fc-button {
-            min-height: 44px; /* iOS aanbevolen touch doel */
+            min-height: 44px;
         }
     }
 
@@ -1650,7 +1671,12 @@
             },
             dayMaxEvents: isMobile ? 2 : 3,
             moreLinkClick: isMobile ? 'listWeek' : 'popover',
-            navLinks: !isMobile,
+            navLinks: false, // ✅ FIX: Uitgeschakeld zodat datum cijfers ook popup openen
+            navLinkDayClick: function(date, jsEvent) {
+                // ✅ FIX: Open modal als er op datum wordt geklikt
+                jsEvent.preventDefault();
+                openAddEventModal(date);
+            },
             nowIndicator: true,
             events: '{{ url_for("calendar.get_events") }}',
             editable: !isMobile,
@@ -1672,6 +1698,7 @@
             },
 
             dateClick: function(info) {
+                // ✅ FIX: Gebruik lokale datum zonder timezone offset
                 openAddEventModal(info.date);
             },
 
@@ -1778,15 +1805,22 @@
         document.getElementById('eventId').value = '';
         document.getElementById('deleteBtn').style.display = 'none';
 
-        // Datum vooraf invullen indien beschikbaar
+        // ✅ FIX: Datum vooraf invullen zonder timezone offset
         if (date) {
-            const dateStr = date.toISOString().split('T')[0];
+            // Converteer naar lokale datum string (YYYY-MM-DD) zonder timezone conversie
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
             document.getElementById('eventDate').value = dateStr;
         } else {
             // Standaard datum: morgen
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('eventDate').value = tomorrow.toISOString().split('T')[0];
+            const year = tomorrow.getFullYear();
+            const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const day = String(tomorrow.getDate()).padStart(2, '0');
+            document.getElementById('eventDate').value = `${year}-${month}-${day}`;
         }
 
         // Reset selecties
@@ -1827,8 +1861,12 @@
         document.getElementById('eventTitle').value = event.title.replace(/^[^\s]+ /, '');
         document.getElementById('eventDescription').value = event.extendedProps.description || '';
 
+        // ✅ FIX: Gebruik lokale datum zonder timezone offset
         const start = new Date(event.start);
-        document.getElementById('eventDate').value = start.toISOString().split('T')[0];
+        const year = start.getFullYear();
+        const month = String(start.getMonth() + 1).padStart(2, '0');
+        const day = String(start.getDate()).padStart(2, '0');
+        document.getElementById('eventDate').value = `${year}-${month}-${day}`;
         document.getElementById('eventTime').value = start.toTimeString().slice(0, 5);
 
         if (event.end) {
@@ -2390,13 +2428,4 @@
         });
     }
 </script>
-
-<style>
-    @keyframes fadeOut {
-        to {
-            opacity: 0;
-            transform: translateX(-50%) translateY(20px);
-        }
-    }
-</style>
 {% endblock %}
