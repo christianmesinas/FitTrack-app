@@ -1,19 +1,14 @@
-version: "3"
 services:
   app:
     build:
       context: .
-      target: production
-    expose:
-      - "5000"
+      target: development
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
     environment:
       - FLASK_APP=fittrack.py
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app
+      - FLASK_ENV=development
