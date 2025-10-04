@@ -29,5 +29,8 @@ jobs:
           AWS_DEFAULT_REGION: eu-west-1
         run: |
           eb init fitness-app --platform python-3.11 --region $AWS_DEFAULT_REGION
+          if ! eb status fitness-app-env; then
+          eb create fitness-app-env
+          fi          
           eb use fitness-app-env
           eb deploy
