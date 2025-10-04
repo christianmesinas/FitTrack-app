@@ -10,6 +10,7 @@ build/
 venv/
 env/
 
+
 # Flask-specifieke bestanden
 app.db
 instance/
@@ -54,3 +55,9 @@ pytest_cache/
 
 flask_session/*
 flask_session
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+
+

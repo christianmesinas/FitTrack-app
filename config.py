@@ -8,8 +8,9 @@ if ENV_FILE:
 
 class Config:
     SECRET_KEY = os.getenv('APP_SECRET_KEY')
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-                              'sqlite:///' + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'app.db')).replace(
+        'postgres://', 'postgresql://')
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SESSION_TYPE = 'filesystem'
     SESSION_PERMANENT = False
