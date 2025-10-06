@@ -8,6 +8,16 @@
     </a>
 </div>
 
+<!-- GROTE DUIDELIJKE BACK BUTTON BOVENAAN -->
+{% if plan_id and plan_id != 0 %}
+<div class="top-back-button">
+    <a href="{{ url_for('workouts.edit_workout', plan_id=plan_id) }}" class="top-back-link">
+        <span class="back-arrow">←</span>
+        <span class="back-text">Terug naar je workout</span>
+    </a>
+</div>
+{% endif %}
+
 <!-- Enhanced Header -->
 <div class="page-container">
     <div class="search-header-context">
@@ -90,7 +100,7 @@
                 </button>
             </div>
 
-            <!-- Push Day (Chest, Shoulders, Triceps) -->
+            <!-- Push Day -->
             <div class="template-card" data-template="push">
                 <div class="template-header">
                     <span class="template-icon">🏋️</span>
@@ -123,7 +133,7 @@
                 </button>
             </div>
 
-            <!-- Pull Day (Back & Biceps) -->
+            <!-- Pull Day -->
             <div class="template-card" data-template="pull">
                 <div class="template-header">
                     <span class="template-icon">💯</span>
@@ -267,8 +277,8 @@
                     <ol class="guide-steps">
                         <li>Gebruik de filters hieronder of zoek op naam</li>
                         <li>Klik op de <span class="highlight-plus">+</span> knop bij een oefening om deze toe te voegen</li>
-                        <li>Je kunt meerdere oefeningen toevoegen</li>
-                        <li>Ga terug naar je workout om sets en reps in te stellen</li>
+                        <li>De knop wordt een <span style="color: #28a745;">✓</span> vinkje als je de oefening hebt toegevoegd</li>
+                        <li>Klik nogmaals op het <span style="color: #28a745;">✓</span> vinkje om de oefening te verwijderen</li>
                     </ol>
                 </div>
             </div>
@@ -359,7 +369,7 @@
             {% else %}
                 <div class="results-header">
                     <h3>✨ Gevonden oefeningen</h3>
-                    <p class="results-tip">Klik op de + om een oefening toe te voegen aan je workout</p>
+                    <p class="results-tip">Klik op de + om toe te voegen, of op ✓ om te verwijderen</p>
                 </div>
             {% endif %}
 
@@ -376,22 +386,15 @@
     </div>
 </div>
 
-<!-- Toast Notifications -->
-<div class="success-toast" id="success-toast" style="display: none;">
-    <span class="toast-icon">✅</span>
-    <span class="toast-message">Oefening toegevoegd!</span>
-</div>
-
-<!-- Floating Back Button -->
+<!-- FLOATING BACK BUTTON ONDERAAN (beter zichtbaar) -->
 {% if plan_id and plan_id != 0 %}
-<a href="{{ url_for('workouts.edit_workout', plan_id=plan_id|default(0)) }}" class="floating-back-btn">
+<a href="{{ url_for('workouts.edit_workout', plan_id=plan_id) }}" class="floating-back-btn">
+    <span class="btn-icon">←</span>
     <span class="btn-text">Terug naar workout</span>
-    <span class="btn-icon">→</span>
 </a>
 {% endif %}
 
 <style>
-/* [Alle CSS blijft hetzelfde - behouden van originele styling] */
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -399,11 +402,104 @@
     box-sizing: border-box;
 }
 
+/* GROTE DUIDELIJKE BACK BUTTON BOVENAAN */
+.top-back-button {
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    padding: 20px;
+    margin: -20px -20px 30px -20px;
+    box-shadow: 0 3px 15px rgba(255,107,53,0.3);
+}
+
+.top-back-link {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 18px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.back-arrow {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.back-text {
+    font-size: 18px;
+}
+
+.top-back-link:hover {
+    color: white;
+    opacity: 0.9;
+}
+
+/* FLOATING BACK BUTTON ONDERAAN - VOLLEDIG ZICHTBAAR OP MOBIEL */
+.floating-back-btn {
+    position: fixed;
+    bottom: 110px; /* Boven navbar */
+    right: 20px;
+    left: 20px; /* Ook links 20px zodat het gecentreerd is */
+    max-width: 400px;
+    margin: 0 auto; /* Centreer het */
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+    padding: 18px 28px;
+    border-radius: 50px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-shadow: 0 8px 30px rgba(255,107,53,0.5);
+    transition: all 0.3s ease;
+    z-index: 100;
+    font-weight: 700;
+    font-size: 16px;
+}
+
+.floating-back-btn .btn-icon {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.floating-back-btn .btn-text {
+    font-size: 16px;
+}
+
+.floating-back-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(255,107,53,0.6);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .floating-back-btn {
+        bottom: 100px;
+        right: 15px;
+        left: 15px;
+        padding: 16px 24px;
+        font-size: 15px;
+    }
+
+    .top-back-link {
+        font-size: 16px;
+    }
+
+    .back-arrow {
+        font-size: 24px;
+    }
+}
+
 /* Container and Layout */
 .page-container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
+    padding-bottom: 200px; /* Extra ruimte voor floating button */
 }
 
 /* Header Section */
@@ -996,58 +1092,36 @@
     box-shadow: 0 5px 20px rgba(255,145,75,0.3);
 }
 
-/* Toast Notification */
-.success-toast {
-    position: fixed;
-    bottom: 120px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
-    padding: 16px 35px;
-    border-radius: 50px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 8px 30px rgba(40,167,69,0.4);
-    z-index: 1000;
-    animation: slideUp 0.3s ease forwards;
-    font-weight: 500;
-}
-
-@keyframes slideUp {
-    to {
-        transform: translateX(-50%) translateY(0);
-    }
-}
-
-.toast-icon {
-    font-size: 24px;
-}
-
-/* Floating Back Button */
-.floating-back-btn {
-    position: fixed;
-    bottom: 120px;
-    right: 30px;
-    background: linear-gradient(135deg, #FF914B, #FF6B35);
-    color: white;
-    padding: 16px 28px;
-    border-radius: 50px;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 8px 30px rgba(255,145,75,0.4);
+/* Add exercise button - TOGGLE STYLING */
+.add-exercise {
     transition: all 0.3s ease;
-    z-index: 100;
-    font-weight: 600;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
 }
 
-.floating-back-btn:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(255,145,75,0.5);
-    color: white;
+.add-exercise:hover {
+    transform: scale(1.15);
+}
+
+/* Toegevoegde oefening - groen vinkje */
+.add-exercise.added {
+    background: #28a745 !important;
+    color: white !important;
+    animation: checkmark 0.3s ease;
+}
+
+@keyframes checkmark {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
 }
 
 /* Exercise Blocks Enhancement */
@@ -1060,30 +1134,6 @@
 .exercise-block:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-}
-
-.add-exercise {
-    transition: all 0.2s ease;
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    font-weight: bold;
-}
-
-.add-exercise:hover {
-    background: #FF914B;
-    color: white;
-    transform: scale(1.15);
-}
-
-.add-exercise.completed {
-    background: #28a745;
-    color: white;
-    pointer-events: none;
 }
 
 /* Animations */
@@ -1102,6 +1152,7 @@
 @media (max-width: 768px) {
     .page-container {
         padding: 15px;
+        padding-bottom: 200px;
     }
 
     .search-header-context {
@@ -1131,13 +1182,6 @@
         text-align: center;
     }
 
-    .floating-back-btn {
-        bottom: 100px;
-        right: 20px;
-        padding: 12px 20px;
-        font-size: 14px;
-    }
-
     .choice-cards {
         grid-template-columns: 1fr;
     }
@@ -1162,23 +1206,6 @@
         font-size: 18px;
     }
 }
-
-/* Loading States */
-.loading {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-.loading::after {
-    content: '...';
-    animation: dots 1.5s infinite;
-}
-
-@keyframes dots {
-    0%, 20% { content: '.'; }
-    40% { content: '..'; }
-    60%, 100% { content: '...'; }
-}
 </style>
 
 <script>
@@ -1195,9 +1222,15 @@ document.getElementById('custom-choice').addEventListener('click', function() {
     document.getElementById('custom-section').style.display = 'block';
     document.getElementById('custom-choice').classList.add('active');
     document.getElementById('templates-choice').classList.remove('active');
+
+    // Laad bestaande exercises als we naar custom section gaan
+    const planId = document.getElementById('exercise-list')?.getAttribute('data-plan-id');
+    if (planId && planId !== '0') {
+        loadExistingExercises(planId);
+    }
 });
 
-// Use workout template - FIXED VERSION
+// Use workout template
 function useTemplate(templateKey) {
     const planId = document.getElementById('exercise-list') ?
         document.getElementById('exercise-list').getAttribute('data-plan-id') : null;
@@ -1208,7 +1241,6 @@ function useTemplate(templateKey) {
         return;
     }
 
-    // Disable button
     const button = event.target.closest('.btn-use-template');
     const originalText = button.innerHTML;
     button.disabled = true;
@@ -1238,17 +1270,15 @@ function useTemplate(templateKey) {
     })
     .then(data => {
         if (data.success) {
-            showSuccessToast(`✅ ${data.message}`);
+            alert(`✅ ${data.message}`);
 
-            // Show details if some exercises weren't found
             if (data.not_found && data.not_found.length > 0) {
                 console.warn('Niet gevonden oefeningen:', data.not_found);
             }
 
-            // Redirect to workout edit page after 2 seconds
             setTimeout(() => {
                 window.location.href = `{{ url_for('workouts.edit_workout', plan_id=0) }}`.replace('/0', `/${planId}`);
-            }, 2000);
+            }, 1000);
         } else {
             throw new Error(data.message || 'Onbekende fout');
         }
@@ -1267,13 +1297,11 @@ function setFilter(filterType, value) {
     if (filterElement) {
         filterElement.value = value;
 
-        // Visual feedback
         document.querySelectorAll('.category-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         event.target.classList.add('active');
 
-        // Auto submit form
         document.getElementById('filter-form').submit();
     }
 }
@@ -1284,21 +1312,36 @@ function resetFilters() {
     document.getElementById('filter-form').submit();
 }
 
-// Show success toast
-function showSuccessToast(message = 'Oefening toegevoegd!') {
-    const toast = document.getElementById('success-toast');
-    const toastMessage = toast.querySelector('.toast-message');
-    toastMessage.textContent = message;
+// NIEUWE FUNCTIE - Laad bestaande oefeningen en markeer ze
+function loadExistingExercises(planId) {
+    console.log('🔍 Laden van bestaande oefeningen voor plan:', planId);
 
-    toast.style.display = 'flex';
+    fetch(`/workouts/${planId}/exercises`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('✅ Gevonden oefeningen:', data.exercise_ids);
 
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => {
-            toast.style.display = 'none';
-            toast.style.opacity = '1';
-        }, 300);
-    }, 3000);
+            // Markeer alle oefeningen die al in workout zitten
+            data.exercise_ids.forEach(exerciseId => {
+                const addBtn = document.querySelector(`.add-exercise[data-exercise-id="${exerciseId}"]`);
+                if (addBtn) {
+                    console.log('✓ Markeren oefening:', exerciseId);
+                    addBtn.textContent = "✓";
+                    addBtn.classList.add("added");
+                    addBtn.style.background = "#28a745";
+                    addBtn.style.color = "white";
+                }
+            });
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error loading existing exercises:', error);
+    });
 }
 
 // Main DOMContentLoaded event
@@ -1308,6 +1351,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const filterForm = document.getElementById("filter-form");
     const planId = exerciseList ? exerciseList.getAttribute('data-plan-id') : null;
     const csrfToken = "{{ form.csrf_token._value() }}";
+
+    console.log('📍 Page loaded, plan_id:', planId);
 
     // Count exercises on load
     if (exerciseList) {
@@ -1346,7 +1391,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     const newUrl = `${window.location.pathname}?${params.toString()}`;
                     window.history.pushState({}, '', newUrl);
 
-                    // Update count
                     const newCount = exerciseList.querySelectorAll('.exercise-block').length;
                     const countElement = document.getElementById('results-count');
                     if (countElement) {
@@ -1358,6 +1402,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (loadMoreBtn) {
                         loadMoreBtn.style.display = hasResults ? 'block' : 'none';
                         loadMoreBtn.setAttribute("data-next-page", "2");
+                    }
+
+                    // Laad bestaande oefeningen na search
+                    if (planId && planId !== '0') {
+                        setTimeout(() => loadExistingExercises(planId), 100);
                     }
                 }
             })
@@ -1396,11 +1445,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 const newNextPage = parseInt(nextPage) + 1;
                 this.setAttribute("data-next-page", newNextPage);
 
-                // Update count
                 const newCount = exerciseList.querySelectorAll('.exercise-block').length;
                 const countElement = document.getElementById('results-count');
                 if (countElement) {
                     countElement.querySelector('.count-number').textContent = newCount;
+                }
+
+                // Laad bestaande oefeningen na load more
+                if (planId && planId !== '0') {
+                    setTimeout(() => loadExistingExercises(planId), 100);
                 }
             })
             .catch(error => {
@@ -1409,7 +1462,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Add exercise to plan with improved feedback
+    // TOGGLE FUNCTIONALITEIT - Add/Remove exercise
     if (exerciseList) {
         exerciseList.addEventListener("click", function(e) {
             if (e.target.classList.contains("add-exercise")) {
@@ -1417,65 +1470,94 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 const exerciseId = e.target.getAttribute("data-exercise-id");
                 const nextUrl = e.target.getAttribute("data-next");
+
                 if (!exerciseId || !planId || planId === '0') {
                     alert("Maak eerst een workout aan voordat je oefeningen toevoegt.");
                     return;
                 }
 
-                const baseUrl = "{{ url_for('workouts.add_exercise_to_workout', plan_id=0, exercise_id=0) }}";
-                const url = baseUrl.replace('/0/', `/${planId}/`).replace('/0', `/${exerciseId}`);
+                // Check of al toegevoegd (heeft vinkje)
+                const isAdded = e.target.classList.contains('added');
 
-                // Visual feedback - disable button
-                e.target.classList.add('loading');
-                e.target.textContent = '...';
+                if (isAdded) {
+                    console.log('➖ Verwijderen oefening:', exerciseId);
+                    // Verwijder oefening
+                    const removeUrl = `/workouts/${planId}/exercise/${exerciseId}/remove`;
 
-                fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-Token": csrfToken,
-                        "X-Requested-With": "XMLHttpRequest"
-                    },
-                    body: JSON.stringify({ exercise_id: exerciseId, plan_id: planId, next: nextUrl })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => {
-                            throw new Error(err.message || 'Onbekende fout');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        showSuccessToast('✅ Oefening toegevoegd aan je workout!');
-                        e.target.textContent = "✓";
-                        e.target.classList.remove('loading');
-                        e.target.classList.add("completed");
-
-                        // Animate the exercise block
-                        const exerciseBlock = e.target.closest('.exercise-block');
-                        if (exerciseBlock) {
-                            exerciseBlock.style.backgroundColor = '#f0fff0';
-                            setTimeout(() => {
-                                exerciseBlock.style.backgroundColor = '';
-                            }, 1000);
+                    fetch(removeUrl, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-Token": csrfToken,
+                            "X-Requested-With": "XMLHttpRequest"
                         }
-                    } else {
-                        e.target.classList.remove('loading');
-                        e.target.textContent = '+';
-                        alert("Kon oefening niet toevoegen: " + (data.message || "Onbekende fout"));
-                    }
-                })
-                .catch(err => {
-                    e.target.classList.remove('loading');
-                    e.target.textContent = '+';
-                    console.error("Fout bij toevoegen oefening:", err);
-                    alert("Netwerkfout: " + err.message);
-                });
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('✅ Oefening verwijderd');
+                            // Reset knop naar +
+                            e.target.textContent = "+";
+                            e.target.classList.remove('added');
+                            e.target.style.background = '';
+                            e.target.style.color = '';
+
+                            // Reset exercise block achtergrond
+                            const exerciseBlock = e.target.closest('.exercise-block');
+                            if (exerciseBlock) {
+                                exerciseBlock.style.backgroundColor = '';
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Fout bij verwijderen:", err);
+                    });
+                } else {
+                    console.log('➕ Toevoegen oefening:', exerciseId);
+                    // Voeg oefening toe
+                    const baseUrl = "{{ url_for('workouts.add_exercise_to_workout', plan_id=0, exercise_id=0) }}";
+                    const url = baseUrl.replace('/0/', `/${planId}/`).replace('/0', `/${exerciseId}`);
+
+                    fetch(url, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-Token": csrfToken,
+                            "X-Requested-With": "XMLHttpRequest"
+                        },
+                        body: JSON.stringify({ exercise_id: exerciseId, plan_id: planId, next: nextUrl })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('✅ Oefening toegevoegd');
+                            // Verander + naar ✓
+                            e.target.textContent = "✓";
+                            e.target.classList.add("added");
+                            e.target.style.background = "#28a745";
+                            e.target.style.color = "white";
+
+                            // Groene highlight op exercise block
+                            const exerciseBlock = e.target.closest('.exercise-block');
+                            if (exerciseBlock) {
+                                exerciseBlock.style.backgroundColor = '#f0fff0';
+                                setTimeout(() => {
+                                    exerciseBlock.style.backgroundColor = '';
+                                }, 2000);
+                            }
+                        } else {
+                            alert("Kon oefening niet toevoegen: " + (data.message || "Onbekende fout"));
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Fout bij toevoegen:", err);
+                        alert("Netwerkfout: " + err.message);
+                    });
+                }
             }
         });
     }
 });
 </script>
+
 {% endblock %}

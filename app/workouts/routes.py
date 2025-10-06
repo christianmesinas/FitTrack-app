@@ -750,3 +750,26 @@ def use_template(plan_id):
     except Exception as e:
         logger.error(f"Error using template: {str(e)}")
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+
+# Voeg deze route toe aan app/workouts/routes.py (onderaan, voor use_template)
+
+@workouts.route('/<int:plan_id>/exercises', methods=['GET'])
+@login_required
+@owns_workout_plan
+def get_plan_exercises(plan_id):
+    """Haal alle exercise IDs op van een workout plan voor markering."""
+    try:
+        plan_exercises = WorkoutPlanExercise.query.filter_by(
+            workout_plan_id=plan_id
+        ).all()
+
+        exercise_ids = [pe.exercise_id for pe in plan_exercises]
+
+        return jsonify({
+            'success': True,
+            'exercise_ids': exercise_ids
+        })
+    except Exception as e:
+        logger.error(f"Error getting plan exercises: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500

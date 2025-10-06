@@ -22,6 +22,27 @@
     margin-top: 10px;
 }
 
+/* Fixed Timer - blijft zichtbaar bij scrollen */
+.fixed-timer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 999;
+    display: none;
+}
+
+.fixed-timer.visible {
+    display: block;
+}
+
 .exercise-card {
     background: white;
     border-radius: 15px;
@@ -231,7 +252,7 @@
 
 .video-container {
     position: relative;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    padding-bottom: 56.25%;
     height: 0;
     overflow: hidden;
     margin: 20px 0;
@@ -247,26 +268,50 @@
     border-radius: 10px;
 }
 
-.complete-workout-btn {
-    position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 15px 40px;
-    background: linear-gradient(135deg, #4CAF50, #45a049);
+/* NIEUWE STYLING - Workout Control Buttons */
+.workout-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 40px;
+    margin-bottom: 150px;
+    padding: 0 20px;
+}
+
+.btn-stop-workout {
+    padding: 15px 35px;
+    background: linear-gradient(135deg, #dc3545, #c82333);
     color: white;
     border: none;
     border-radius: 50px;
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
-    z-index: 100;
+    box-shadow: 0 5px 20px rgba(220, 53, 69, 0.3);
+    transition: all 0.3s ease;
 }
 
-.complete-workout-btn:hover {
-    transform: translateX(-50%) translateY(-3px);
-    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+.btn-stop-workout:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}
+
+.btn-complete-workout {
+    padding: 15px 35px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-complete-workout:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
 }
 
 @media (max-width: 768px) {
@@ -283,6 +328,18 @@
     .btn-view-details, .btn-view-video {
         width: 100%;
     }
+
+    .workout-controls {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-stop-workout,
+    .btn-complete-workout {
+        padding: 12px 25px;
+        font-size: 1rem;
+    }
 }
 </style>
 {% endblock %}
@@ -293,7 +350,12 @@
     <div class="workout-timer" id="workout-timer">00:00:00</div>
 </div>
 
-<div class="workout-container" style="max-width: 900px; margin: 0 auto; padding: 0 20px 150px;">
+<!-- Fixed Timer die verschijnt bij scrollen -->
+<div class="fixed-timer" id="fixed-timer">
+    ⏱️ <span id="fixed-timer-display">00:00:00</span>
+</div>
+
+<div class="workout-container" style="max-width: 900px; margin: 0 auto; padding: 0 20px 20px;">
     {% for wpe in exercises %}
         {% set exercise = wpe.exercise %}
         <div class="exercise-card" data-exercise-id="{{ exercise.id }}" data-wpe-id="{{ wpe.id }}">
@@ -394,10 +456,15 @@
     {% endfor %}
 </div>
 
-<!-- Complete Workout Button -->
-<button class="complete-workout-btn" onclick="completeWorkout()">
-    ✅ Voltooi Workout
-</button>
+<!-- Workout Control Buttons -->
+<div class="workout-controls">
+    <button class="btn-stop-workout" onclick="stopWorkout()">
+        ⏹️ Stop Workout
+    </button>
+    <button class="btn-complete-workout" onclick="completeWorkout()">
+        ✅ Voltooi Workout
+    </button>
+</div>
 
 <!-- Exercise Detail Modal -->
 <div id="exerciseModal" class="modal">
@@ -421,11 +488,25 @@ function updateTimer() {
     const minutes = Math.floor((elapsed % 3600000) / 60000);
     const seconds = Math.floor((elapsed % 60000) / 1000);
 
-    document.getElementById('workout-timer').textContent =
-        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    document.getElementById('workout-timer').textContent = timeString;
+    document.getElementById('fixed-timer-display').textContent = timeString;
 }
 
 timerInterval = setInterval(updateTimer, 1000);
+
+// Scroll event - toon/verberg fixed timer
+window.addEventListener('scroll', function() {
+    const workoutHeader = document.querySelector('.workout-header');
+    const fixedTimer = document.getElementById('fixed-timer');
+
+    if (workoutHeader.getBoundingClientRect().bottom < 0) {
+        fixedTimer.classList.add('visible');
+    } else {
+        fixedTimer.classList.remove('visible');
+    }
+});
 
 // Exercise data storage
 const exerciseData = {
@@ -567,9 +648,19 @@ function addSet(wpeId, isCardio) {
     container.appendChild(setRow);
 }
 
+// NIEUWE FUNCTIE - Stop workout zonder te voltooien
+async function stopWorkout() {
+    if (!confirm('⚠️ Weet je zeker dat je wilt stoppen?\n\nJe voortgang wordt NIET opgeslagen.')) {
+        return;
+    }
+
+    clearInterval(timerInterval);
+    window.location.href = '/index';
+}
+
 // Complete workout
 async function completeWorkout() {
-    if (!confirm('Weet je zeker dat je deze workout wilt voltooien?')) {
+    if (!confirm('✅ Wil je deze workout voltooien?\n\nAlle ingevulde sets worden opgeslagen.')) {
         return;
     }
 
