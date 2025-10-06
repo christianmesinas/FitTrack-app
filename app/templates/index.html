@@ -900,6 +900,7 @@
     align-items: center;
     justify-content: center;
     z-index: 9999;
+    overflow-y: auto;
 }
 
 .modal-content {
@@ -910,6 +911,9 @@
     width: 90%;
     position: relative;
     animation: slideUp 0.3s ease;
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: auto;
 }
 
 @keyframes slideUp {
