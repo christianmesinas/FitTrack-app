@@ -437,14 +437,14 @@
     opacity: 0.9;
 }
 
-/* FLOATING BACK BUTTON ONDERAAN - VOLLEDIG ZICHTBAAR OP MOBIEL */
+/* FLOATING BACK BUTTON ONDERAAN - MET SCROLL BEHAVIOR */
 .floating-back-btn {
     position: fixed;
     bottom: 110px; /* Boven navbar */
     right: 20px;
-    left: 20px; /* Ook links 20px zodat het gecentreerd is */
+    left: 20px;
     max-width: 400px;
-    margin: 0 auto; /* Centreer het */
+    margin: 0 auto;
     background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
     color: white;
     padding: 18px 28px;
@@ -455,10 +455,13 @@
     justify-content: center;
     gap: 12px;
     box-shadow: 0 8px 30px rgba(255,107,53,0.5);
-    transition: all 0.3s ease;
     z-index: 100;
     font-weight: 700;
     font-size: 16px;
+    /* Smooth transitions voor scroll behavior */
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.3s ease;
 }
 
 .floating-back-btn .btn-icon {
@@ -471,7 +474,6 @@
 }
 
 .floating-back-btn:hover {
-    transform: translateY(-3px);
     box-shadow: 0 12px 40px rgba(255,107,53,0.6);
     color: white;
 }
@@ -1209,6 +1211,30 @@
 </style>
 
 <script>
+// Scroll behavior voor floating back button
+let lastScrollTop = 0;
+const scrollThreshold = 200; // Pixels voordat knop verdwijnt
+
+function handleScrollBehavior() {
+    const floatingBtn = document.querySelector('.floating-back-btn');
+    if (!floatingBtn) return;
+
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    // Als we naar beneden scrollen en voorbij threshold
+    if (scrollTop > lastScrollTop && scrollTop > scrollThreshold) {
+        floatingBtn.style.transform = 'translateY(200px)'; // Verberg knop
+        floatingBtn.style.opacity = '0';
+    }
+    // Als we naar boven scrollen of boven threshold
+    else if (scrollTop < lastScrollTop || scrollTop <= scrollThreshold) {
+        floatingBtn.style.transform = 'translateY(0)'; // Toon knop
+        floatingBtn.style.opacity = '1';
+    }
+
+    lastScrollTop = scrollTop <= 0 ? 0 : scrollTop; // Voorkom negatieve waarden
+}
+
 // Toggle between templates and custom section
 document.getElementById('templates-choice').addEventListener('click', function() {
     document.getElementById('templates-section').style.display = 'block';
@@ -1312,7 +1338,7 @@ function resetFilters() {
     document.getElementById('filter-form').submit();
 }
 
-// NIEUWE FUNCTIE - Laad bestaande oefeningen en markeer ze
+// Laad bestaande oefeningen en markeer ze
 function loadExistingExercises(planId) {
     console.log('🔍 Laden van bestaande oefeningen voor plan:', planId);
 
@@ -1353,6 +1379,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const csrfToken = "{{ form.csrf_token._value() }}";
 
     console.log('📍 Page loaded, plan_id:', planId);
+
+    // Voeg scroll event listener toe
+    window.addEventListener('scroll', handleScrollBehavior);
+
+    // Initial check van scroll positie
+    handleScrollBehavior();
 
     // Count exercises on load
     if (exerciseList) {
