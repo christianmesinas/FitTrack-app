@@ -7,68 +7,386 @@
     </a>
 </div>
 
-<section class="header-section">
-    <h1>Workout Historiek</h1>
-</section>
+<div class="history-container">
+    <section class="header-section">
+        <h1><i class="fas fa-history"></i> Workout Historiek</h1>
+        <p class="header-subtitle">Bekijk al je voltooide workouts</p>
+    </section>
 
-<section class="workout-blok-section">
-    {% if sessions.items %}
-        {% for session in sessions.items %}
-            <div class="workout-block history-block">
-                <div class="workout-header">
-                    <h3>{{ session.workout_plan.name if session.workout_plan else 'Onbekend Plan' }}</h3>
-                    <p class="workout-date">{{ session.completed_at.strftime('%d-%m-%Y om %H:%M') }}</p>
+    <section class="workout-blok-section">
+        {% if sessions.items %}
+            {% for session in sessions.items %}
+                <div class="history-card">
+                    <div class="history-header">
+                        <div class="header-left">
+                            <div class="workout-icon">
+                                <i class="fas fa-dumbbell"></i>
+                            </div>
+                            <div class="header-info">
+                                <h3>{{ session.workout_plan.name if session.workout_plan else 'Onbekend Plan' }}</h3>
+                                <p class="workout-date">
+                                    <i class="fas fa-calendar"></i>
+                                    {{ session.completed_at.strftime('%d-%m-%Y om %H:%M') }}
+                                </p>
+                            </div>
+                        </div>
+                        <span class="completed-badge">
+                            <i class="fas fa-check-circle"></i> Voltooid
+                        </span>
+                    </div>
+
+                    <div class="history-stats">
+                        <div class="stat-box">
+                            <i class="fas fa-layer-group"></i>
+                            <div>
+                                <span class="stat-number">{{ session.total_sets_count or 0 }}</span>
+                                <span class="stat-label">Sets</span>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <i class="fas fa-redo"></i>
+                            <div>
+                                <span class="stat-number">{{ session.total_reps_count or 0 }}</span>
+                                <span class="stat-label">Reps</span>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <i class="fas fa-weight-hanging"></i>
+                            <div>
+                                <span class="stat-number">{{ "%.1f"|format(session.total_weight_count or 0) }}</span>
+                                <span class="stat-label">kg</span>
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <span class="stat-number">{{ session.duration_minutes or 0 }}</span>
+                                <span class="stat-label">min</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="history-actions">
+                        <a href="{{ url_for('sessions.workout_session_detail', session_id=session.id) }}"
+                           class="btn-view-details">
+                            <i class="fas fa-eye"></i> Bekijk Details
+                        </a>
+                    </div>
                 </div>
+            {% endfor %}
 
-                <div class="workout-stats">
-                    <div class="stat-item">
-                        <span class="stat-number">{{ session.total_sets_count or 0 }}</span>
-                        <span class="stat-label">Sets</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">{{ session.total_reps_count or 0 }}</span>
-                        <span class="stat-label">Reps</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">{{ "%.1f"|format(session.total_weight_count or 0) }}</span>
-                        <span class="stat-label">kg</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number">{{ session.duration_minutes or 0 }}</span>
-                        <span class="stat-label">min</span>
-                    </div>
+            <div class="pagination-container">
+                {% if sessions.has_prev %}
+                    <a href="{{ url_for('profile.workout_history', page=sessions.prev_num) }}"
+                       class="pagination-btn">
+                        <i class="fas fa-arrow-left"></i> Vorige
+                    </a>
+                {% endif %}
+
+                <span class="pagination-info">
+                    <i class="fas fa-file-alt"></i>
+                    Pagina {{ sessions.page }} van {{ sessions.pages }}
+                </span>
+
+                {% if sessions.has_next %}
+                    <a href="{{ url_for('profile.workout_history', page=sessions.next_num) }}"
+                       class="pagination-btn">
+                        Volgende <i class="fas fa-arrow-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="empty-state-modern">
+                <div class="empty-icon">
+                    <i class="fas fa-dumbbell"></i>
                 </div>
-
-                <a href="{{ url_for('sessions.workout_session_detail', session_id=session.id) }}" class="orange-btn-outline">
-                    Bekijk Details
+                <h3>Nog geen workouts voltooid</h3>
+                <p>Je hebt nog geen workouts afgerond. Start je eerste workout om je voortgang bij te houden!</p>
+                <a href="{{ url_for('main.index') }}" class="orange-btn">
+                    <i class="fas fa-home"></i> Naar Home
                 </a>
             </div>
-        {% endfor %}
-
-        <div class="pagination">
-            {% if sessions.has_prev %}
-                <a href="{{ url_for('profile.workout_history', page=sessions.prev_num) }}" class="pagination-btn">← Vorige</a>
-            {% endif %}
-
-            <span class="pagination-info">
-                Pagina {{ sessions.page }} van {{ sessions.pages }}
-            </span>
-
-            {% if sessions.has_next %}
-                <a href="{{ url_for('profile.workout_history', page=sessions.next_num) }}" class="pagination-btn">Volgende →</a>
-            {% endif %}
-        </div>
-    {% else %}
-        <div class="empty-state">
-            <h3>Nog geen workouts voltooid</h3>
-            <p>Je hebt nog geen workouts afgerond. Start je eerste workout om je voortgang bij te houden!</p>
-            <a href="{{ url_for('main.index') }}" class="orange-btn">Naar Home</a>
-        </div>
-    {% endif %}
-</section>
+        {% endif %}
+    </section>
+</div>
 
 <style>
+.history-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 120px;
+}
 
+.header-section {
+    text-align: center;
+    margin: 3rem 0;
+}
+
+.header-section h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.header-section h1 i {
+    color: #FF6B35;
+}
+
+.header-subtitle {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.history-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.history-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+.history-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.workout-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.header-info h3 {
+    font-size: 1.3rem;
+    color: #333;
+    margin: 0 0 0.3rem 0;
+}
+
+.workout-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.completed-badge {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.history-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    padding: 1.5rem;
+    background: white;
+}
+
+.stat-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.stat-box:hover {
+    background: #e9ecef;
+    transform: scale(1.05);
+}
+
+.stat-box i {
+    font-size: 1.5rem;
+    color: #FF6B35;
+}
+
+.stat-box div {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 3px;
+}
+
+.history-actions {
+    padding: 1.5rem;
+    background: white;
+    border-top: 1px solid #f0f0f0;
+}
+
+.btn-view-details {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(255,107,53,0.3);
+}
+
+.btn-view-details:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255,107,53,0.4);
+    color: white;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+}
+
+.pagination-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.pagination-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255,107,53,0.3);
+    color: white;
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-weight: 500;
+}
+
+.empty-state-modern {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.empty-icon {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, rgba(255,107,53,0.1) 0%, rgba(255,140,66,0.1) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 3rem;
+    color: #FF6B35;
+}
+
+.empty-state-modern h3 {
+    font-size: 1.8rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.empty-state-modern p {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .header-section h1 {
+        font-size: 1.8rem;
+    }
+
+    .history-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .header-left {
+        width: 100%;
+    }
+
+    .completed-badge {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .history-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pagination-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .pagination-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
 </style>
 
 {% endblock %}

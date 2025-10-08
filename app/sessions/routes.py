@@ -358,5 +358,63 @@ def complete_workout(plan_id):
         logger.error(f"Error completing workout: {str(e)}")
         return jsonify({'success': False, 'message': f'Error completing workout: {str(e)}'}), 500
 
-# Rest van je routes blijven hetzelfde...
-# (workout_session_detail, get_workout_progress, archive_workout_session, etc.)
+
+@bp.route('/session/<session_id>')
+@login_required
+def workout_session_detail(session_id):
+    """Toon details van een specifieke workout sessie"""
+    try:
+        workout_session = WorkoutSession.query.get_or_404(session_id)
+
+        # Check authorization
+        if workout_session.user_id != current_user.id:
+            flash('Je hebt geen toegang tot deze workout sessie.', 'error')
+            return redirect(url_for('main.index'))
+
+        # Haal alle set logs op voor deze sessie
+        set_logs = SetLog.query.filter_by(
+            workout_session_id=session_id,
+            completed=True
+        ).order_by(SetLog.exercise_id, SetLog.set_number).all()
+
+        # Groepeer sets per exercise
+        from collections import defaultdict
+        exercises_data = defaultdict(list)
+
+        for set_log in set_logs:
+            exercises_data[set_log.exercise].append(set_log)
+
+        return render_template(
+            'workout_session_detail.html',
+            session=workout_session,
+            exercises_data=dict(exercises_data)
+        )
+
+    except Exception as e:
+        logger.error(f"Error loading workout session detail: {str(e)}")
+        flash('Fout bij het laden van workout details.', 'error')
+        return redirect(url_for('profile.workout_history'))
+
+
+@bp.route('/session/<session_id>/archive', methods=['POST'])
+@login_required
+def archive_workout_session(session_id):
+    """Archiveer een workout sessie"""
+    try:
+        workout_session = WorkoutSession.query.get_or_404(session_id)
+
+        if workout_session.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+
+        workout_session.is_archived = True
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Workout sessie gearchiveerd'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error archiving session: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500

@@ -1,61 +1,308 @@
-{% extends "base.html" %}
-
-{% block title %}FitTrack - Workout Session Details{% endblock %}
-
+{% extends 'base.html' %}
 {% block content %}
+
 <div class="top-bar">
     <a href="{{ url_for('profile.workout_history') }}">
-        <img src="{{ url_for('static', filename='img/back.svg') }}" alt="Terug knop" class="back-icon"/>
+        <img src="{{ url_for('static', filename='img/back.svg') }}" alt="Terug" class="back-icon"/>
     </a>
 </div>
 
-<section class="header-section">
-    <h1>Workout van {{ workout_session.completed_at.strftime('%d-%m-%Y %H:%M') }}</h1>
-    <p>Plan: {{ workout_session.workout_plan.name if workout_session.workout_plan else 'Onbekend' }}</p>
-</section>
+<div class="session-detail-container">
+    <div class="session-header">
+        <h1>{{ session.workout_plan.name if session.workout_plan else 'Workout' }}</h1>
+        <p class="session-date">
+            <i class="fas fa-calendar"></i>
+            {{ session.completed_at.strftime('%d %B %Y om %H:%M') }}
+        </p>
+    </div>
 
-<section class="exercise-blok-section mg-btm-exercise">
-    {% if exercise_groups %}
-        {% for exercise_id, group in exercise_groups.items() %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">{{ group.exercise.name }}</h5>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Set</th>
-                                {% if group.exercise.is_cardio %}
-                                    <th>Duur (min)</th>
-                                    <th>Afstand (km)</th>
-                                {% else %}
-                                    <th>Reps</th>
-                                    <th>Gewicht (kg)</th>
-                                {% endif %}
-                                <th>Voltooid</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for set_log in group.sets %}
-                                <tr>
-                                    <td>{{ set_log.set_number + 1 }}</td> <!-- +1 om te beginnen bij 1 -->
-                                    {% if group.exercise.is_cardio %}
-                                        <td>{{ set_log.duration_minutes | default('N/A', true) }}</td>
-                                        <td>{{ set_log.distance_km | default('N/A', true) }}</td>
-                                    {% else %}
-                                        <td>{{ set_log.reps | default('N/A', true) }}</td>
-                                        <td>{{ set_log.weight | default('N/A', true) }}</td>
-                                    {% endif %}
-                                    <td>{{ 'Ja' if set_log.completed else 'Nee' }}</td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                    <a href="{{ url_for('workouts.exercise_detail', exercise_id=group.exercise.id) }}" class="btn btn-outline-secondary">Details</a>
-                </div>
+    <div class="session-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-layer-group"></i>
             </div>
+            <div class="stat-info">
+                <span class="stat-number">{{ session.total_sets or 0 }}</span>
+                <span class="stat-label">Sets</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-redo"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-number">{{ session.total_reps or 0 }}</span>
+                <span class="stat-label">Reps</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-weight-hanging"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-number">{{ "%.0f"|format(session.total_weight or 0) }}</span>
+                <span class="stat-label">kg totaal</span>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-number">{{ session.duration_minutes or 0 }}</span>
+                <span class="stat-label">minuten</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="exercises-section">
+        <h2>Oefeningen</h2>
+
+        {% for exercise, sets in exercises_data.items() %}
+        <div class="exercise-detail-card">
+            <div class="exercise-header">
+                <h3>{{ exercise.name }}</h3>
+                <span class="exercise-category">{{ exercise.category.value if exercise.category else 'Algemeen' }}</span>
+            </div>
+
+            <div class="sets-list">
+                {% for set_log in sets %}
+                <div class="set-row">
+                    <span class="set-label">Set {{ set_log.set_number + 1 }}</span>
+                    {% if exercise.is_cardio %}
+                        <span class="set-value">
+                            <i class="fas fa-clock"></i> {{ set_log.duration_minutes }} min
+                        </span>
+                        {% if set_log.distance_km %}
+                        <span class="set-value">
+                            <i class="fas fa-route"></i> {{ set_log.distance_km }} km
+                        </span>
+                        {% endif %}
+                    {% else %}
+                        <span class="set-value">
+                            <i class="fas fa-redo"></i> {{ set_log.reps }} reps
+                        </span>
+                        <span class="set-value">
+                            <i class="fas fa-weight-hanging"></i> {{ set_log.weight }} kg
+                        </span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
         {% endfor %}
-    {% else %}
-        <p>Geen voltooide sets gevonden voor deze sessie.</p>
-    {% endif %}
-</section>
+    </div>
+
+    <div class="action-buttons">
+        <a href="{{ url_for('profile.workout_history') }}" class="orange-btn-outline">
+            <i class="fas fa-arrow-left"></i> Terug naar Historie
+        </a>
+    </div>
+</div>
+
+<style>
+.session-detail-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 20px 120px;
+}
+
+.session-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    border-radius: 20px;
+    color: white;
+}
+
+.session-header h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+.session-date {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: rgba(255,255,255,0.9);
+    font-size: 1.1rem;
+}
+
+.session-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.exercises-section {
+    margin-bottom: 3rem;
+}
+
+.exercises-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.exercise-detail-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.exercise-header h3 {
+    font-size: 1.3rem;
+    color: #333;
+    margin: 0;
+}
+
+.exercise-category {
+    background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
+    color: white;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.sets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.set-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.set-row:hover {
+    background: #e9ecef;
+}
+
+.set-label {
+    font-weight: 600;
+    color: #666;
+    min-width: 60px;
+}
+
+.set-value {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #333;
+    font-weight: 500;
+}
+
+.set-value i {
+    color: #FF6B35;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .session-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .session-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+    }
+
+    .exercise-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .set-row {
+        flex-wrap: wrap;
+    }
+}
+</style>
+
 {% endblock %}
