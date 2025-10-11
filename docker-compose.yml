@@ -10,6 +10,8 @@ services:
     volumes:
       - .:/app
       - ./data:/app/data
+      - ./app/static/img:/app/static/img       # Mount grote afbeeldingen
+      - ./app/static/videos:/app/static/videos # Mount video’s
     environment:
       - FLASK_APP=fittrack.py
       - FLASK_ENV=development

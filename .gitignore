@@ -48,6 +48,9 @@ coverage.xml
 *.cover
 pytest_cache/
 
+app/static/videos/*
+app/static/videos/
+
 # Overige tijdelijke bestanden
 *.bak
 *.tmp
