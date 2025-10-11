@@ -8,6 +8,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -29,5 +30,18 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             cd /home/ubuntu/fitness_app
+
+            echo "🧹 Cleaning up old Docker images and volumes..."
+            docker system prune -a --volumes -f
+
+            echo "🗑️ Removing temporary test videos..."
+            rm -rf app/static/videos/exercises/test/* || true
+
+            echo "📦 Rebuilding and restarting containers..."
             docker-compose down
             docker-compose up -d --build
+
+            echo "🧬 (Optional) Seeding exercises if needed..."
+            docker exec $(docker ps -qf "name=fitness_app_app") python seed_exercises.py || true
+
+            echo "✅ Deployment completed successfully!"
